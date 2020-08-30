@@ -66,7 +66,7 @@ setup(
                                     "tests"]),
     url='https://pycroscopy.github.io/BGlib/about.html',
     license='MIT',
-    author='Pycroscopy contributors',
+    author='Suhas Somnath, Chris R. Smith, Rama K. Vasudevan, Stephen Jesse, Anton Ievlev, and contributors',
     author_email='pycroscopy@gmail.com',
     install_requires=requirements,
     setup_requires=['pytest-runner'],
