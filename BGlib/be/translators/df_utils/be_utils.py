@@ -23,12 +23,10 @@ from pyUSID.io.hdf_utils import find_dataset, create_indexed_group, \
     write_main_dataset, get_unit_values
 from pyUSID.io.write_utils import create_spec_inds_from_vals, Dimension
 
-from ....processing.histogram import build_histogram
-from ....analysis.utils.be_sho import SHOestimateGuess
-from ....viz.be_viz_utils import plot_1d_spectrum, plot_2d_spectrogram, \
+from .histogram import build_histogram
+from ...analysis.utils.be_sho import SHOestimateGuess
+from ...viz.be_viz_utils import plot_1d_spectrum, plot_2d_spectrogram, \
     plot_histograms
-from ...hdf_writer import HDFwriter
-from ...virtual_data import VirtualDataset, VirtualGroup
 
 nf32 = np.dtype({'names': ['super_band', 'inter_bin_band', 'sub_band'],
                  'formats': [np.float32, np.float32, np.float32]})
