@@ -4,6 +4,7 @@ Utility functions for the Fake BEPS generator
 """
 import os
 import numpy as np
+import h5py
 from sklearn.utils import gen_batches
 from sidpy.proc.comp_utils import get_available_memory
 from skimage.measure import block_reduce
@@ -14,16 +15,17 @@ from sidpy.sid import Translator
 from pyUSID.io.hdf_utils import link_as_main, copy_dataset, \
     write_main_dataset, create_indexed_group, create_results_group, \
     write_reduced_anc_dsets
+
 from pyUSID.io.reg_ref import copy_all_region_refs , write_region_references
 from pyUSID.io.write_utils import Dimension, calc_chunks
 from pyUSID.io.image import read_image
-from ...analysis.utils.be_loop import loop_fit_function
-from ...analysis.utils.be_sho import SHOfunc
-from ...analysis.be_sho_fitter import sho32
-from ...analysis.be_loop_fitter import loop_fit32
+
+from ..analysis.utils.be_loop import loop_fit_function
+from ..analysis.utils.be_sho import SHOfunc
+from ..analysis.be_sho_fitter import sho32
+from ..analysis.be_loop_fitter import loop_fit32
 from .df_utils.beps_gen_utils import get_noise_vec, beps_image_folder
 from .df_utils.image_utils import no_bin
-import h5py
 
 # Deprecated imports:
 from ..hdf_writer import HDFwriter

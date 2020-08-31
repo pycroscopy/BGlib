@@ -20,11 +20,13 @@ from sidpy.viz.plot_utils import plot_curves, plot_map_stack, get_cmap_object, p
     plot_complex_spectra
 from sidpy.viz.jupyter_utils import save_fig_filebox_button
 from sidpy.hdf.hdf_utils import get_auxiliary_datasets, get_attr
+
+from pyUSID.io.hdf_utils import reshape_to_n_dims, get_sort_order, \
+    get_dimensionality, get_source_dataset
+from pyUSID import USIDataset
+
 from ..analysis.utils.be_loop import loop_fit_function
 from ..analysis.utils.be_sho import SHOfunc
-from pyUSID.io.hdf_utils import reshape_to_n_dims, get_sort_order, get_dimensionality, \
-    get_source_dataset
-from pyUSID import USIDataset
 
 
 def visualize_sho_results(h5_main, save_plots=True, show_plots=True, cmap=None,

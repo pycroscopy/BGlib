@@ -19,7 +19,7 @@ from pyUSID.io.write_utils import VALUES_DTYPE, Dimension
 from pyUSID.io.hdf_utils import write_main_dataset, create_indexed_group, \
     write_ind_val_dsets
 
-from .df_utils.be_utils import parmsToDict
+from ...be.translators.df_utils.be_utils import parmsToDict
 
 if sys.version_info.major == 3:
     unicode = str
