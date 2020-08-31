@@ -30,7 +30,7 @@ from pyUSID.io.hdf_utils import get_unit_values, get_sort_order, \
 from pyUSID.io.usi_data import USIDataset
 from .utils.be_loop import projectLoop, fit_loop, generate_guess, \
     loop_fit_function, calc_switching_coef_vec, switching32
-from ..processing.tree import ClusterTree
+from .utils.tree import ClusterTree
 from .be_sho_fitter import sho32
 from .fitter import Fitter
 
