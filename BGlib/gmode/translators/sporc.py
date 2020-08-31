@@ -18,10 +18,6 @@ from sidpy.hdf.hdf_utils import get_h5_obj_refs, link_h5_objects_as_attrs
 
 from pyUSID.io.write_utils import Dimension, INDICES_DTYPE, VALUES_DTYPE
 
-from ..write_utils import build_ind_val_dsets
-from ..hdf_writer import HDFwriter
-from ..virtual_data import VirtualGroup, VirtualDataset
-
 
 class SporcTranslator(Translator):
     """
