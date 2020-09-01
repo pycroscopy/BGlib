@@ -1616,7 +1616,7 @@ class BEHistogram:
         -------
         None
         """
-        hdf = HDFwriter(h5_path)
+        hdf = h5py.File(h5_path, mode='r+')
         h5_file = hdf.file
 
         print('Adding Histograms to file {}'.format(h5_file.name))
@@ -1656,8 +1656,10 @@ class BEHistogram:
                 """
                 Add the BEHistogram for the current plot group
                 """
-                plot_grp = VirtualGroup(p_group.name.split('/')[-1], group.name[1:])
-                plot_grp.attrs['Name'] = udvs_lab
+
+                plot_grp = group.create_group(p_group.name.split('/')[-1])
+                write_simple_attrs(plot_grp, {'Name': udvs_lab})
+
                 hist = BEHistogram()
                 hist_mat, hist_labels, hist_indices, hist_indices_labels = \
                     hist.buildPlotGroupHist(h5_main[im],
@@ -1666,21 +1668,19 @@ class BEHistogram:
                                             min_response=min_resp,
                                             max_mem_mb=max_mem)
 
-                ds_hist = VirtualDataset('Histograms', hist_mat, dtype=np.int32,
-                                         chunking=(1, hist_mat.shape[1]), compression='gzip')
+                ds_hist = plot_grp.create_dataset('Histograms',
+                                                  data=hist_mat,
+                                                  dtype=np.int32)
+                write_simple_attrs(ds_hist, {'labels': hist_labels})
 
-                hist_slice_dict = dict()
-                for hist_ind, hist_dim in enumerate(hist_labels):
-                    hist_slice_dict[hist_dim] = (slice(hist_ind, hist_ind + 1), slice(None))
-                ds_hist.attrs['labels'] = hist_slice_dict
-                ds_hist_indices = VirtualDataset('Histograms_Indices', hist_indices, dtype=np.int32)
-                hist_ind_dict = dict()
-                for hist_ind_ind, hist_ind_dim in enumerate(hist_indices_labels):
-                    hist_ind_dict[hist_ind_dim] = (slice(hist_ind_ind, hist_ind_ind + 1), slice(None))
-                ds_hist_indices.attrs['labels'] = hist_ind_dict
-                ds_hist_labels = VirtualDataset('Histograms_Labels', np.array(hist_labels))
-                plot_grp.add_children([ds_hist, ds_hist_indices, ds_hist_labels])
-                hdf.write(plot_grp)
+                ds_hist_indices = plot_grp.create_dataset('Histograms_Indices',
+                                                          data=hist_indices,
+                                                          dtype=np.int32)
+                write_simple_attrs(ds_hist_indices,
+                                   {'labels': hist_indices_labels})
+
+                ds_hist_labels = plot_grp.create_dataset('Histograms_Labels',
+                                                         data=hist_labels)
 
                 if show_plot or save_plot:
                     if save_plot:
