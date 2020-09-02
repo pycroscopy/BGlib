@@ -547,8 +547,7 @@ class BEodfTranslator(Translator):
         # Noise floor should be of shape: (udvs_steps x 3 x positions)
         if self._verbose:
             print('\tWriting noise floor dataset')
-        h5_chan_grp.create_dataset('Noise_Floor', (num_pix, num_actual_udvs_steps), dtype=nf32,
-                                   chunks=(1, num_actual_udvs_steps))
+        h5_chan_grp.create_dataset('Noise_Floor', (num_pix, num_actual_udvs_steps), dtype=nf32)
 
         """
         New Method for chunking the Main_Data dataset.  Chunking is now done in N-by-N squares
@@ -564,7 +563,7 @@ class BEodfTranslator(Translator):
             print('\tHDF5 dataset will have chunks of size: {}'.format(BEPS_chunks))
             print('\tCreating empty main dataset of shape: ({}, {})'.format(num_pix, tot_bins))
         self.h5_raw = write_main_dataset(h5_chan_grp, (num_pix, tot_bins), 'Raw_Data', 'Piezoresponse', 'V', None, None,
-                                         dtype=np.complex64, chunks=BEPS_chunks, compression='gzip',
+                                         dtype=np.complex64,
                                          h5_pos_inds=h5_pos_ind, h5_pos_vals=h5_pos_val, h5_spec_inds=h5_spec_inds,
                                          h5_spec_vals=h5_spec_vals, verbose=self._verbose)
 
