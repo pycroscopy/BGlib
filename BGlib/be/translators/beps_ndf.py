@@ -17,12 +17,13 @@ import xlrd as xlreader  # To read the UDVS spreadsheet
 from scipy.io.matlab import loadmat  # To load parameters stored in Matlab .mat file
 
 from sidpy.sid import Translator
-from sidpy.hdf.hdf_utils import get_h5_obj_refs, link_h5_objects_as_attrs, write_simple_attrs
+from sidpy.hdf.hdf_utils import link_h5_objects_as_attrs, write_simple_attrs
+from sidpy.proc.comp_utils import get_available_memory
 
 from pyUSID.io.write_utils import make_indices_matrix, VALUES_DTYPE, \
     INDICES_DTYPE, calc_chunks
 from pyUSID.io.usi_data import USIDataset
-from pyUSID.io.hdf_utils import create_indexed_group, link_as_main
+from pyUSID.io.hdf_utils import create_indexed_group, check_if_main, print_tree
 
 from .df_utils.be_utils import trimUDVS, getSpectroscopicParmLabel, \
     parmsToDict, generatePlotGroups, normalizeBEresponse, createSpecVals, nf32
@@ -356,11 +357,12 @@ class BEPSndfTranslator(Translator):
 
         pos_inds = self.pos_mat[self.ds_pixel_start_indx: self.ds_pixel_start_indx + self.ds_pixel_index, :]
 
-        h5_meas_grp = create_indexed_group(self.hdf, 'Measurement')
-        h5_pos_ind = h5_meas_grp.create_dataset('Position_Indices',
+        h5_chan_grp = self.ds_main.parent
+
+        h5_pos_ind = h5_chan_grp.create_dataset('Position_Indices',
                                                 data=pos_inds,
                                                 dtype=INDICES_DTYPE)
-        h5_pos_val = h5_meas_grp.create_dataset('Position_Values',
+        h5_pos_val = h5_chan_grp.create_dataset('Position_Values',
                                                 data=pos_val_mat,
                                                 dtype=VALUES_DTYPE)
 
@@ -368,11 +370,12 @@ class BEPSndfTranslator(Translator):
             write_simple_attrs(anc_dset, {'labels': self.pos_labels,
                                           'units': self.pos_units})
 
+        link_h5_objects_as_attrs(self.ds_main, [h5_pos_ind, h5_pos_val])
+
         # Do all the reference linking:
         aux_ds_names = ['Excitation_Waveform', 'Position_Indices', 'Position_Values', 'UDVS_Indices',
                         'Spectroscopic_Indices', 'Bin_Step', 'Bin_Indices', 'Bin_Wfm_Type',
                         'Bin_Frequencies', 'Bin_FFT', 'UDVS', 'UDVS_Labels', 'Noise_Floor', 'Spectroscopic_Values']
-        link_h5_objects_as_attrs(self.ds_main, get_h5_obj_refs(aux_ds_names, h5_refs))
 
         # While we have all the references and mean data, write the plot groups as well:
         generatePlotGroups(USIDataset(self.ds_main), self.mean_resp,
