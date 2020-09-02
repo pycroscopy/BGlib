@@ -48,6 +48,7 @@ class BEodfTranslator(Translator):
         self.signal_type = None
         self.expt_type = None
         self._verbose = False
+        self.max_mem = int(get_available_memory()*0.8)
 
     @staticmethod
     def is_valid_file(data_path):

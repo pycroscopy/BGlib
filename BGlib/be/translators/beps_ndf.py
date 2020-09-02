@@ -61,6 +61,7 @@ class BEPSndfTranslator(Translator):
         self.pos_mat = None
         self.pos_units = None
         self.hdf = None
+        self.max_ram = int(get_available_memory() * 0.8)
 
     def is_valid_file(self, data_path):
         """
