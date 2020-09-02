@@ -607,10 +607,11 @@ def generatePlotGroups(h5_main, mean_resp, folder_path, basename, max_resp=[], m
     spec_inds = h5_main.h5_spec_inds
     UDVS_inds = grp['UDVS_Indices']
     spec_vals = h5_main.h5_spec_vals
+    spec_dim_labs = list(get_attr(spec_inds, 'labels'))
 
     #     std_cols = ['wave_type','Frequency','DC_Offset','wave_mod','AC_Amplitude','dc_offset','ac_amplitude']
 
-    col_names = UDVS.attrs['labels']
+    col_names = list(get_attr(UDVS, 'labels'))
 
     if len(col_names) <= 5:
         """
@@ -621,19 +622,20 @@ def generatePlotGroups(h5_main, mean_resp, folder_path, basename, max_resp=[], m
         return
 
     # Removing the standard columns
-    col_names = get_attr(UDVS, 'labels')[5:]
+    col_names = list(get_attr(UDVS, 'labels')[5:])
 
     #     col_names = [col for col in col_names if col not in std_cols + ignore_plot_groups]
 
-    freq_inds = spec_inds[spec_inds.attrs['Frequency']].flatten()
+    freq_inds = spec_inds[spec_dim_labs.index('Frequency')].flatten()
 
     for col_name in col_names:
 
         # Make sure the column name is a regular Python string
         col_name = str(col_name)
 
-        ref = UDVS.attrs[col_name]
-        #         Make sure we're actually dealing with a reference of some type
+        ref = UDVS.regionref[:, col_names.index(col_name)]
+        # ref = UDVS.attrs[col_name]
+        # Make sure we're actually dealing with a reference of some type
         if not isinstance(ref, h5py.RegionReference):
             continue
         # 4. Access that column of the data through region reference
