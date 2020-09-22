@@ -21,8 +21,4 @@ BGlib
     :target: http://pepy.tech/project/BGlib
     :alt: Downloads
 
-.. image:: https://zenodo.org/badge/138171750.svg
-   :target: https://zenodo.org/badge/latestdoi/138171750
-   :alt: DOI
-
 Band Excitation and General Mode analysis and visualization codes
