@@ -34,8 +34,6 @@ requirements = ['numpy>=1.13.0',
                 'pyUSID>=0.0.8',
 
                 'xlrd>=1.0.0',
-                'igor',
-                'gwyfile',
                 ]
 
 setup(
