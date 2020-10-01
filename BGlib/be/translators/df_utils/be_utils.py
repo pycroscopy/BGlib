@@ -357,7 +357,12 @@ def parmsToDict(filepath, parms_to_remove=[]):
                 name = 'mode'
             if name == 'IO_rate':
                 name = 'IO_rate_[Hz]'
-                value = int(value.split()[0]) * 1E6
+                try:
+                    value = int(value.split()[0]) * 1E6
+                except ValueError:
+                    # very rare
+                    # let it be a string
+                    pass
             if name == 'AO_range':
                 name = 'AO_range_[V]'
                 value = ' '.join(value.split()[:-1])
