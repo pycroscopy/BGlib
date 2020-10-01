@@ -1110,7 +1110,7 @@ def createSpecVals(udvs_mat, spec_inds, bin_freqs, bin_wfm_type, parm_dict,
                 print('\t' * 3 + 'Generated spec vals. Calling __BEPSgen')
 
             return __BEPSgen(udvs_mat, inSpecVals, bin_freqs, bin_wfm_type,
-                             parm_dict, udvs_labs, iSpecVals, udvs_units)
+                             udvs_labs, iSpecVals, udvs_units)
 
     def __BEPSDC(udvs_mat, inSpecVals, bin_freqs, bin_wfm_type, parm_dict,
                  verbose=False):
