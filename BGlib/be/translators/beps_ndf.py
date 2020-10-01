@@ -41,7 +41,7 @@ class BEPSndfTranslator(Translator):
 
     def __init__(self, *args, **kwargs):
         super(BEPSndfTranslator, self).__init__(*args, **kwargs)
-        self.debug = False
+        self._verbose = False
         self.parm_dict = dict()
         self.field_mode = None
         self.spec_label = None
@@ -108,7 +108,7 @@ class BEPSndfTranslator(Translator):
             return None
         return parm_filepath
 
-    def translate(self, data_filepath, show_plots=True, save_plots=True, do_histogram=False, debug=False):
+    def translate(self, data_filepath, show_plots=True, save_plots=True, do_histogram=False, verbose=False):
         """
         The main function that translates the provided file into a .h5 file
         
@@ -122,7 +122,7 @@ class BEPSndfTranslator(Translator):
             Whether or not to save the generated plots
         do_histogram : Boolean (Optional. Default is False)
             Whether or not to generate and save 2D histograms of the raw data
-        debug : Boolean (Optional. default is false)
+        verbose : Boolean (Optional. default is false)
             Whether or not to print log statements
             
         Returns
@@ -133,12 +133,12 @@ class BEPSndfTranslator(Translator):
         """
         data_filepath = path.abspath(data_filepath)
         # Read the parameter files
-        self.debug = debug
-        if debug:
+        self._verbose = verbose
+        if self._verbose:
             print('BEndfTranslator: Getting file paths')
 
         parm_filepath, udvs_filepath, parms_mat_path = self._parse_file_path(data_filepath)
-        if debug:
+        if self._verbose:
             print('BEndfTranslator: Reading Parms text file')
 
         isBEPS, self.parm_dict = parmsToDict(parm_filepath)
@@ -167,18 +167,18 @@ class BEPSndfTranslator(Translator):
         if path.exists(h5_path):
             remove(h5_path)
 
-        if debug:
+        if self._verbose:
             print('BEndfTranslator: Preparing to read parms.mat file')
         self.BE_wave, self.BE_wave_rev, self.BE_bin_inds = self.__get_excit_wfm(parms_mat_path)
 
-        if debug:
+        if self._verbose:
             print('BEndfTranslator: About to read UDVS file')
 
         self.udvs_labs, self.udvs_units, self.udvs_mat = self.__read_udvs_table(udvs_filepath)
         # Remove the unused plot group columns before proceeding:
         self.udvs_mat, self.udvs_labs, self.udvs_units = trimUDVS(self.udvs_mat, self.udvs_labs, self.udvs_units,
                                                                   ignored_plt_grps)
-        if debug:
+        if self._verbose:
             print('BEndfTranslator: Read UDVS file')
 
         self.num_udvs_steps = self.udvs_mat.shape[0]
@@ -191,7 +191,7 @@ class BEPSndfTranslator(Translator):
         self.__num_wave_types__ = len(unique_waves)
         # print self.__num_wave_types__, 'different excitation waveforms in this experiment'
 
-        if debug:
+        if self._verbose:
             print('BEndfTranslator: Preparing to set up parsers')
 
         # Preparing objects to parse the file(s)
@@ -385,7 +385,7 @@ class BEPSndfTranslator(Translator):
                            max_mem_mb=self.max_ram,
                            spec_label=self.spec_label,
                            show_plots=show_plots, save_plots=save_plots,
-                           do_histogram=do_histogram, debug=self.debug)
+                           do_histogram=do_histogram, debug=self._verbose)
 
         # Now that everything about this dataset is complete:
         self.dset_index += 1
@@ -500,9 +500,11 @@ class BEPSndfTranslator(Translator):
         '''
         Create the Spectroscopic Values tables
         '''
-        spec_vals, spec_inds, spec_vals_labs, spec_vals_units, spec_vals_labs_names = \
-            createSpecVals(self.udvs_mat, spec_inds, bin_freqs, exec_bin_vec,
-                           curr_parm_dict, np.array(self.udvs_labs), self.udvs_units)
+        ret_vals = createSpecVals(self.udvs_mat, spec_inds, bin_freqs,
+                                  exec_bin_vec, curr_parm_dict,
+                                  np.array(self.udvs_labs), self.udvs_units,
+                                  verbose=self._verbose)
+        spec_vals, spec_inds, spec_vals_labs, spec_vals_units, spec_vals_labs_names = ret_vals
 
         ds_spec_vals_mat = h5_chan_grp.create_dataset('Spectroscopic_Values',
                                                       data=np.array(spec_vals),
