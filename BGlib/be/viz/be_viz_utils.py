@@ -169,7 +169,7 @@ def visualize_sho_results(h5_main, save_plots=True, show_plots=True, cmap=None,
                                                   save_plots, folder_path, basename, num_rows, num_cols))
         else:
             # plot loops at a few locations
-            dc_vec = np.squeeze(h5_spec_vals[h5_spec_vals.attrs['DC_Offset']])
+            dc_vec = np.squeeze(h5_spec_vals[h5_main.spec_dim_descriptors.index('DC_Offset (V)')])
 
             if not isinstance(field_mode, str):
                 field_mode = meas_grp.attrs['VS_measure_in_field_loops']
@@ -1335,7 +1335,7 @@ def plot_loop_sho_raw_comparison(h5_loop_parameters, h5_sho_grp, h5_raw_dset,
     '''
     Get the bias vector to be plotted against
     '''
-    loop_bias_vec = h5_sho_spec_vals[get_attr(h5_sho_spec_vals, step_chan)].squeeze()
+    loop_bias_vec = h5_sho_spec_vals[main_bias_dim].squeeze()
     shift_ind = int(-1 * steps_per_loop / 4)
     loop_bias_vec = loop_bias_vec.reshape(sho_spec_dims[::-1])
     loop_bias_vec = np.moveaxis(loop_bias_vec, len(loop_bias_vec.shape) - sho_bias_dim - 1, 0)
@@ -1345,8 +1345,9 @@ def plot_loop_sho_raw_comparison(h5_loop_parameters, h5_sho_grp, h5_raw_dset,
     '''
     Get the frequency vector to be plotted against
     '''
-    full_w_vec = h5_main_spec_vals[h5_main_spec_vals.attrs['Frequency']]
-    full_w_vec, _ = reshape_to_n_dims(full_w_vec, h5_spec=h5_main_spec_inds)
+    full_w_vec = h5_main_spec_vals[h5_main.spec_dim_descriptors.index('Frequency (Hz)')]
+    print(full_w_vec.shape)
+    full_w_vec = full_w_vec.reshape(tuple(h5_main.spec_dim_sizes))
     full_w_vec = full_w_vec.squeeze()
 
     '''
@@ -1361,7 +1362,7 @@ def plot_loop_sho_raw_comparison(h5_loop_parameters, h5_sho_grp, h5_raw_dset,
         # Also create the title string for the map
         loop_map_title = list()
         for label in loop_spec_labs:
-            val = h5_loop_spec_vals[get_attr(h5_loop_spec_vals, label)].squeeze()[selected_loop_cycle]
+            val = h5_loop_spec_vals[h5_loop_fit.spec_dim_labels.index(label)].squeeze()[selected_loop_cycle]
         loop_map_title.append('{}: {}'.format(label, val))
 
         loop_map_title = ' - '.join(loop_map_title)
