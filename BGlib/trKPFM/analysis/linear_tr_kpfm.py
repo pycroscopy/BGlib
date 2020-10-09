@@ -2,7 +2,7 @@
 Analysis codes for doing linear tr-KPFM: where slow scan is disabled
 """
 
-class trKPFM_L_Dataset():
+class trKPFM_L_Analyzer():
     def __init__(self,usid_dataset):
         """
         h5_main: h5 file
@@ -12,7 +12,7 @@ class trKPFM_L_Dataset():
         """
         self.source_h5_dataset = usid_dataset
         self.dataset_type = 'trKPFM-USIDataset'
-        super(trKPFM_L_Dataset, self).__init__(h5_ref=usid_dataset)
+        super(trKPFM_L_Analyzer, self).__init__(h5_main,'Linear_trKPFM')
 
     def add_scan_info(self,scan_rate,scan_size,dim):
         self.h5_main = self.source_h5_dataset
