@@ -1,5 +1,5 @@
 from pyUSID import USIDataset
-from ..analysis import TRKPFM_L_Analyzer
+from ..analysis import trKPFM_L_Analyzer
 
 class RawTRKPFM_L_Dataset(USIDataset):
     """
@@ -18,7 +18,7 @@ class RawTRKPFM_L_Dataset(USIDataset):
         self.dataset_type = 'RawTRKPFM_L_Dataset'
         self.parm_dict = self.dset.file['/Measurement_000'].attrs
 
-        self.analyzer = TRKPFM_L_Analyzer(self)
+        self.analyzer = trKPFM_L_Analyzer(self)
 
 
 
