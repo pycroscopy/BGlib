@@ -29,6 +29,60 @@ from ..analysis.utils.be_loop import loop_fit_function
 from ..analysis.utils.be_sho import SHOfunc
 
 
+def plot_line_family(axis, x_vec, line_family, line_names=None, label_prefix='', label_suffix='',
+                     y_offset=0, show_cbar=False, **kwargs):
+    """
+    Plots a family of lines with a sequence of colors
+
+    Parameters
+    ----------
+    axis : matplotlib.axes.Axes object
+        Axis to plot the curve
+    x_vec : array-like
+        Values to plot against
+    line_family : 2D numpy array
+        family of curves arranged as [curve_index, features]
+    line_names : array-like
+        array of string or numbers that represent the identity of each curve in the family
+    label_prefix : string / unicode
+        prefix for the legend (before the index of the curve)
+    label_suffix : string / unicode
+        suffix for the legend (after the index of the curve)
+    y_offset : (optional) number
+        quantity by which the lines are offset from each other vertically (useful for spectra)
+    show_cbar : (optional) bool
+        Whether or not to show a colorbar (instead of a legend)
+
+    """
+
+    x_vec = np.array(x_vec)
+
+    if not isinstance(line_family, list):
+        line_family = np.array(line_family)
+
+    assert line_family.ndim == 2, 'line_family must be a 2D array'
+
+    num_lines = line_family.shape[0]
+
+    if line_names is None:
+        # label_prefix = 'Line '
+        line_names = [str(line_ind) for line_ind in range(num_lines)]
+
+    line_names = ['{} {} {}'.format(label_prefix, cur_name, label_suffix) for cur_name in line_names]
+
+    print("Line family shape is {}".format(line_family.shape))
+
+    for line_ind in range(num_lines):
+        colors = plt.cm.get_cmap('jet', line_family.shape[-1])
+        axis.plot(x_vec, line_family[line_ind] + line_ind * y_offset,
+                  color=colors(line_ind),
+                  )
+
+    if show_cbar:
+        # put back the cmap parameter:
+        kwargs.update({'cmap': cmap})
+        _ = sidpy.viz.plot_utils.cbar_for_line_plot(axis, num_lines, **kwargs)
+
 def visualize_sho_results(h5_main, save_plots=True, show_plots=True, cmap=None,
                           expt_type=None, meas_type=None, field_mode=None):
     """
