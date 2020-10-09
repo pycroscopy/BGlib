@@ -11,11 +11,11 @@ class RawTRKPFM_S_Dataset(USIDataset):
     Should be able to pass either HDF5dataset or USIDataset
     """
 
-        def __init__(self,h5_dataset):
-            super(RawTRKPFM_S_Dataset,self).__init__(h5_ref = h5_dataset)
+    def __init__(self,h5_dataset):
+        super(RawTRKPFM_S_Dataset,self).__init__(h5_ref = h5_dataset)
 
-            #Prepare the datasets
-            self.dataset_type = 'RawTRKPFM_S_Dataset'
-            self.parm_dict = self.dset.file['/Measurement_000'].attrs
+        #Prepare the datasets
+        self.dataset_type = 'RawTRKPFM_S_Dataset'
+        self.parm_dict = self.dset.file['/Measurement_000'].attrs
 
-            self.analyzer = trKPFM_S_Analyzer(self)
+        self.analyzer = trKPFM_S_Analyzer(self)
