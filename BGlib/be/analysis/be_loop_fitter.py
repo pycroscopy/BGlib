@@ -1069,8 +1069,8 @@ class BELoopFitter(Fitter):
                   ' slowest to fastest varying'
                   '.'.format(results_nd_s2f.shape, dim_labels_s2f))
 
-        pos_size = np.prod(results_nd_s2f.shape[:1])
-        spec_size = np.prod(results_nd_s2f.shape[1:])
+        pos_size = int(np.prod(results_nd_s2f.shape[:1]))
+        spec_size = int(np.prod(results_nd_s2f.shape[1:]))
 
         if verbose:
             print('Results will be flattend to: {}'
