@@ -164,7 +164,7 @@ class BELoopFitter(Fitter):
         if h5_main.dtype != sho32:
             raise TypeError('Provided dataset is not a SHO results dataset.')
 
-        if data_type == 'BEPSData':
+        if data_type.lower() == 'bepsdata':
             if vs_mode not in ['DC modulation mode', 'current mode']:
                 raise ValueError('Provided dataset has a mode: "' + vs_mode +
                                  '" is not a "DC modulation" or "current mode"'
