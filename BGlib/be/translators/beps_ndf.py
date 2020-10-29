@@ -322,7 +322,7 @@ class BEPSndfTranslator(Translator):
         """
         # Update the number of pixels in the attributes
         meas_grp = self.ds_main.parent
-        meas_grp.attrs['num_pix'] = self.ds_pixel_index
+        write_simple_attrs(meas_grp, {'num_pix': self.ds_pixel_index})
 
         # Write position specific datasets now that the dataset is complete
         pos_slice_dict = dict()
