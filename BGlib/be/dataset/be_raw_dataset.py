@@ -1,5 +1,17 @@
 from pyUSID import USIDataset
 from ..analysis import BESHOfitter
+from ..analysis import be_sho_fitter as bsho
+from .be_sho_dataset import SHOBEDataset
+import os
+import numpy as np
+import matplotlib.pyplot as plt
+from pyUSID.io.hdf_utils import reshape_to_n_dims
+from sidpy.viz.plot_utils import plot_curves, plot_map_stack, get_cmap_object, plot_map, set_tick_font_size, \
+    plot_complex_spectra
+from IPython.display import display
+from sidpy.viz.jupyter_utils import save_fig_filebox_button
+import ipywidgets as widgets
+import h5py
 
 class RawBEDataset(USIDataset):
     """
@@ -15,39 +27,85 @@ class RawBEDataset(USIDataset):
 
     def __init__(self, h5_dataset):
 
-        super(RawBEDataset, self).__init__(h5_ref=h5_dataset, sho_fit_points = 5, sho_override = False,
-                                           max_cores = None, verbose = False, h5_sho_targ_grp = None)
+        super(RawBEDataset, self).__init__(h5_ref=h5_dataset)
 
         # Prepare the datasets
         self.dataset_type = 'RawBEDataset'
-        self.parm_dict = self.dset.file['/Measurement_000'].attrs
+        self.parm_dict = list(self.file['/Measurement_000'].attrs)
 
-        self.fitter = BESHOfitter(self, cores=max_cores,
-                                                verbose=verbose, h5_target_group=h5_sho_targ_grp)
 
-    def plot_spectrogram(self, static = False):
-        print('here we can plot out stuff')
-        # TODO: Add the BE visualizers here
+    def plot_spectrogram(self, px = None, method = 'all'):
+        """
+        This function will plot the spectrogram at a given pixel, or the mean spectrogram if no pixels are given
 
-    def perform_SHO_fit(self, sho_fit_points=5, sho_override=False, max_cores=None):
+        Parameters
+        ----------
+        px : Int, pixel value to be plotted. If None, an average spectrogram will be plotted.
 
-        sho_fit_points = 5  # The number of data points at each step to use when fitting
-        sho_override = False  # Force recompute if True
+        method: string: -'all': will plot real, imag, amp and phase of the spectrogram
+                        - 'amp': will plot amplitude and phase
+                        - 'real': will plot only the real and imaginary parts of the spectrogram
+        """
+        if px is not None:
+            assert int(px)>=0, "Pixel index provided must be positive"
+            assert int(px)<self.shape[0], "Pixel index provided is greater than number of pixels in dataset"
+            average_spect = False
+        else:
+            average_spect = True
 
-        h5_sho_targ_grp = None
+        #Get the data
+        freq_index = self.spec_dim_labels.index('Frequency')
+        freq_len = self.spec_dim_sizes[freq_index]
 
-        sho_fitter = belib.analysis.BESHOfitter(h5_main, cores=max_cores,
-                                                verbose=False, h5_target_group=h5_sho_targ_grp)
+        if not average_spect:
+            real_spec = np.real(self[px,:]).reshape(-1,freq_len)
+            imag_spec = np.imag(self[px, :]).reshape(-1,freq_len)
+            amp_spec = np.abs(self[px, :]).reshape(-1,freq_len)
+            phase_spec = np.angle(self[px, :]).reshape(-1,freq_len)
+        else:
+            real_spec = np.real(self[:, :]).mean(axis=0).reshape(-1,freq_len)
+            imag_spec = np.imag(self[:, :]).mean(axis=0).reshape(-1,freq_len)
+            amp_spec = np.abs(self[:, :]).mean(axis=0).reshape(-1,freq_len)
+            phase_spec = np.angle(self[:, :]).mean(axis=0).reshape(-1,freq_len)
 
-        sho_fitter.set_up_guess(guess_func=belib.analysis.be_sho_fitter.SHOGuessFunc.complex_gaussian,
-                                num_points=sho_fit_points)
+        data_spec = [real_spec, imag_spec, amp_spec, phase_spec]
 
-        self.h5_sho_guess = sho_fitter.do_guess(override=sho_override)
-        sho_fitter.set_up_fit()
-        self.h5_sho_fit = sho_fitter.do_fit(override=sho_override)
-        self.h5_sho_grp = h5_sho_fit.parent
+        #Plot the data
+        #TODO: Use plot map stack to do this!!
 
-    def jupyter_visualize_be_spectrograms(self, cmap=None):
+        if method == 'all':
+            fig, axes = plt.subplots(nrows=2, ncols=2, figsize = (10,8))
+            titles = ['Real', 'Imaginary', 'Amplitude', 'Phase']
+            for ind, ax in enumerate(axes.flat):
+                ax.imshow(data_spec[ind].T)
+                if average_spect: spec_title = 'Mean ' + titles[ind]
+                else: spec_title = titles[ind] + ' at px ' + str(px)
+                ax.set_title(spec_title)
+        else:
+            fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(8, 4))
+            if method == 'amp':
+                titles = ['Amplitude', 'Phase']
+                for ind, ax in enumerate(axes.flat):
+                    ax.imshow(data_spec[ind+2].T)
+                    if average_spect:
+                        spec_title = 'Mean' + titles[ind]
+                    else:
+                        titles[ind] + 'at px ' + str(px)
+                    ax.set_title(spec_title)
+            elif method == 'real':
+                titles = ['Real', 'Imaginary']
+                for ind, ax in enumerate(axes.flat):
+                    ax.imshow(data_spec[ind])
+                    if average_spect:
+                        spec_title = 'Mean' + titles[ind]
+                    else:
+                        titles[ind] + 'at px ' + str(px)
+                    ax.set_title(spec_title)
+        fig.tight_layout()
+        return fig, data_spec
+
+
+    def visualize_spectrograms(self, cmap=None):
         """
         Jupyer notebook ONLY function. Sets up a simple visualzier for visualizing raw BE data.
         Sliders for position indices can be used to visualize BE spectrograms (frequency, UDVS step).
@@ -55,12 +113,10 @@ class RawBEDataset(USIDataset):
 
         Parameters
         ----------
-        self : USIDataset
-            Raw Band Excitation dataset
-        cmap : String, or matplotlib.colors.LinearSegmentedColormap object (Optional)
+        cmap : matplotlib.colors.LinearSegmentedColormap object (Optional)
             Requested color map
         """
-        cmap = get_cmap_object(cmap)
+        if cmap is None: cmap = plt.cm.viridis
 
         h5_pos_inds = self.h5_pos_inds
         pos_dims = self.pos_dim_sizes
@@ -304,3 +360,34 @@ class RawBEDataset(USIDataset):
             display(fig)
 
         return fig
+
+    def perform_SHO_fit(self, sho_fit_points=5, sho_override=False, max_cores=None,
+                        h5_sho_targ_grp = None, guess_func = bsho.SHOGuessFunc.complex_gaussian):
+        '''h5_path  - group or name of file to write to. If None '''
+        if type(h5_sho_targ_grp) == str:
+            f_open_mode = 'w'
+            if os.path.exists(h5_sho_targ_grp):
+                f_open_mode = 'r+'
+            h5_sho_file = h5py.File(h5_sho_targ_grp, mode=f_open_mode)
+            h5_sho_targ_grp = h5_sho_file
+
+
+        sho_fit_points = 5  # The number of data points at each step to use when fitting
+        sho_override = False  # Force recompute if True
+
+        h5_sho_targ_grp = None
+
+        sho_fitter = BESHOfitter(self, cores=max_cores,
+                                                verbose=False, h5_target_group=h5_sho_targ_grp)
+
+        sho_fitter.set_up_guess(guess_func=guess_func,
+                                num_points=sho_fit_points)
+
+        h5_sho_guess = sho_fitter.do_guess(override=sho_override)
+        sho_fitter.set_up_fit()
+        h5_sho_fit = sho_fitter.do_fit(override=sho_override)
+
+        #TODO: return the be_sho_dataset object
+
+        return SHOBEDataset(h5_sho_fit)
+

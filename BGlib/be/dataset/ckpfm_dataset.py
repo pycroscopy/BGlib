@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from pyUSID.hdf_utils import reshape_to_n_dims
+#from pyUSID.hdf_utils import reshape_to_n_dims
 from .be_raw_dataset import RawBEDataset
 from .be_sho_dataset import SHOBEDataset
 from sidpy.viz.plot_utils.curve import cbar_for_line_plot
