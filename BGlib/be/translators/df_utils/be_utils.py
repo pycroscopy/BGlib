@@ -645,7 +645,15 @@ def generatePlotGroups(h5_main, mean_resp, folder_path, basename, max_resp=[], m
             continue
         # 4. Access that column of the data through region reference
         steps = np.where(np.isfinite(UDVS[ref]))[0]
-        step_inds = np.array([np.where(UDVS_inds[()] == step)[0] for step in steps]).flatten()
+        udvs_inds = UDVS_inds[()]
+        step_inds = np.array([np.where(udvs_inds == step)[0] for step in steps]).flatten()
+        if step_inds.dtype != np.int:
+            # dtype = Object
+            warn('step indices looked odd. Trying to fix..', UserWarning)
+            # Every alternate element in the array is empty.
+            temp = [item for item in step_inds if len(item) > 0]
+            step_inds = np.array(temp)
+            step_inds = step_inds.flatten()
         """selected_UDVS_steps = UDVS[ref]
         selected_UDVS_steps = selected_UDVS_steps[np.isfinite(selected_UDVS_steps)]"""
 
@@ -1039,7 +1047,11 @@ def createSpecVals(udvs_mat, spec_inds, bin_freqs, bin_wfm_type, parm_dict,
                              ''.format(iSpec_var))
 
         if len(iSpec_var) < 1:
-            raise ValueError('Invalid UDVS inputs. No variables were varied')
+            warn('No variables were varied in UDVS table! Using UDVS step as '
+                 'the only variable', UserWarning)
+            return np.asarray(1, np.int), \
+                   np.expand_dims(np.arange(UDVS.shape[0], dtype=np.int), 1)
+
 
         iSpec_var = np.asarray(iSpec_var, np.int)
         ds_spec_val_mat = UDVS[:, iSpec_var]
