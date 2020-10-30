@@ -648,11 +648,12 @@ def generatePlotGroups(h5_main, mean_resp, folder_path, basename, max_resp=[], m
         udvs_inds = UDVS_inds[()]
         step_inds = np.array([np.where(udvs_inds == step)[0] for step in steps]).flatten()
         if step_inds.dtype != np.int:
+            # dtype = Object
             warn('step indices looked odd. Trying to fix..', UserWarning)
+            # Every alternate element in the array is empty.
             temp = [item for item in step_inds if len(item) > 0]
             step_inds = np.array(temp)
             step_inds = step_inds.flatten()
-            print(step_inds.shape, step_inds.dtype)
         """selected_UDVS_steps = UDVS[ref]
         selected_UDVS_steps = selected_UDVS_steps[np.isfinite(selected_UDVS_steps)]"""
 
