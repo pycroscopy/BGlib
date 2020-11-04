@@ -1185,7 +1185,8 @@ class BEodfTranslator(Translator):
         # band_combination_order = assembly_parm_vec[1]  # 0 parallel 1 series
 
         if 'SS_parm_vec' not in matread.keys():
-            # BE-Line dataset
+            if verbose:
+                print('\t\tBE-Line dataset')
             return parm_dict
 
         if assembly_parm_vec[2] == 0:
@@ -1222,9 +1223,10 @@ class BEodfTranslator(Translator):
         parm_dict['FORC_V_low1_[V]'] = -1
         parm_dict['FORC_V_low2_[V]'] = -10
 
-        if VS_parms[0] in [0, 8, 9]:
+        if VS_parms[0] in [0, 8, 9, 11]:
             if verbose:
-                print('\t\tDC modulation or current mode based on VS parms[0]')
+                print('\t\tDC modulation or current mode based on VS_parms[0]:'
+                      ' {}'.format(VS_parms[0]))
             parm_dict['VS_mode'] = 'DC modulation mode'
             if VS_parms[0] == 9:
                 if verbose:
@@ -1236,7 +1238,7 @@ class BEodfTranslator(Translator):
 
         elif VS_parms[0] in [1, 6, 7]:
             if verbose:
-                print('\t\tFORC, based on VS parms[0]')
+                print('\t\tFORC, based on VS_parms[0]: {}'.format(VS_parms[0]))
             # Could not tell difference between mode = 1 or 6
             # mode 7 = multiple FORC cycles
             parm_dict['VS_mode'] = 'DC modulation mode'
@@ -1274,7 +1276,8 @@ class BEodfTranslator(Translator):
 
         elif VS_parms[0] in [2, 3, 4]:
             if verbose:
-                print('\t\tAC Spectroscopy with time reversal, based on VS parms')
+                print('\t\tAC Spectroscopy with time reversal, based on '
+                      'VS_parms[0]: {}'.format(VS_parms[0]))
             if VS_parms[0] == 3:
                 # These numbers seemed to match with the v_dc vector
                 parm_dict['VS_number_of_cycles'] = int(VS_parms[2]) * 2
@@ -1292,6 +1295,8 @@ class BEodfTranslator(Translator):
             # this is not correct. Fix manually when it comes to UDVS generation?
         else:
             # Did not see any examples of this...
+            warn('Unknown VS mode: {}. Assuming user defined custom voltage '
+                 'spectroscopy'.format(VS_parms[0]))
             parm_dict['VS_mode'] = 'Custom'
 
         # Assigning the phase and fraction for bi-polar triangular waveforms
@@ -1443,7 +1448,6 @@ class BEodfTranslator(Translator):
                     ''.format(parm_dict['VS_cycle_fraction']))
             VS_shift = parm_dict['VS_cycle_phase_shift']
         except KeyError as exp:
-            print()
             raise KeyError(exp)
 
         if VS_shift is not 0:
