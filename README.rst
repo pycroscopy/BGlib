@@ -2,7 +2,7 @@ BGlib
 =====
 
 .. image:: https://travis-ci.com/pycroscopy/sidpy.svg?branch=master
-    :target: https://travis-ci.com/pycroscopy/sidpy
+    :target: https://travis-ci.com/pycroscopy/BGlib
     :alt: TravisCI
 
 .. image:: https://img.shields.io/pypi/v/BGlib.svg
