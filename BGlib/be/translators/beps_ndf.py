@@ -202,7 +202,11 @@ class BEPSndfTranslator(Translator):
         s_pixels = np.array(parsers[0].get_spatial_pixels())
         self.pos_labels = ['Laser Spot', 'Z', 'Y', 'X']
         self.pos_labels = [self.pos_labels[i] for i in np.where(s_pixels > 1)[0]]
-        self.pos_mat = make_indices_matrix(s_pixels[np.argwhere(s_pixels > 1)].squeeze())
+        if len(self.pos_labels) == 0:
+            self.pos_labels = ['X']
+            self.pos_mat = make_indices_matrix(1)
+        else:
+            self.pos_mat = make_indices_matrix(s_pixels[np.argwhere(s_pixels > 1)].squeeze())
         self.pos_units = ['um' for _ in range(len(self.pos_labels))]
         #         self.pos_mat = np.int32(self.pos_mat)
 

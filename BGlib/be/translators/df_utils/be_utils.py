@@ -868,6 +868,14 @@ def trimUDVS(udvs_mat, udvs_labs, udvs_units, target_col_names):
         Truncated list of UDVS column units
     """
 
+    # Delete UDVS rows which are zeros in the very end:
+    # Look at the first column - UDVS steps
+    step = np.where(np.diff(udvs_mat[:, 0]) < 0)[0]
+    if len(step) > 0:
+        warn('Found zeros at the bottom of the UDVS table. Only keeping the '
+             'first {} rows'.format(step[0]))
+        udvs_mat = udvs_mat[:step[0] + 1]
+
     if len(target_col_names) == 0:
         return udvs_mat, udvs_labs, udvs_units
 
