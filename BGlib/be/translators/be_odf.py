@@ -540,6 +540,7 @@ class BEodfTranslator(Translator):
         h5_spec_inds = h5_chan_grp.create_dataset('Spectroscopic_Indices', data=spec_inds, dtype=INDICES_DTYPE)        
         h5_spec_vals = h5_chan_grp.create_dataset('Spectroscopic_Values', data=np.array(spec_vals), dtype=VALUES_DTYPE)
         for dset in [h5_spec_inds, h5_spec_vals]:
+            # TODO: This is completely unnecessary
             write_region_references(dset, spec_vals_slices, add_labels_attr=True, verbose=self._verbose)
             write_simple_attrs(dset, {'units': spec_vals_units}, verbose=False)
             write_simple_attrs(dset, spec_dim_dict)
@@ -569,7 +570,7 @@ class BEodfTranslator(Translator):
 
         if self._verbose:
             print('\tReading data from binary data files into raw HDF5')
-        self._read_data(UDVS_mat, parm_dict, path_dict, real_size, isBEPS,
+        self._read_data(parm_dict, path_dict, real_size, isBEPS,
                         add_pix)
 
         if self._verbose:
@@ -594,16 +595,13 @@ class BEodfTranslator(Translator):
 
         return h5_path
 
-    def _read_data(self, UDVS_mat, parm_dict, path_dict, real_size, isBEPS,
-                   add_pix):
+    def _read_data(self, parm_dict, path_dict, real_size, isBEPS, add_pix):
         """
         Checks if the data is BEPS or BELine and calls the correct function to read the data from
         file
 
         Parameters
         ----------
-        UDVS_mat : numpy.ndarray of float
-            UDVS table
         parm_dict : dict
             Experimental parameters
         path_dict : dict
@@ -648,7 +646,8 @@ class BEodfTranslator(Translator):
             if self._verbose:
                 print('\t\tReading all raw data for in-and-out-of-field OR '
                       'very large file one pixel at a time')
-            self._read_beps_data(path_dict, UDVS_mat.shape[0],
+            self._read_beps_data(path_dict,
+                                 parm_dict['num_udvs_steps'],
                                  parm_dict['VS_measure_in_field_loops'],
                                  add_pix)
         self.h5_raw.file.flush()
@@ -1492,13 +1491,20 @@ class BEodfTranslator(Translator):
             print('\t\tBuilding spectroscopy waveform')
         if VS_ACDC_cond == 0 or VS_ACDC_cond == 4:
             if self._verbose:
-                print('\t\t\tDC voltage spectroscopy or current mode')
+                print('\t\t\tDC voltage spectroscopy or current mode for:')
+                for key in ['VS_steps', 'VS_fraction', 'VS_shift', 'VS_cycles',
+                            'VS_amp', 'VS_offset']:
+                    print('\t'*4 + '{} = {}'.format(key, repr(eval(key))))
+
             vs_amp_vec = generate_bipolar_triangular_waveform(VS_steps,
                                                               cycle_frac=VS_fraction,
                                                               phase=VS_shift,
                                                               amplitude=VS_amp,
                                                               cycles=VS_cycles,
                                                               offset=VS_offset)
+            if self._verbose:
+                print('\t\t\tgenerated triangular waveform of size: {}'
+                      ''.format(len(vs_amp_vec)))
 
         elif VS_ACDC_cond == 2:
             if self._verbose:
@@ -1536,18 +1542,22 @@ class BEodfTranslator(Translator):
         if self._verbose:
             print('\t\tBuilding UDVS table')
         if VS_ACDC_cond is 0 or VS_ACDC_cond is 4:
-            if self._verbose:
-                print('\t\t\tDC voltage spectroscopy or current mode')
 
             if VS_ACDC_cond is 0:
+                if self._verbose:
+                    print('\t'*3 + 'DC Spectroscopy mode. Appending zeros')
                 UD_dc_vec = np.vstack((vs_amp_vec, np.zeros(len(vs_amp_vec))))
             if VS_ACDC_cond is 4:
+                if self._verbose:
+                    print('\t'*3 + 'Current mode. Tiling vs amp vec')
                 UD_dc_vec = np.vstack((vs_amp_vec, vs_amp_vec))
 
             UD_dc_vec = UD_dc_vec.transpose().reshape(UD_dc_vec.size)
             num_VS_steps = UD_dc_vec.size
 
-            UD_VS_table_label = ['step_num', 'dc_offset', 'ac_amp', 'wave_type', 'wave_mod', 'in-field', 'out-of-field']
+            UD_VS_table_label = ['step_num', 'dc_offset', 'ac_amp',
+                                 'wave_type', 'wave_mod', 'in-field',
+                                 'out-of-field']
             UD_VS_table_unit = ['', 'V', 'A', '', '', 'V', 'V']
             udvs_table = np.zeros(shape=(num_VS_steps, 7), dtype=np.float32)
 
@@ -1557,6 +1567,10 @@ class BEodfTranslator(Translator):
             BE_IF_switch = np.abs(np.imag(np.exp(1j * np.pi / 2 * np.arange(1, num_VS_steps + 1))))
             BE_OF_switch = np.abs(np.real(np.exp(1j * np.pi / 2 * np.arange(1, num_VS_steps + 1))))
 
+            """
+            Regardless of the field condition, both in and out of field rows
+            WILL exist in the table. 
+            """
             if VS_in_out_cond is 0:  # out of field only
                 udvs_table[:, 2] = BE_amp * BE_OF_switch
             elif VS_in_out_cond is 1:  # in field only
@@ -1571,7 +1585,7 @@ class BEodfTranslator(Translator):
             udvs_table[:, 6] = float('NaN') * np.ones(num_VS_steps)
 
             udvs_table[BE_IF_switch == 1, 5] = udvs_table[BE_IF_switch == 1, 1]
-            udvs_table[BE_OF_switch == 1, 6] = udvs_table[BE_IF_switch == 1, 1]
+            udvs_table[BE_OF_switch == 1, 6] = udvs_table[BE_OF_switch == 1, 1]
 
         elif VS_ACDC_cond is 2:
             if self._verbose:
