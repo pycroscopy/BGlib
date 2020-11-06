@@ -107,7 +107,8 @@ class RawBEDataset(USIDataset):
                     if average_spect:
                         spec_title = 'Mean' + titles[ind]
                     else:
-                        titles[ind] + 'at px ' + str(px)
+                        if expt_type != 'BELineData': titles[ind] + 'at px ' + str(px)
+                        else: titles[ind] + 'at row ' + str(px)
                     ax.set_title(spec_title)
             elif method == 'real':
                 titles = ['Real', 'Imaginary']
@@ -116,7 +117,9 @@ class RawBEDataset(USIDataset):
                     if average_spect:
                         spec_title = 'Mean' + titles[ind]
                     else:
-                        titles[ind] + 'at px ' + str(px)
+                        if expt_type != 'BELineData': titles[ind] + 'at px ' + str(px)
+                        else: titles[ind] + 'at row ' + str(px)
+
                     ax.set_title(spec_title)
         fig.tight_layout()
         return fig, data_spec
