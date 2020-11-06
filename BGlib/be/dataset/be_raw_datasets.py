@@ -19,7 +19,7 @@ import h5py
 #RawBELINEDataset
 #RawBERelaxDataset
 
-
+#This is the MAIN parent class for RawBEDatasets.
 class RawBEDataset(USIDataset):
 
     """
@@ -42,11 +42,12 @@ class RawBEDataset(USIDataset):
         self.dataset_type = 'RawBEDataset'
         self.parm_dict = list(self.file['/Measurement_000'].attrs)
 
+#----From here, these are the child classes, each for specific modes----#
 
 class RawBEPSDataset(RawBEDataset):
 
     def __init__(self, h5_dataset):
-        super(RawBEDataset, self).__init__(h5_ref=h5_dataset)
+        super(RawBEPSDataset, self).__init__(h5_ref=h5_dataset)
         # Prepare the datasets
         self.dataset_type = 'RawBEDataset'
 
@@ -398,11 +399,10 @@ class RawBEPSDataset(RawBEDataset):
 
         return SHOBEDataset(h5_sho_fit)
 
-
 class RawBELINEDataset(RawBEDataset):
 
     def __init__(self, h5_dataset):
-        super(RawBEDataset, self).__init__(h5_ref=h5_dataset)
+        super(RawBELINEDataset, self).__init__(h5_ref=h5_dataset)
         # Prepare the datasets
         self.dataset_type = 'RawBELINEDataset'
 
@@ -750,3 +750,35 @@ class RawBELINEDataset(RawBEDataset):
         h5_sho_fit = sho_fitter.do_fit(override=sho_override)
 
         return h5_sho_fit #SHOBELINEDataset(h5_sho_fit)
+
+class RawcKPFMDataset(RawBEDataset):
+    """
+
+    Extension of the RawBEDataset object to allow for cKPFM datasets
+    This includes various visualization and analaysis routines
+
+    Pass the raw_data h5 dataset to make this into a cKPFMRawDataset
+
+    high_voltage_amp: (int) (default = 1) (multiplication factor in case voltage amplifier was used).
+
+    """
+
+    def __init__(self, h5_dataset, high_voltage_amp=1):
+        super(RawcKPFMDataset, self).__init__(h5_ref=h5_dataset)
+        # Prepare the datasets
+        self.dataset_type = 'RawcKPFMDataset'
+
+        # Prepare the datasets
+        self._dataset_type = 'cKPFM-USIDataset'
+        self.num_write_steps = self._parm_dict['VS_num_DC_write_steps']
+        self.num_read_steps = self._parm_dict['VS_num_read_steps']
+        self.num_fields = 2
+        self.high_voltage_amp = high_voltage_amp
+
+        return
+
+    def plot_spectrogram(self, static = False):
+        print('here we can plot out stuff')
+        # TODO: add a visualization routine for raw cKPFM datasets here
+        # This would basically be similar to the existing RawBEDataset visualizer,
+        # except that it would also plot the cKPFM waveform
