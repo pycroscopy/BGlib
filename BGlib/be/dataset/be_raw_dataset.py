@@ -56,7 +56,7 @@ class RawBEDataset(USIDataset):
         else:
             average_spect = True
 
-        expt_type = get_attr(self.File, 'data_type')
+        expt_type = get_attr(self.file, 'data_type')
 
         #Get the data
         freq_index = self.spec_dim_labels.index('Frequency')
