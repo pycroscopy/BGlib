@@ -46,7 +46,7 @@ class RawBEDataset(USIDataset):
 class RawBEPSDataset(RawBEDataset):
 
     def __init__(self, h5_dataset):
-        super(RawBEPSDataset, self).__init__(h5_ref=h5_dataset)
+        super(RawBEPSDataset, self).__init__(h5_dataset)
         # Prepare the datasets
         self.dataset_type = 'RawBEDataset'
 
@@ -401,7 +401,7 @@ class RawBEPSDataset(RawBEDataset):
 class RawBELINEDataset(RawBEDataset):
 
     def __init__(self, h5_dataset):
-        super(RawBELINEDataset, self).__init__(h5_ref=h5_dataset)
+        super(RawBELINEDataset, self).__init__(h5_dataset)
         # Prepare the datasets
         self.dataset_type = 'RawBELINEDataset'
 
@@ -763,7 +763,7 @@ class RawcKPFMDataset(RawBEDataset):
     """
 
     def __init__(self, h5_dataset, high_voltage_amp=1):
-        super(RawcKPFMDataset, self).__init__(h5_ref=h5_dataset)
+        super(RawcKPFMDataset, self).__init__(h5_dataset)
         # Prepare the datasets
         self.dataset_type = 'RawcKPFMDataset'
 
