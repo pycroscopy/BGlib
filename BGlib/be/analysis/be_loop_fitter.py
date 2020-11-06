@@ -182,84 +182,84 @@ class BELoopFitter(Fitter):
                                       'Excitation experiment type: {}'
                                       ''.format(data_type))
 
-    # def _create_projection_datasets(self):
-    #     """
-    #     Creates the Loop projection and metrics HDF5 dataset & results group
-    #     """
-    #
-    #     # Which row in the spec datasets is DC offset?
-    #     _fit_spec_index = self.h5_main.spec_dim_labels.index(
-    #         self._fit_dim_name)
-    #
-    #     # TODO: Unkown usage of variable. Waste either way
-    #     # self._fit_offset_index = 1 + _fit_spec_index
-    #
-    #     # Calculate the number of loops per position
-    #     cycle_start_inds = np.argwhere(
-    #         self.h5_main.h5_spec_inds[_fit_spec_index, :] == 0).flatten()
-    #     tot_cycles = cycle_start_inds.size
-    #     if self.verbose and self.mpi_rank == 0:
-    #         print('Found {} cycles starting at indices: {}'.format(tot_cycles,
-    #                                                                cycle_start_inds))
-    #
-    #     # Make the results group
-    #     self.h5_results_grp = create_results_group(self.h5_main,
-    #                                                self.process_name,
-    #                                                h5_parent_group=self._h5_target_group)
-    #
-    #     write_simple_attrs(self.h5_results_grp, self.parms_dict)
-    #
-    #     # If writing to a new HDF5 file:
-    #     # Add back the data_type attribute - still being used in the visualizer
-    #     if self.h5_results_grp.file != self.h5_main.file:
-    #         write_simple_attrs(self.h5_results_grp.file,
-    #                            {'data_type': get_attr(self.h5_main.file,
-    #                                                   'data_type')})
-    #
-    #     # Write datasets
-    #     self.h5_projected_loops = create_empty_dataset(self.h5_main,
-    #                                                    np.float32,
-    #                                                    'Projected_Loops',
-    #                                                    h5_group=self.h5_results_grp)
-    #
-    #     h5_loop_met_spec_inds, h5_loop_met_spec_vals = write_reduced_anc_dsets(
-    #         self.h5_results_grp, self.h5_main.h5_spec_inds,
-    #         self.h5_main.h5_spec_vals, self._fit_dim_name,
-    #         basename='Loop_Metrics', verbose=False)
-    #
-    #     self.h5_loop_metrics = write_main_dataset(self.h5_results_grp,
-    #                                               (self.h5_main.shape[0], tot_cycles), 'Loop_Metrics',
-    #                                               'Metrics', 'compound', None,
-    #                                               None, dtype=loop_metrics32,
-    #                                               h5_pos_inds=self.h5_main.h5_pos_inds,
-    #                                               h5_pos_vals=self.h5_main.h5_pos_vals,
-    #                                               h5_spec_inds=h5_loop_met_spec_inds,
-    #                                               h5_spec_vals=h5_loop_met_spec_vals)
-    #
-    #     # Copy region reference:
-    #     # copy_region_refs(self.h5_main, self.h5_projected_loops)
-    #     # copy_region_refs(self.h5_main, self.h5_loop_metrics)
-    #
-    #     self.h5_main.file.flush()
-    #     self._met_spec_inds = self.h5_loop_metrics.h5_spec_inds
-    #
-    #     if self.verbose and self.mpi_rank == 0:
-    #         print('Finished creating Guess dataset')
+    def _create_projection_datasets(self):
+        """
+        Creates the Loop projection and metrics HDF5 dataset & results group
+        """
 
-    # def _create_guess_datasets(self):
-    #     """
-    #     Creates the HDF5 Guess dataset
-    #     """
-    #     self._create_projection_datasets()
-    #
-    #     self._h5_guess = create_empty_dataset(self.h5_loop_metrics, loop_fit32,
-    #                                          'Guess')
-    #
-    #     self._h5_guess = USIDataset(self._h5_guess)
-    #
-    #     write_simple_attrs(self.h5_results_grp, self.parms_dict)
-    #
-    #     self.h5_main.file.flush()
+        # Which row in the spec datasets is DC offset?
+        _fit_spec_index = self.h5_main.spec_dim_labels.index(
+            self._fit_dim_name)
+
+        # TODO: Unkown usage of variable. Waste either way
+        # self._fit_offset_index = 1 + _fit_spec_index
+
+        # Calculate the number of loops per position
+        cycle_start_inds = np.argwhere(
+            self.h5_main.h5_spec_inds[_fit_spec_index, :] == 0).flatten()
+        tot_cycles = cycle_start_inds.size
+        if self.verbose and self.mpi_rank == 0:
+            print('Found {} cycles starting at indices: {}'.format(tot_cycles,
+                                                                   cycle_start_inds))
+
+        # Make the results group
+        self.h5_results_grp = create_results_group(self.h5_main,
+                                                   self.process_name,
+                                                   h5_parent_group=self._h5_target_group)
+
+        write_simple_attrs(self.h5_results_grp, self.parms_dict)
+
+        # If writing to a new HDF5 file:
+        # Add back the data_type attribute - still being used in the visualizer
+        if self.h5_results_grp.file != self.h5_main.file:
+            write_simple_attrs(self.h5_results_grp.file,
+                               {'data_type': get_attr(self.h5_main.file,
+                                                      'data_type')})
+
+        # Write datasets
+        self.h5_projected_loops = create_empty_dataset(self.h5_main,
+                                                       np.float32,
+                                                       'Projected_Loops',
+                                                       h5_group=self.h5_results_grp)
+
+        h5_loop_met_spec_inds, h5_loop_met_spec_vals = write_reduced_anc_dsets(
+            self.h5_results_grp, self.h5_main.h5_spec_inds,
+            self.h5_main.h5_spec_vals, self._fit_dim_name,
+            basename='Loop_Metrics', verbose=False)
+
+        self.h5_loop_metrics = write_main_dataset(self.h5_results_grp,
+                                                  (self.h5_main.shape[0], tot_cycles), 'Loop_Metrics',
+                                                  'Metrics', 'compound', None,
+                                                  None, dtype=loop_metrics32,
+                                                  h5_pos_inds=self.h5_main.h5_pos_inds,
+                                                  h5_pos_vals=self.h5_main.h5_pos_vals,
+                                                  h5_spec_inds=h5_loop_met_spec_inds,
+                                                  h5_spec_vals=h5_loop_met_spec_vals)
+
+        # Copy region reference:
+        # copy_region_refs(self.h5_main, self.h5_projected_loops)
+        # copy_region_refs(self.h5_main, self.h5_loop_metrics)
+
+        self.h5_main.file.flush()
+        self._met_spec_inds = self.h5_loop_metrics.h5_spec_inds
+
+        if self.verbose and self.mpi_rank == 0:
+            print('Finished creating Guess dataset')
+
+    def _create_guess_datasets(self):
+        """
+        Creates the HDF5 Guess dataset
+        """
+        self._create_projection_datasets()
+
+        self._h5_guess = create_empty_dataset(self.h5_loop_metrics, loop_fit32,
+                                             'Guess')
+
+        self._h5_guess = USIDataset(self._h5_guess)
+
+        write_simple_attrs(self.h5_results_grp, self.parms_dict)
+
+        self.h5_main.file.flush()
 
     def _create_fit_datasets(self):
         """
@@ -648,29 +648,11 @@ class BELoopFitter(Fitter):
     #     PR_OF2 = PR_mat[:, :, 129::2]  # off field
     #     PR_IF2 = PR_mat[:, :, 128::2]  # on field
 
-    def fit_loops(self,dc_vec, PR_mat,method='Neighbor',NN=1,nclust = []):
-        """
-        Fits loops using default nearest neighbor method.
-
-        dc_vec: vector of DC-biases
-        PR_mat: matrix of data responses
-        method: default nearest neighbor- Neighbor, can be changed to Random or K-Means
-        NN: number of nearest neighbors to consider, default 1.  Only needed for Neighbors method
-        nclust: number of clusters to use for K-Means, default of data size/100
-        """
-
-        # Will need to vectorize double for loop to make faster, but it works and doesn't take too long for 50x50 dataset
-
+    def neighbor_fit(self,dc_vec, PR_mat,NN=1):
         from scipy.optimize import curve_fit
         from sklearn.metrics import r2_score
         from tqdm import trange
         from copy import deepcopy
-        from sklearn.cluster import KMeans
-
-        if method not in ['Random', 'Neighbor', 'K-Means']:
-            print(
-                'Please use one of the following methods: "Neighbor", "K-Means", or "Random".')
-            return
 
         cmap = plt.cm.plasma_r
         scale = (0, 1)
@@ -702,70 +684,26 @@ class BELoopFitter(Fitter):
         if dum == 1:
             all_mean = np.roll(all_mean, -max_x)
 
-        if method == 'Neighbor' or method == 'K-Means':
-            for kk in range(50):
-                p0 = np.random.normal(0.1, 5, 9)
-                p0_vals.append(p0)
-                try:
-                    vals_min, pcov = curve_fit(loop_fit_function, xdata, all_mean, p0=p0, maxfev=10000)
-                except:
-                    continue
-                opt_vals.append(vals_min)
-                fitted_loop = loop_fit_function(xdata, *vals_min)
-                yres = all_mean - fitted_loop
-                res.append(yres @ yres)
+        for kk in range(50):
+            p0 = np.random.normal(0.1, 5, 9)
+            p0_vals.append(p0)
+            try:
+                vals_min, pcov = curve_fit(loop_fit_function, xdata, all_mean, p0=p0, maxfev=10000)
+            except:
+                continue
+            opt_vals.append(vals_min)
+            fitted_loop = loop_fit_function(xdata, *vals_min)
+            yres = all_mean - fitted_loop
+            res.append(yres @ yres)
 
-            popt = opt_vals[np.argmin(res)]
-            popt_mean = deepcopy(popt)
-            p0_mat = [popt] * PR_mat.shape[0] * PR_mat.shape[1]
-            plt.figure()
-            plt.plot(xdata, all_mean, 'ko')
-            fitted_loop = loop_fit_function(xdata, *popt)
-            plt.plot(xdata, fitted_loop, 'k')
-            print('Done with average fit')
-
-        if method == 'K-Means':  # ---> using average fit for start point for kmeans average fits
-            size = PR_mat.shape[0] * PR_mat.shape[1]
-            if nclust is empty:
-                n_clusters = int(size / 50)
-            else:
-                n_clusters = nclust
-            print('Using ' + str(n_clusters) + ' clusters')
-            PR_mat_flat = PR_mat.reshape(size, int(PR_mat.shape[2]))
-            kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit(PR_mat_flat)
-            labels = kmeans.labels_
-            p0_clusters = []
-            cluster_loops = []
-            for pp in trange(n_clusters):
-                opt_vals = []
-                res = []
-                clust = PR_mat_flat[labels == pp]
-                PR_mean = np.mean(clust, axis=0)
-                if dum == 1:
-                    PR_mean = np.roll(PR_mean, -max_x)
-                cluster_loops.append(PR_mean)
-                p0 = p0_mat[0]
-                try:
-                    popt, pcov = curve_fit(loop_fit_function, xdata, PR_mean, p0=p0, maxfev=10000)
-                except:
-                    kk = 0
-                    p0 = np.random.normal(0.1, 5, 9)
-                    while kk < 20:
-                        try:
-                            vals_min, pcov = curve_fit(loop_fit_function, xdata, all_mean, p0=p0, maxfev=10000)
-                        except:
-                            continue
-                        kk += 1
-                        opt_vals.append(vals_min)
-                        fitted_loop = loop_fit_function(xdata, *vals_min)
-                        yres = PR_mean - fitted_loop
-                        res.append(yres @ yres)
-                        popt = opt_vals[np.argmin(res)]
-                p0_clusters.append(popt)
-
-        # -----------------
-        # Start loop for fitting each pixel
-        # -----------------
+        popt = opt_vals[np.argmin(res)]
+        popt_mean = deepcopy(popt)
+        p0_mat = [popt] * PR_mat.shape[0] * PR_mat.shape[1]
+        plt.figure()
+        plt.plot(xdata, all_mean, 'ko')
+        fitted_loop = loop_fit_function(xdata, *popt)
+        plt.plot(xdata, fitted_loop, 'k')
+        print('Done with average fit')
         for ii in trange(PR_mat.shape[0]):
             xind = ii
             for jj in range(PR_mat.shape[1]):
@@ -777,72 +715,26 @@ class BELoopFitter(Fitter):
                 else:
                     ydata = ydata0
 
-                # -----------------
-                # SET UP METHOD FOR INITIAL VALUES
-                # -----------------
-
-                # ----------------- Random Guess
-
-                if method == 'Random':  # Random guesses of parameter values (may change initial values to random values within bounds)
-                    opt_vals = []
-                    res = []
-                    p0_vals = []
-                    kk = 0
-                    while kk < 2:
-                        p0 = np.random.normal(0.1, 5, 9)
-                        p0_vals.append(p0)
-                        try:
-                            vals_min, pcov = curve_fit(loop_fit_function, xdata, ydata, p0=p0, maxfev=10000)
-                        except:
-                            continue
-                        kk += 1
-                        opt_vals.append(vals_min)
-                        fitted_loop = loop_fit_function(xdata, *vals_min)
-                        yres = ydata - fitted_loop
-                        res.append(yres @ yres)
-                    popt = opt_vals[np.argmin(res)]
-                    p0_mat[count] = popt
-
-                # ----------------- Neighbor informs guess
-                if method == 'Neighbor':
-                    xs = [ii + k for k in range(-NN, NN + 1)]
-                    ys = [jj + k for k in range(-NN, NN + 1)]
-                    nbrs = [(n, m) for n in xs for m in ys]
-                    cond = [all(x >= 0 for x in list(y)) for y in nbrs]
-                    nbrs = [d for (d, remove) in zip(nbrs, cond) if remove]
-                    cond2 = [all(x < ref_counts.shape[0] for x in list(y)) for y in
-                             nbrs]  # assumes PR_mat is square....
-                    nbrs = [d for (d, remove) in zip(nbrs, cond2) if remove]
-                    NN_indx = [ref_counts[v] for v in nbrs]
-                    prior_coefs = [p0_mat[k] for k in NN_indx if len(p0_mat[k]) != 0]
-                    if prior_coefs == []:
-                        p0 = popt
-                    else:
-                        p0 = np.mean(prior_coefs, axis=0)
-                    p0_refs[count] = p0
-                    try:
-                        popt, pcov = curve_fit(loop_fit_function, xdata, ydata, p0=p0, maxfev=10000, bounds=bnds)
-                    except:
-                        continue
-                    p0_mat[count] = popt  # saves fitted coefficients for the index
-                # ----------------- K-Means
-                if method == 'K-Means':
-                    lab = labels[count]
-                    p0 = p0_clusters[lab]
-                    try:
-                        popt, pcov = curve_fit(loop_fit_function, xdata, ydata, p0=p0, maxfev=10000)
-                    except:
-                        p0 = popt_mean
-                        try:
-                            popt, pcov = curve_fit(loop_fit_function, xdata, ydata, p0=p0, maxfev=10000)
-                        except:
-                            continue
-                    p0_refs[count] = p0
-                    p0_mat[count] = popt  # saves fitted coefficients for the index
-
-                # -----------------
-                # ----------------- Common for all methods ---------------------
-                # -----------------
+                xs = [ii + k for k in range(-NN, NN + 1)]
+                ys = [jj + k for k in range(-NN, NN + 1)]
+                nbrs = [(n, m) for n in xs for m in ys]
+                cond = [all(x >= 0 for x in list(y)) for y in nbrs]
+                nbrs = [d for (d, remove) in zip(nbrs, cond) if remove]
+                cond2 = [all(x < ref_counts.shape[0] for x in list(y)) for y in
+                         nbrs]  # assumes PR_mat is square....
+                nbrs = [d for (d, remove) in zip(nbrs, cond2) if remove]
+                NN_indx = [ref_counts[v] for v in nbrs]
+                prior_coefs = [p0_mat[k] for k in NN_indx if len(p0_mat[k]) != 0]
+                if prior_coefs == []:
+                    p0 = popt
+                else:
+                    p0 = np.mean(prior_coefs, axis=0)
+                p0_refs[count] = p0
+                try:
+                    popt, pcov = curve_fit(loop_fit_function, xdata, ydata, p0=p0, maxfev=10000, bounds=bnds)
+                except:
+                    continue
+                p0_mat[count] = popt  # saves fitted coefficients for the index
 
                 fitted_loop = loop_fit_function(xdata, *p0_mat[count])
                 fitted_loops_mat[count] = fitted_loop
@@ -861,6 +753,251 @@ class BELoopFitter(Fitter):
         cbar = plt.colorbar(scbar, cax=cbaxs)
         cbar.ax.set_ylabel('$R^2$', rotation=270, labelpad=20)
 
+        return fig, ax, p0_refs, p0_mat, SumSq, fitted_loops_mat
+
+
+    def kmeans_fit(self,dc_vec, PR_mat):
+        from scipy.optimize import curve_fit
+        from sklearn.metrics import r2_score
+        from tqdm import trange
+        from copy import deepcopy
+        from sklearn.cluster import KMeans
+
+        cmap = plt.cm.plasma_r
+        scale = (0, 1)
+        fig, ax = plt.subplots(figsize=(8, 8))
+        cbaxs = fig.add_axes([0.92, 0.125, 0.02, 0.755])
+        p0_refs = [[]] * PR_mat.shape[0] * PR_mat.shape[1]
+        all_mean = np.mean(np.mean(PR_mat, axis=0), axis=0)
+
+        bnds = (-100, 100)
+        p0_mat = [[]] * PR_mat.shape[0] * PR_mat.shape[1]  # empty array to store fits from neighboring pixels
+        fitted_loops_mat = [[]] * PR_mat.shape[0] * PR_mat.shape[1]
+        SumSq = [[]] * PR_mat.shape[0] * PR_mat.shape[1]
+        ref_counts = np.arange(PR_mat.shape[0] * PR_mat.shape[1]).reshape(
+            (PR_mat.shape[0], PR_mat.shape[1]))  # reference for finding neighboring pixels
+        count = -1
+        # SET UP X DATA
+        xdata0 = dc_vec
+        max_x = np.where(xdata0 == np.max(xdata0))[0]
+        if max_x != 0 or max_x != len(xdata0):
+            xdata = np.roll(xdata0, -max_x)  # assumes voltages are a symmetric triangle wave
+            dum = 1
+        else:
+            xdata = xdata0  # just in case voltages are already rolled
+            dum = 0
+
+        p0_vals = []
+        opt_vals = []
+        res = []
+        if dum == 1:
+            all_mean = np.roll(all_mean, -max_x)
+
+        for kk in range(50):
+            p0 = np.random.normal(0.1, 5, 9)
+            p0_vals.append(p0)
+            try:
+                vals_min, pcov = curve_fit(loop_fit_function, xdata, all_mean, p0=p0, maxfev=10000)
+            except:
+                continue
+            opt_vals.append(vals_min)
+            fitted_loop = loop_fit_function(xdata, *vals_min)
+            yres = all_mean - fitted_loop
+            res.append(yres @ yres)
+        popt = opt_vals[np.argmin(res)]
+        popt_mean = deepcopy(popt)
+        p0_mat = [popt] * PR_mat.shape[0] * PR_mat.shape[1]
+        plt.figure()
+        plt.plot(xdata, all_mean, 'ko')
+        fitted_loop = loop_fit_function(xdata, *popt)
+        plt.plot(xdata, fitted_loop, 'k')
+        print('Done with average fit')
+
+        size = PR_mat.shape[0] * PR_mat.shape[1]
+        if nclust is empty:
+            n_clusters = int(size / 50)
+        else:
+            n_clusters = nclust
+        print('Using ' + str(n_clusters) + ' clusters')
+        PR_mat_flat = PR_mat.reshape(size, int(PR_mat.shape[2]))
+        kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit(PR_mat_flat)
+        labels = kmeans.labels_
+        p0_clusters = []
+        cluster_loops = []
+        for pp in trange(n_clusters):
+            opt_vals = []
+            res = []
+            clust = PR_mat_flat[labels == pp]
+            PR_mean = np.mean(clust, axis=0)
+            if dum == 1:
+                PR_mean = np.roll(PR_mean, -max_x)
+            cluster_loops.append(PR_mean)
+            p0 = p0_mat[0]
+            try:
+                popt, pcov = curve_fit(loop_fit_function, xdata, PR_mean, p0=p0, maxfev=10000)
+            except:
+                kk = 0
+                p0 = np.random.normal(0.1, 5, 9)
+                while kk < 20:
+                    try:
+                        vals_min, pcov = curve_fit(loop_fit_function, xdata, all_mean, p0=p0, maxfev=10000)
+                    except:
+                        continue
+                    kk += 1
+                    opt_vals.append(vals_min)
+                    fitted_loop = loop_fit_function(xdata, *vals_min)
+                    yres = PR_mean - fitted_loop
+                    res.append(yres @ yres)
+                    popt = opt_vals[np.argmin(res)]
+            p0_clusters.append(popt)
+
+        for ii in trange(PR_mat.shape[0]):
+            xind = ii
+            for jj in range(PR_mat.shape[1]):
+                count += 1  # used to keep track of popt vals
+                yind = jj
+                ydata0 = PR_mat[xind, yind, :]
+                if dum == 1:
+                    ydata = np.roll(ydata0, -max_x)
+                else:
+                    ydata = ydata0
+
+                lab = labels[count]
+                p0 = p0_clusters[lab]
+                try:
+                    popt, pcov = curve_fit(loop_fit_function, xdata, ydata, p0=p0, maxfev=10000)
+                except:
+                    p0 = popt_mean
+                    try:
+                        popt, pcov = curve_fit(loop_fit_function, xdata, ydata, p0=p0, maxfev=10000)
+                    except:
+                        continue
+                p0_refs[count] = p0
+                p0_mat[count] = popt  # saves fitted coefficients for the index
+
+                fitted_loop = loop_fit_function(xdata, *p0_mat[count])
+                fitted_loops_mat[count] = fitted_loop
+                ss = r2_score(ydata, fitted_loop)
+                SumSq[count] = ss
+                sh = np.floor(1 + (2 ** 16 - 1) * ((ss) - scale[0]) / (scale[1] - scale[0]))
+                if sh < 1:
+                    sh = 1
+                if sh > 2 ** 16:
+                    sh = 2 ** 16
+
+                ax.plot(ii, jj, c=cmap(sh / (2 ** 16)), marker='s', markersize=7)
+
+
+        scbar = plt.cm.ScalarMappable(cmap=plt.cm.plasma_r, norm=plt.Normalize(vmin=scale[0], vmax=scale[1]))
+        scbar._A = []
+        cbar = plt.colorbar(scbar, cax=cbaxs)
+        cbar.ax.set_ylabel('$R^2$', rotation=270, labelpad=20)
+
+        return fig, ax, p0_refs, p0_mat, SumSq, fitted_loops_mat
+
+
+    def random_fit(self,dc_vec, PR_mat):
+        from scipy.optimize import curve_fit
+        from sklearn.metrics import r2_score
+        from tqdm import trange
+
+        cmap = plt.cm.plasma_r
+        scale = (0, 1)
+        fig, ax = plt.subplots(figsize=(8, 8))
+        cbaxs = fig.add_axes([0.92, 0.125, 0.02, 0.755])
+        p0_refs = [[]] * PR_mat.shape[0] * PR_mat.shape[1]
+
+        p0_mat = [[]] * PR_mat.shape[0] * PR_mat.shape[1]  # empty array to store fits from neighboring pixels
+        fitted_loops_mat = [[]] * PR_mat.shape[0] * PR_mat.shape[1]
+        SumSq = [[]] * PR_mat.shape[0] * PR_mat.shape[1]
+        ref_counts = np.arange(PR_mat.shape[0] * PR_mat.shape[1]).reshape(
+            (PR_mat.shape[0], PR_mat.shape[1]))  # reference for finding neighboring pixels
+        count = -1
+        # SET UP X DATA
+        xdata0 = dc_vec
+        max_x = np.where(xdata0 == np.max(xdata0))[0]
+        if max_x != 0 or max_x != len(xdata0):
+            xdata = np.roll(xdata0, -max_x)  # assumes voltages are a symmetric triangle wave
+            dum = 1
+        else:
+            xdata = xdata0  # just in case voltages are already rolled
+            dum = 0
+
+        for ii in trange(PR_mat.shape[0]):
+            xind = ii
+            for jj in range(PR_mat.shape[1]):
+                count += 1  # used to keep track of popt vals
+                yind = jj
+                ydata0 = PR_mat[xind, yind, :]
+                if dum == 1:
+                    ydata = np.roll(ydata0, -max_x)
+                else:
+                    ydata = ydata0
+
+                opt_vals = []
+                res = []
+                p0_vals = []
+                kk = 0
+                while kk < 2:
+                    p0 = np.random.normal(0.1, 5, 9)
+                    p0_vals.append(p0)
+                    try:
+                        vals_min, pcov = curve_fit(loop_fit_function, xdata, ydata, p0=p0, maxfev=10000)
+                    except:
+                        continue
+                    kk += 1
+                    opt_vals.append(vals_min)
+                    fitted_loop = loop_fit_function(xdata, *vals_min)
+                    yres = ydata - fitted_loop
+                    res.append(yres @ yres)
+                popt = opt_vals[np.argmin(res)]
+                p0_mat[count] = popt
+
+                fitted_loop = loop_fit_function(xdata, *p0_mat[count])
+                fitted_loops_mat[count] = fitted_loop
+                ss = r2_score(ydata, fitted_loop)
+                SumSq[count] = ss
+                sh = np.floor(1 + (2 ** 16 - 1) * ((ss) - scale[0]) / (scale[1] - scale[0]))
+                if sh < 1:
+                    sh = 1
+                if sh > 2 ** 16:
+                    sh = 2 ** 16
+
+                ax.plot(ii, jj, c=cmap(sh / (2 ** 16)), marker='s', markersize=7)
+
+        scbar = plt.cm.ScalarMappable(cmap=plt.cm.plasma_r, norm=plt.Normalize(vmin=scale[0], vmax=scale[1]))
+        scbar._A = []
+        cbar = plt.colorbar(scbar, cax=cbaxs)
+        cbar.ax.set_ylabel('$R^2$', rotation=270, labelpad=20)
+
+        return fig, ax, p0_refs, p0_mat, SumSq, fitted_loops_mat
+
+
+
+    def fit_loops(self,dc_vec, PR_mat, method='Neighbor',NN=1, nclust = []):
+        """
+        Fits loops using default nearest neighbor method.
+
+        dc_vec: vector of DC-biases
+        PR_mat: matrix of data responses
+        method: default nearest neighbor- Neighbor, can be changed to Random or K-Means
+        NN: number of nearest neighbors to consider, default 1.  Only needed for Neighbors method
+        nclust: number of clusters to use for K-Means, default of data size/100
+        """
+
+
+        if method not in ['Random', 'Neighbor', 'K-Means', 'Hierarchical']:
+            print(
+                'Please use one of the following methods: "Neighbor", "K-Means", "Hierarchical" or "Random".')
+            return
+        if method == 'Hierarchical':
+            'Do tree fitting'
+        if method == 'Neighbor':
+            fig, ax, p0_refs, p0_mat, SumSq, fitted_loops_mat = neighbor_fit(self,dc_vec, PR_mat,NN=NN)
+        if method == 'K-Means':
+            fig, ax, p0_refs, p0_mat, SumSq, fitted_loops_mat = kmeans_fit(self,dc_vec, PR_mat)
+        if method == 'Random':
+            fig, ax, p0_refs, p0_mat, SumSq, fitted_loops_mat = random_fit(self,dc_vec, PR_mat)
         return fig, ax, p0_refs, p0_mat, SumSq, fitted_loops_mat
 
 
