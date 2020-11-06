@@ -97,7 +97,10 @@ class RawBEDataset(USIDataset):
             for ind, ax in enumerate(axes.flat):
                 ax.imshow(data_spec[ind].T)
                 if average_spect: spec_title = 'Mean ' + titles[ind]
-                else: spec_title = titles[ind] + ' at px ' + str(px)
+                else:
+                    if expt_type != 'BELineData': spec_title = titles[ind] + ' at px ' + str(px)
+                    else: spec_title = titles[ind] + ' at row ' + str(px)
+
                 ax.set_title(spec_title)
         else:
             fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(8, 4))
