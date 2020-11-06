@@ -10,8 +10,10 @@ from sidpy.viz.plot_utils import plot_curves, plot_map_stack, get_cmap_object, p
     plot_complex_spectra
 from IPython.display import display
 from sidpy.viz.jupyter_utils import save_fig_filebox_button
+from sidpy.hdf.hdf_utils import get_attr
 import ipywidgets as widgets
 import h5py
+
 
 class RawBEDataset(USIDataset):
     """
@@ -41,6 +43,7 @@ class RawBEDataset(USIDataset):
         Parameters
         ----------
         px : Int, pixel value to be plotted. If None, an average spectrogram will be plotted.
+            For BELine datasets, px is the row number
 
         method: string: -'all': will plot real, imag, amp and phase of the spectrogram
                         - 'amp': will plot amplitude and phase
@@ -53,20 +56,34 @@ class RawBEDataset(USIDataset):
         else:
             average_spect = True
 
+        expt_type = get_attr(self.File, 'data_type')
+
         #Get the data
         freq_index = self.spec_dim_labels.index('Frequency')
         freq_len = self.spec_dim_sizes[freq_index]
 
         if not average_spect:
-            real_spec = np.real(self[px,:]).reshape(-1,freq_len)
-            imag_spec = np.imag(self[px, :]).reshape(-1,freq_len)
-            amp_spec = np.abs(self[px, :]).reshape(-1,freq_len)
-            phase_spec = np.angle(self[px, :]).reshape(-1,freq_len)
+            if expt_type!='BELineData':
+                real_spec = np.real(self[px,:]).reshape(-1,freq_len)
+                imag_spec = np.imag(self[px, :]).reshape(-1,freq_len)
+                amp_spec = np.abs(self[px, :]).reshape(-1,freq_len)
+                phase_spec = np.angle(self[px, :]).reshape(-1,freq_len)
+            else:
+                real_spec = np.real(self[px*self.pos_dim_sizes[0]:(px+1)*self.pos_dim_sizes[1],:])
+                imag_spec = np.imag(self[px*self.pos_dim_sizes[0]:(px+1)*self.pos_dim_sizes[1],:])
+                amp_spec = np.abs(self[px * self.pos_dim_sizes[0]:(px + 1) * self.pos_dim_sizes[1], :])
+                phase_spec = np.angle(self[px * self.pos_dim_sizes[0]:(px + 1) * self.pos_dim_sizes[1], :])
         else:
-            real_spec = np.real(self[:, :]).mean(axis=0).reshape(-1,freq_len)
-            imag_spec = np.imag(self[:, :]).mean(axis=0).reshape(-1,freq_len)
-            amp_spec = np.abs(self[:, :]).mean(axis=0).reshape(-1,freq_len)
-            phase_spec = np.angle(self[:, :]).mean(axis=0).reshape(-1,freq_len)
+            if expt_type != 'BELineData':
+                real_spec = np.real(self[:, :]).mean(axis=0).reshape(-1,freq_len)
+                imag_spec = np.imag(self[:, :]).mean(axis=0).reshape(-1,freq_len)
+                amp_spec = np.abs(self[:, :]).mean(axis=0).reshape(-1,freq_len)
+                phase_spec = np.angle(self[:, :]).mean(axis=0).reshape(-1,freq_len)
+            else:
+                real_spec = np.real(self[:, :]).mean(axis=0)
+                imag_spec = np.imag(self[:, :]).mean(axis=0)
+                amp_spec = np.abs(self[:, :]).mean(axis=0)
+                phase_spec = np.angle(self[:, :]).mean(axis=0)
 
         data_spec = [real_spec, imag_spec, amp_spec, phase_spec]
 

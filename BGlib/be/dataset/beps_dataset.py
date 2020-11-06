@@ -1,30 +1,37 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from pyUSID.hdf_utils import reshape_to_n_dims
 from .be_raw_dataset import RawBEDataset
 from .be_sho_dataset import SHOBEDataset
-from sidpy.viz.plot_utils.curve import cbar_for_line_plot
+from sidpy.hdf.hdf_utils import get_auxiliary_datasets, get_attr
+from pyUSID import USIDataset
+from pyUSID.io.hdf_utils import reshape_to_n_dims
+from sidpy.viz.plot_utils import plot_curves, plot_map_stack, get_cmap_object, plot_map, set_tick_font_size, \
+    plot_complex_spectra
+import os
+import numpy as np
+import matplotlib.pyplot as plt
+from warnings import warn
 
 class BEPSRawDataset(RawBEDataset):
     """
 
-    Extension of the RawBEDataset object to allow for cKPFM datasets
+    Extension of the RawBEDataset object to allow for BEPS datasets.
     This includes various visualization and analaysis routines
 
-    Pass the raw_data h5 dataset to make this into a cKPFMRawDataset
+    Pass the sho-fit h5 dataset to make this into a class BEPSRawDataset(RawBEDataset):
 
     high_voltage_amp: (int) (default = 1) (multiplication factor in case voltage amplifier was used).
 
     """
 
-    def __init__(self, usid_dataset, high_voltage_amp=1):
+    def __init__(self, sho_BEdataset, high_voltage_amp=1):
 
 
         super(BEPSRawDataset, self).__init__(h5_ref=usid_dataset)
 
         # Prepare the datasets
-        self._dataset_type = 'cKPFM-USIDataset'
+        self._dataset_type = 'BEPSRawDataset'
         self._parm_dict = self.file['/Measurement_000'].attrs
         self.num_write_steps = self._parm_dict['VS_num_DC_write_steps']
         self.num_read_steps = self._parm_dict['VS_num_read_steps']
