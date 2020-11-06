@@ -80,10 +80,11 @@ class RawBEDataset(USIDataset):
                 amp_spec = np.abs(self[:, :]).mean(axis=0).reshape(-1,freq_len)
                 phase_spec = np.angle(self[:, :]).mean(axis=0).reshape(-1,freq_len)
             else:
-                real_spec = np.real(self[:, :]).mean(axis=0)
-                imag_spec = np.imag(self[:, :]).mean(axis=0)
-                amp_spec = np.abs(self[:, :]).mean(axis=0)
-                phase_spec = np.angle(self[:, :]).mean(axis=0)
+                dset_ndim = self.get_ndim_form()
+                real_spec = np.real(dset_ndim[:]).mean(axis=0)
+                imag_spec = np.imag(dset_ndim[:]).mean(axis=0)
+                amp_spec = np.abs(dset_ndim[:]).mean(axis=0)
+                phase_spec = np.angle(dset_ndim[:]).mean(axis=0)
 
         data_spec = [real_spec, imag_spec, amp_spec, phase_spec]
 
