@@ -1,7 +1,6 @@
 from pyUSID import USIDataset
 from ..analysis import BESHOfitter
 from ..analysis import be_sho_fitter as bsho
-from .be_sho_dataset import SHOBEDataset
 import os
 import numpy as np
 import matplotlib.pyplot as plt
