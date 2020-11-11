@@ -15,8 +15,8 @@ from sidpy.sid import Translator
 from pyUSID.io.hdf_utils import link_as_main, copy_dataset, \
     write_main_dataset, create_indexed_group, create_results_group, \
     write_reduced_anc_dsets
-
 from sidpy.hdf.reg_ref import copy_all_region_refs , write_region_references
+
 from pyUSID.io.write_utils import Dimension, calc_chunks
 from pyUSID.io.image import read_image
 
