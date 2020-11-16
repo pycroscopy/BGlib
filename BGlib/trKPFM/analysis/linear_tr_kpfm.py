@@ -10,12 +10,12 @@ class trKPFM_L_Analyzer():
         scan_size: physical dimension of scan (ex: 80 um)
         dim: distance between electrodes in cm (for Efield calculations)
         """
-        self.source_h5_dataset = usid_dataset
-        self.dataset_type = 'trKPFM-USIDataset'
+        # self.source_h5_dataset = usid_dataset
+        # self.dataset_type = 'trKPFM-USIDataset'
         super(trKPFM_L_Analyzer, self).__init__(h5_main,'Linear_trKPFM')
 
     def add_scan_info(self,scan_rate,scan_size,dim):
-        self.h5_main = self.source_h5_dataset
+        # self.h5_main = self.source_h5_dataset
         self.scan_rate = scan_rate
         self.scan_size = scan_size
         self.dim = dim
@@ -36,6 +36,7 @@ class trKPFM_L_Analyzer():
                 cnttot = cnttot + 1  # counts the total number of voltage switches in the data set
                 if np.rint(self.volt[ii, 0]) != np.rint(self.volt[ii, -1]):  # checks to see if the voltage is changed in the middle fo the scan line
                     indx.append(ii + 1)
+                    vs.append(self.volt[ii+1,0])
                 else:
                     indx.append(ii)
                     vs.append(self.volt[ii, 0])
@@ -342,3 +343,59 @@ class trKPFM_L_Analyzer():
                 ax[1].text(self.t[k] + 10, txty, str(int(np.rint(self.vs[j]))) + ' V', horizontalalignment='left',
                            verticalalignment='top')
         fig.subplots_adjust(wspace=.3)
+
+    def calc_decay(self, jj, indx):
+        import numpy as np
+        from scipy.optimize import curve_fit
+
+        def exp_decay(x, a, b, k):
+            return a * np.exp(x * k) + b
+
+        ii = data.indx.index(indx)
+        if indx == self.indx[-1]:
+            y_array = self.pot[indx:-1, jj] - self.zeroavg[jj]
+        else:
+            y_array = self.pot[indx:self.indx[ii + 1] - 1, jj] - self.zeroavg[jj]
+
+        x_array = self.t[:len(y_array)]
+
+        if self.volt[self.indx[ii - 1], 0] > 0:
+            yint = np.min(y_array)
+        else:
+            yint = np.max(y_array)
+
+        popt, pcov = curve_fit(exp_decay, x_array, y_array, p0=[0.5, yint, -0.5])
+        return popt, pcov
+
+    def decay_analysis_d(self):
+        import numpy as np
+
+        t_c_mat = []
+        b_0_mat = []
+        a_0_mat = []
+
+        for v in range(len(self.indx)):
+            t_c = []
+            b_0 = []
+            a_0 = []
+            if np.rint(self.vs[v]) == 0:
+                continue
+
+            for ii in range(len(self.y)):
+                ind = self.indx[v]
+                try:
+                    popt, pcov = self.analyzer.calc_decay(self, ii, ind)  # data, distance, voltage start
+                    t_c.append(popt[2])
+                    b_0.append(popt[1])
+                    a_0.append(popt[0])
+                except:
+                    popt = np.nan
+                    pcov = np.nan
+                    t_c.append(popt)
+                    b_0.append(popt)
+                    a_0.append(popt)
+
+            t_c_mat.append(t_c)
+            b_0_mat.append(b_0)
+            a_0_mat.append(a_0)
+        return t_c_mat, b_0_mat, a_0_mat

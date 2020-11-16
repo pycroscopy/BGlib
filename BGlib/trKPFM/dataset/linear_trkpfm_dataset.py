@@ -17,7 +17,7 @@ class RawTRKPFM_L_Dataset():
         #Prepare the datasets
         self.dataset_type = 'RawTRKPFM_L_Dataset'
         # self.parm_dict = self.dset.file['/Measurement_000'].attrs
-        # self.analyzer = trKPFM_L_Analyzer(self)
+        self.analyzer = trKPFM_L_Analyzer
 
     def plot_raw_data(self):
         """
@@ -44,8 +44,10 @@ class RawTRKPFM_L_Dataset():
         ax[1,0].set_title('CPD')
         ax[1,1].imshow(self.volt,cmap='plasma')
         ax[1,1].set_title('Applied Voltage')
-        ax[1,2].plot(self.volt[:,int(self.ndim_form[1]/2)])
+        ax[1,2].plot(self.volt[:,int(self.ndim_form[1]/2)],label='d = '+str(self.ndim_form[1]/2))
         ax[1,2].set_ylabel('Voltage Profile')
+        ax[1,2].legend()
+        fig.subplots_adjust(wspace=0.05, hspace=0.3)
 
     def unpack_data(self):
 
