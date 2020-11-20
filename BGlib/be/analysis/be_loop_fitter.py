@@ -5,9 +5,8 @@ Harmonic Oscillator model data to a parametric model to describe hysteretic
 switching in ferroelectric materials
 
 Created on Thu Nov 20 11:48:53 2019
-Last Updated Fri Oct 23 2020
 
-@author: Suhas Somnath, Chris R. Smith, Rama K. Vasudevan, Nicole C. Creange
+@author: Suhas Somnath, Chris R. Smith, Rama K. Vasudevan
 
 """
 
@@ -48,7 +47,7 @@ crit32 = np.dtype({'names': ['AIC_loop', 'BIC_loop', 'AIC_line', 'BIC_line'],
                                np.float32]})
 
 __field_names = ['a_0', 'a_1', 'a_2', 'a_3', 'a_4', 'b_0', 'b_1', 'b_2', 'b_3',
-                 'R^2']
+                 'R2 Criterion']
 loop_fit32 = np.dtype({'names': __field_names,
                        'formats': [np.float32 for name in __field_names]})
 
@@ -165,7 +164,7 @@ class BELoopFitter(Fitter):
         if h5_main.dtype != sho32:
             raise TypeError('Provided dataset is not a SHO results dataset.')
 
-        if data_type == 'BEPSData':
+        if data_type.lower() == 'bepsdata':
             if vs_mode not in ['DC modulation mode', 'current mode']:
                 raise ValueError('Provided dataset has a mode: "' + vs_mode +
                                  '" is not a "DC modulation" or "current mode"'
@@ -269,7 +268,7 @@ class BELoopFitter(Fitter):
         if self._h5_guess is None:
             raise ValueError('Need to guess before fitting!')
 
-        self._h5_fit = create_empty_dataset(self._h5_guess, loop_fit32, 'Loop Fits')
+        self._h5_fit = create_empty_dataset(self._h5_guess, loop_fit32, 'Fit')
         self._h5_fit = USIDataset(self._h5_fit)
 
         write_simple_attrs(self.h5_results_grp, self.parms_dict)
@@ -335,7 +334,7 @@ class BELoopFitter(Fitter):
                 all_but_forc_rows.append(ind)
 
         if self.verbose and self.mpi_rank == 0:
-            print('All but FORC rows: {}'.format(all_but_forc_rows))
+            print('All but FORC spec rows: {}'.format(all_but_forc_rows))
 
         dc_mats = []
 
@@ -384,10 +383,18 @@ class BELoopFitter(Fitter):
                 raise ValueError('Unable to reshape data to N dimensions')
 
             if self.verbose and self.mpi_rank == 0:
-                print(this_forc_nd.shape)
+                print('After reshaping to N dimensions: shape: '
+                      '{}'.format(this_forc_nd.shape))
+                print('Will reorder to slow-to-fast as: '
+                      '{} and squeeze FORC out'.format(order_to_s2f))
 
             this_forc_nd_s2f = this_forc_nd.transpose(
                 order_to_s2f).squeeze()  # squeeze out FORC
+            # Need to account for niche case when number of positions = 1:
+            if self.h5_main.shape[0] == 1:
+                # Add back a singular dimension
+                this_forc_nd_s2f = this_forc_nd_s2f.reshape([1] + list(this_forc_nd_s2f.shape))
+
             dim_names_s2f = self._dim_labels_s2f.copy()
             if self._num_forcs > 0:
                 dim_names_s2f.remove(
@@ -578,17 +585,313 @@ class BELoopFitter(Fitter):
 
         return projected_loop, ancillary
 
-    def set_up_guess(self):
+    @staticmethod
+    def __compute_batches(data_mat_list, ref_vec_list, map_func, req_cores,
+                          verbose=False):
         """
-        Performs necessary book-keeping before fitting can be called.
+        Maps the provided function onto the sets of data and their
+        corresponding reference vector. This function is almost identical and
+        is based on pyUSID.processing.comp_utils.parallel_compute. Except,
+        this function allows the data and reference vectors to be specified
+        as a list of arrays as opposed to limiting to a single reference vector
+        as in the case of parallel_compute()
+
+        Parameters
+        ----------
+        data_mat_list : list
+            List of numpy.ndarray objects
+        ref_vec_list : list
+            List of numpy.ndarray objects
+        map_func : callable
+            Function that the data matrices will be mapped to
+        req_cores : uint
+            Number of CPU cores to use for the computation
+        verbose : bool, optional. Default = False
+            Whether or not to print logs for debugging
+
+        Returns
+        -------
+        list
+            List of values returned by map_func when applied to the provided
+            data
+        """
+        MPI = get_MPI()
+        if MPI is not None:
+            rank = MPI.COMM_WORLD.Get_rank()
+            cores = 1
+        else:
+            rank = 0
+            cores = req_cores
+
+        if verbose:
+            print(
+                'Rank {} starting computation on {} cores (requested {} '
+                'cores)'.format(rank, cores, req_cores))
+
+        if cores > 1:
+            values = []
+            for loops_2d, curr_vdc in zip(data_mat_list, ref_vec_list):
+                values += [joblib.delayed(map_func)(x, [curr_vdc])
+                           for x
+                           in loops_2d]
+            results = joblib.Parallel(n_jobs=cores)(values)
+
+            # Finished reading the entire data set
+            if verbose:
+                print('Rank {} finished parallel computation'.format(rank))
+
+        else:
+            if verbose:
+                print("Rank {} computing serially ...".format(rank))
+            # List comprehension vs map vs for loop?
+            # https://stackoverflow.com/questions/1247486/python-list-comprehension-vs-map
+            results = []
+            for loops_2d, curr_vdc in zip(data_mat_list, ref_vec_list):
+                results += [map_func(vector, curr_vdc) for vector in
+                            loops_2d]
+
+            if verbose:
+                print('Rank {} finished serial computation'.format(rank))
+
+        return results
+
+    def _unit_compute_guess(self):
+        """
+        Performs loop projection followed by clustering-based guess for
+        the self.data loaded into memory.
+
+        In the end self._results is a tuple containing the projected loops,
+        loop metrics, and the guess parameters ready to be written to HDF5
+        """
+        if self.verbose and self.mpi_rank == 0:
+            print("Rank {} at _unit_compute_guess".format(self.mpi_rank))
+
+        resp_2d_list, dc_vec_list = self.data
+
+        if self.verbose and self.mpi_rank == 0:
+            print('Unit computation found {} FORC datasets with {} '
+                  'corresponding DC vectors'.format(len(resp_2d_list),
+                                                    len(dc_vec_list)))
+            print('First dataset of shape: {}'.format(resp_2d_list[0].shape))
+
+        results = self.__compute_batches(resp_2d_list, dc_vec_list,
+                                         self._project_loop, self._cores,
+                                         verbose=self.verbose)
+
+        # Step 1: unzip the two components in results into separate arrays
+        if self.verbose and self.mpi_rank == 0:
+            print('Unzipping loop projection results')
+        loop_mets = np.zeros(shape=len(results), dtype=loop_metrics32)
+        proj_loops = np.zeros(shape=(len(results), self.data[0][0].shape[1]),
+                              dtype=np.float32)
+
+        if self.verbose and self.mpi_rank == 0:
+            print(
+                'Prepared empty arrays for loop metrics of shape: {} and '
+                'projected loops of shape: {}.'
+                ''.format(loop_mets.shape, proj_loops.shape))
+
+        for ind in range(len(results)):
+            proj_loops[ind] = results[ind][0]
+            loop_mets[ind] = results[ind][1]
+
+        # NOW do the guess:
+        proj_forc = proj_loops.reshape((len(dc_vec_list),
+                                        len(results) // len(dc_vec_list),
+                                        proj_loops.shape[-1]))
+
+        if self.verbose and self.mpi_rank == 0:
+            print('Reshaped projected loops from {} to: {}'.format(
+                proj_loops.shape, proj_forc.shape))
+
+        # Convert forc dimension to a list
+        if self.verbose and self.mpi_rank == 0:
+            print('Going to compute guesses now')
+
+        all_guesses = []
+
+        for proj_loops_this_forc, curr_vdc in zip(proj_forc, dc_vec_list):
+            # this works on batches and not individual loops
+            # Cannot be done in parallel
+            this_guesses = guess_loops_hierarchically(curr_vdc,
+                                                      proj_loops_this_forc)
+            all_guesses.append(this_guesses)
+
+        self._results = proj_loops, loop_mets, np.array(all_guesses)
+
+    def set_up_guess(self, h5_partial_guess=None):
+        """
+        Performs necessary book-keeping before do_guess can be called.
         Also remaps data reading, computation, writing functions to those
-        specific to Guess.
+        specific to Guess
+
+        Parameters
+        ----------
+        h5_partial_guess: h5py.Dataset or pyUSID.io.USIDataset, optional
+            HDF5 dataset containing partial Guess. Not implemented
         """
         self.h5_main = self.__h5_main_orig
         self.parms_dict = {'projection_method': 'pycroscopy BE loop model',
-                           'guess_method': "pycroscopy Nearest Neighbor"}
+                           'guess_method': "pycroscopy Cluster Tree"}
 
-        # self.compute = self.
+        # ask super to take care of the rest, which is a standardized operation
+        super(BELoopFitter, self).set_up_guess(h5_partial_guess=h5_partial_guess)
+
+        self._max_pos_per_read = self._max_raw_pos_per_read // 1.5
+
+        self._unit_computation = self._unit_compute_guess
+        self.compute = self.do_guess
+        self._write_results_chunk = self._write_guess_chunk
+
+    def set_up_fit(self, h5_partial_fit=None, h5_guess=None, ):
+        """
+        Performs necessary book-keeping before do_fit can be called.
+        Also remaps data reading, computation, writing functions to those
+        specific to Fit
+
+        Parameters
+        ----------
+        h5_partial_fit: h5py.Dataset or pyUSID.io.USIDataset, optional
+            HDF5 dataset containing partial Fit. Not implemented
+        h5_guess: h5py.Dataset or pyUSID.io.USIDataset, optional
+            HDF5 dataset containing completed Guess. Not implemented
+        """
+        self.h5_main = self.__h5_main_orig
+        self.parms_dict = {'fit_method': 'pycroscopy functional'}
+
+        # ask super to take care of the rest, which is a standardized operation
+        super(BELoopFitter, self).set_up_fit(h5_partial_fit=h5_partial_fit,
+                                             h5_guess=h5_guess)
+
+        self._max_pos_per_read = self._max_raw_pos_per_read // 1.5
+
+        self._unit_computation = self._unit_compute_fit
+        self.compute = self.do_fit
+        self._write_results_chunk = self._write_fit_chunk
+
+    def _get_existing_datasets(self):
+        """
+        The purpose of this function is to allow processes to resume from partly computed results
+        Start with self.h5_results_grp
+        """
+        super(BELoopFitter, self)._get_existing_datasets()
+        self.h5_projected_loops = self.h5_results_grp['Projected_Loops']
+        self.h5_loop_metrics = self.h5_results_grp['Loop_Metrics']
+        try:
+            _ = self.h5_results_grp['Guess_Loop_Parameters']
+        except KeyError:
+            _ = self.extract_loop_parameters(self._h5_guess)
+        try:
+            # This has already been done by super
+            _ = self.h5_results_grp['Fit']
+            try:
+                _ = self.h5_results_grp['Fit_Loop_Parameters']
+            except KeyError:
+                _ = self.extract_loop_parameters(self._h5_fit)
+        except KeyError:
+            pass
+
+    def do_fit(self, override=False,):
+        """
+        Computes the Fit
+
+        Parameters
+        ----------
+        override : bool, optional
+            If True, computes a fresh guess even if existing Fit was found
+            Else, returns existing Fit dataset. Default = False
+
+        Returns
+        -------
+        USIDataset
+            HDF5 dataset with the Fit computed
+        """
+
+        """
+        This is REALLY ugly but needs to be done because projection, guess,
+        and fit work in such a unique manner. At the same time, this complexity
+        needs to be invisible to the end-user
+        """
+        # Manually setting this variable because this is not set if resuming
+        # an older computation
+        self.h5_projected_loops = USIDataset(self.h5_results_grp['Projected_Loops'])
+
+        # raw data is actually projected loops not raw SHO data
+        self.h5_main = self.h5_projected_loops
+
+        # TODO: h5_main swap is not resilient against failure of do_fit()
+        temp = super(BELoopFitter, self).do_fit(override=override)
+
+        # Reset h5_main so that this swap is invisible to the user
+        self.h5_main = self.__h5_main_orig
+
+        # Extract material properties from loop coefficients
+        _ = self.extract_loop_parameters(temp)
+
+        return temp
+
+    def _unit_compute_fit(self):
+        """
+        Performs least-squares fitting on self.data using self.guess for
+        initial conditions.
+        Results of the computation are captured in self._results
+        """
+
+        obj_func = _be_loop_err
+        opt_func = least_squares
+        solver_options = {'jac': 'cs'}
+
+        resp_2d_list, dc_vec_list = self.data
+
+        # At this point data has been read in. Read in the guess as well:
+        self._read_guess_chunk()
+
+        if self.mpi_size == 1:
+            if self.verbose:
+                print('Using Dask for parallel computation')
+            opt_func = dask.delayed(opt_func)
+        else:
+            if self.verbose:
+                print('Rank {} using serial computation'.format(self.mpi_rank))
+
+        t0 = time.time()
+
+        self._results = list()
+        for dc_vec, loops_2d, guess_parms in zip(dc_vec_list, resp_2d_list,
+                                                 self._guess):
+            '''
+            Shift the loops and vdc vector
+            '''
+            shift_ind, vdc_shifted = shift_vdc(dc_vec)
+            loops_2d_shifted = np.roll(loops_2d, shift_ind, axis=1)
+
+            if self.verbose and self.mpi_rank == 0:
+                print('Computing on set: DC: {}<{}>, loops: {}<{}>, Guess: {}<{}>'.format(
+                        vdc_shifted.shape, vdc_shifted.dtype,
+                        loops_2d_shifted.shape, loops_2d_shifted.dtype,
+                        guess_parms.shape, guess_parms.dtype))
+
+            for loop_resp, loop_guess in zip(loops_2d_shifted, guess_parms):
+                curr_results = opt_func(obj_func, loop_guess,
+                                             args=[loop_resp, vdc_shifted],
+                                             **solver_options)
+                self._results.append(curr_results)
+
+        t1 = time.time()
+
+        if self.mpi_size == 1:
+            if self.verbose and self.mpi_rank == 0:
+                print('Now computing delayed tasks:')
+
+            self._results = dask.compute(self._results, scheduler='processes')[0]
+
+            t2 = time.time()
+
+            if self.verbose and self.mpi_rank == 0:
+                print('Dask Setup time: {} sec. Compute time: {} sec'.format(t1- t0, t2 - t1))
+        else:
+            if self.verbose:
+                print('Rank {}: Serial compute time: {} sec'.format(self.mpi_rank, t1 - t0))
 
     @staticmethod
     def extract_loop_parameters(h5_loop_fit, nuc_threshold=0.03):
@@ -624,383 +927,264 @@ class BELoopFitter(Fitter):
 
         return h5_loop_parameters
 
-    # def split_data(self,cycle=1):
-    #     main_dsets = usid.hdf_utils.get_all_main(h5_f)
-    #     h5_sho_fit = main_dsets[1]
-    #     amplitude = h5_sho_fit['Amplitude [V]']
-    #     phase = h5_sho_fit['Phase [rad]']
-    #     adjust = np.max(phase) - np.min(phase)
-    #     phase_wrap = []
-    #     for ii in range(phase.shape[0]):
-    #         phase_wrap.append([x + adjust if x < -2 else x for x in phase[ii, :]])
-    #     phase = np.asarray(phase_wrap)
-    #     plt.figure()
-    #     plt.hist(phase.ravel(), bins=100)
-    #
-    #     PR_mat = amplitude * np.cos(phase)
-    #     self.PR_mat_full = -PR_mat.reshape(h5_sho_fit.pos_dim_sizes[0], h5_sho_fit.pos_dim_sizes[1], -1)
-    #
-    #     self.dc_vec_OF = h5_sho_fit.h5_spec_vals[0, :][
-    #         np.logical_and(h5_sho_fit.h5_spec_vals[1, :] == 0, h5_sho_fit.h5_spec_vals[2, :] == cycle)]  # off field
-    #     self.dc_vec_IF = h5_sho_fit.h5_spec_vals[0, :][
-    #         np.logical_and(h5_sho_fit.h5_spec_vals[1, :] == 1, h5_sho_fit.h5_spec_vals[2, :] == cycle)]  # on field
-    #
-    #     PR_OF2 = PR_mat[:, :, 129::2]  # off field
-    #     PR_IF2 = PR_mat[:, :, 128::2]  # on field
-
-    def neighbor_fit(self,dc_vec, PR_mat,NN=1):
-        from scipy.optimize import curve_fit
-        from sklearn.metrics import r2_score
-        from tqdm import trange
-        from copy import deepcopy
-
-        cmap = plt.cm.plasma_r
-        scale = (0, 1)
-        fig, ax = plt.subplots(figsize=(8, 8))
-        cbaxs = fig.add_axes([0.92, 0.125, 0.02, 0.755])
-        p0_refs = [[]] * PR_mat.shape[0] * PR_mat.shape[1]
-        all_mean = np.mean(np.mean(PR_mat, axis=0), axis=0)
-
-        bnds = (-100, 100)
-        p0_mat = [[]] * PR_mat.shape[0] * PR_mat.shape[1]  # empty array to store fits from neighboring pixels
-        fitted_loops_mat = [[]] * PR_mat.shape[0] * PR_mat.shape[1]
-        SumSq = [[]] * PR_mat.shape[0] * PR_mat.shape[1]
-        ref_counts = np.arange(PR_mat.shape[0] * PR_mat.shape[1]).reshape(
-            (PR_mat.shape[0], PR_mat.shape[1]))  # reference for finding neighboring pixels
-        count = -1
-        # SET UP X DATA
-        xdata0 = dc_vec
-        max_x = np.where(xdata0 == np.max(xdata0))[0]
-        if max_x != 0 or max_x != len(xdata0):
-            xdata = np.roll(xdata0, -max_x)  # assumes voltages are a symmetric triangle wave
-            dum = 1
-        else:
-            xdata = xdata0  # just in case voltages are already rolled
-            dum = 0
-
-        p0_vals = []
-        opt_vals = []
-        res = []
-        if dum == 1:
-            all_mean = np.roll(all_mean, -max_x)
-
-        for kk in range(50):
-            p0 = np.random.normal(0.1, 5, 9)
-            p0_vals.append(p0)
-            try:
-                vals_min, pcov = curve_fit(loop_fit_function, xdata, all_mean, p0=p0, maxfev=10000)
-            except:
-                continue
-            opt_vals.append(vals_min)
-            fitted_loop = loop_fit_function(xdata, *vals_min)
-            yres = all_mean - fitted_loop
-            res.append(yres @ yres)
-
-        popt = opt_vals[np.argmin(res)]
-        popt_mean = deepcopy(popt)
-        p0_mat = [popt] * PR_mat.shape[0] * PR_mat.shape[1]
-        plt.figure()
-        plt.plot(xdata, all_mean, 'ko')
-        fitted_loop = loop_fit_function(xdata, *popt)
-        plt.plot(xdata, fitted_loop, 'k')
-        print('Done with average fit')
-        for ii in trange(PR_mat.shape[0]):
-            xind = ii
-            for jj in range(PR_mat.shape[1]):
-                count += 1  # used to keep track of popt vals
-                yind = jj
-                ydata0 = PR_mat[xind, yind, :]
-                if dum == 1:
-                    ydata = np.roll(ydata0, -max_x)
-                else:
-                    ydata = ydata0
-
-                xs = [ii + k for k in range(-NN, NN + 1)]
-                ys = [jj + k for k in range(-NN, NN + 1)]
-                nbrs = [(n, m) for n in xs for m in ys]
-                cond = [all(x >= 0 for x in list(y)) for y in nbrs]
-                nbrs = [d for (d, remove) in zip(nbrs, cond) if remove]
-                cond2 = [all(x < ref_counts.shape[0] for x in list(y)) for y in
-                         nbrs]  # assumes PR_mat is square....
-                nbrs = [d for (d, remove) in zip(nbrs, cond2) if remove]
-                NN_indx = [ref_counts[v] for v in nbrs]
-                prior_coefs = [p0_mat[k] for k in NN_indx if len(p0_mat[k]) != 0]
-                if prior_coefs == []:
-                    p0 = popt
-                else:
-                    p0 = np.mean(prior_coefs, axis=0)
-                p0_refs[count] = p0
-                try:
-                    popt, pcov = curve_fit(loop_fit_function, xdata, ydata, p0=p0, maxfev=10000, bounds=bnds)
-                except:
-                    continue
-                p0_mat[count] = popt  # saves fitted coefficients for the index
-
-                fitted_loop = loop_fit_function(xdata, *p0_mat[count])
-                fitted_loops_mat[count] = fitted_loop
-                ss = r2_score(ydata, fitted_loop)
-                SumSq[count] = ss
-                sh = np.floor(1 + (2 ** 16 - 1) * ((ss) - scale[0]) / (scale[1] - scale[0]))
-                if sh < 1:
-                    sh = 1
-                if sh > 2 ** 16:
-                    sh = 2 ** 16
-
-                ax.plot(ii, jj, c=cmap(sh / (2 ** 16)), marker='s', markersize=7)
-
-        scbar = plt.cm.ScalarMappable(cmap=plt.cm.plasma_r, norm=plt.Normalize(vmin=scale[0], vmax=scale[1]))
-        scbar._A = []
-        cbar = plt.colorbar(scbar, cax=cbaxs)
-        cbar.ax.set_ylabel('$R^2$', rotation=270, labelpad=20)
-
-        return fig, ax, p0_refs, p0_mat, SumSq, fitted_loops_mat
-
-
-    def kmeans_fit(self,dc_vec, PR_mat):
-        from scipy.optimize import curve_fit
-        from sklearn.metrics import r2_score
-        from tqdm import trange
-        from copy import deepcopy
-        from sklearn.cluster import KMeans
-
-        cmap = plt.cm.plasma_r
-        scale = (0, 1)
-        fig, ax = plt.subplots(figsize=(8, 8))
-        cbaxs = fig.add_axes([0.92, 0.125, 0.02, 0.755])
-        p0_refs = [[]] * PR_mat.shape[0] * PR_mat.shape[1]
-        all_mean = np.mean(np.mean(PR_mat, axis=0), axis=0)
-
-        bnds = (-100, 100)
-        p0_mat = [[]] * PR_mat.shape[0] * PR_mat.shape[1]  # empty array to store fits from neighboring pixels
-        fitted_loops_mat = [[]] * PR_mat.shape[0] * PR_mat.shape[1]
-        SumSq = [[]] * PR_mat.shape[0] * PR_mat.shape[1]
-        ref_counts = np.arange(PR_mat.shape[0] * PR_mat.shape[1]).reshape(
-            (PR_mat.shape[0], PR_mat.shape[1]))  # reference for finding neighboring pixels
-        count = -1
-        # SET UP X DATA
-        xdata0 = dc_vec
-        max_x = np.where(xdata0 == np.max(xdata0))[0]
-        if max_x != 0 or max_x != len(xdata0):
-            xdata = np.roll(xdata0, -max_x)  # assumes voltages are a symmetric triangle wave
-            dum = 1
-        else:
-            xdata = xdata0  # just in case voltages are already rolled
-            dum = 0
-
-        p0_vals = []
-        opt_vals = []
-        res = []
-        if dum == 1:
-            all_mean = np.roll(all_mean, -max_x)
-
-        for kk in range(50):
-            p0 = np.random.normal(0.1, 5, 9)
-            p0_vals.append(p0)
-            try:
-                vals_min, pcov = curve_fit(loop_fit_function, xdata, all_mean, p0=p0, maxfev=10000)
-            except:
-                continue
-            opt_vals.append(vals_min)
-            fitted_loop = loop_fit_function(xdata, *vals_min)
-            yres = all_mean - fitted_loop
-            res.append(yres @ yres)
-        popt = opt_vals[np.argmin(res)]
-        popt_mean = deepcopy(popt)
-        p0_mat = [popt] * PR_mat.shape[0] * PR_mat.shape[1]
-        plt.figure()
-        plt.plot(xdata, all_mean, 'ko')
-        fitted_loop = loop_fit_function(xdata, *popt)
-        plt.plot(xdata, fitted_loop, 'k')
-        print('Done with average fit')
-
-        size = PR_mat.shape[0] * PR_mat.shape[1]
-        if nclust is empty:
-            n_clusters = int(size / 50)
-        else:
-            n_clusters = nclust
-        print('Using ' + str(n_clusters) + ' clusters')
-        PR_mat_flat = PR_mat.reshape(size, int(PR_mat.shape[2]))
-        kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit(PR_mat_flat)
-        labels = kmeans.labels_
-        p0_clusters = []
-        cluster_loops = []
-        for pp in trange(n_clusters):
-            opt_vals = []
-            res = []
-            clust = PR_mat_flat[labels == pp]
-            PR_mean = np.mean(clust, axis=0)
-            if dum == 1:
-                PR_mean = np.roll(PR_mean, -max_x)
-            cluster_loops.append(PR_mean)
-            p0 = p0_mat[0]
-            try:
-                popt, pcov = curve_fit(loop_fit_function, xdata, PR_mean, p0=p0, maxfev=10000)
-            except:
-                kk = 0
-                p0 = np.random.normal(0.1, 5, 9)
-                while kk < 20:
-                    try:
-                        vals_min, pcov = curve_fit(loop_fit_function, xdata, all_mean, p0=p0, maxfev=10000)
-                    except:
-                        continue
-                    kk += 1
-                    opt_vals.append(vals_min)
-                    fitted_loop = loop_fit_function(xdata, *vals_min)
-                    yres = PR_mean - fitted_loop
-                    res.append(yres @ yres)
-                    popt = opt_vals[np.argmin(res)]
-            p0_clusters.append(popt)
-
-        for ii in trange(PR_mat.shape[0]):
-            xind = ii
-            for jj in range(PR_mat.shape[1]):
-                count += 1  # used to keep track of popt vals
-                yind = jj
-                ydata0 = PR_mat[xind, yind, :]
-                if dum == 1:
-                    ydata = np.roll(ydata0, -max_x)
-                else:
-                    ydata = ydata0
-
-                lab = labels[count]
-                p0 = p0_clusters[lab]
-                try:
-                    popt, pcov = curve_fit(loop_fit_function, xdata, ydata, p0=p0, maxfev=10000)
-                except:
-                    p0 = popt_mean
-                    try:
-                        popt, pcov = curve_fit(loop_fit_function, xdata, ydata, p0=p0, maxfev=10000)
-                    except:
-                        continue
-                p0_refs[count] = p0
-                p0_mat[count] = popt  # saves fitted coefficients for the index
-
-                fitted_loop = loop_fit_function(xdata, *p0_mat[count])
-                fitted_loops_mat[count] = fitted_loop
-                ss = r2_score(ydata, fitted_loop)
-                SumSq[count] = ss
-                sh = np.floor(1 + (2 ** 16 - 1) * ((ss) - scale[0]) / (scale[1] - scale[0]))
-                if sh < 1:
-                    sh = 1
-                if sh > 2 ** 16:
-                    sh = 2 ** 16
-
-                ax.plot(ii, jj, c=cmap(sh / (2 ** 16)), marker='s', markersize=7)
-
-
-        scbar = plt.cm.ScalarMappable(cmap=plt.cm.plasma_r, norm=plt.Normalize(vmin=scale[0], vmax=scale[1]))
-        scbar._A = []
-        cbar = plt.colorbar(scbar, cax=cbaxs)
-        cbar.ax.set_ylabel('$R^2$', rotation=270, labelpad=20)
-
-        return fig, ax, p0_refs, p0_mat, SumSq, fitted_loops_mat
-
-
-    def random_fit(self,dc_vec, PR_mat):
-        from scipy.optimize import curve_fit
-        from sklearn.metrics import r2_score
-        from tqdm import trange
-
-        cmap = plt.cm.plasma_r
-        scale = (0, 1)
-        fig, ax = plt.subplots(figsize=(8, 8))
-        cbaxs = fig.add_axes([0.92, 0.125, 0.02, 0.755])
-        p0_refs = [[]] * PR_mat.shape[0] * PR_mat.shape[1]
-
-        p0_mat = [[]] * PR_mat.shape[0] * PR_mat.shape[1]  # empty array to store fits from neighboring pixels
-        fitted_loops_mat = [[]] * PR_mat.shape[0] * PR_mat.shape[1]
-        SumSq = [[]] * PR_mat.shape[0] * PR_mat.shape[1]
-        ref_counts = np.arange(PR_mat.shape[0] * PR_mat.shape[1]).reshape(
-            (PR_mat.shape[0], PR_mat.shape[1]))  # reference for finding neighboring pixels
-        count = -1
-        # SET UP X DATA
-        xdata0 = dc_vec
-        max_x = np.where(xdata0 == np.max(xdata0))[0]
-        if max_x != 0 or max_x != len(xdata0):
-            xdata = np.roll(xdata0, -max_x)  # assumes voltages are a symmetric triangle wave
-            dum = 1
-        else:
-            xdata = xdata0  # just in case voltages are already rolled
-            dum = 0
-
-        for ii in trange(PR_mat.shape[0]):
-            xind = ii
-            for jj in range(PR_mat.shape[1]):
-                count += 1  # used to keep track of popt vals
-                yind = jj
-                ydata0 = PR_mat[xind, yind, :]
-                if dum == 1:
-                    ydata = np.roll(ydata0, -max_x)
-                else:
-                    ydata = ydata0
-
-                opt_vals = []
-                res = []
-                p0_vals = []
-                kk = 0
-                while kk < 2:
-                    p0 = np.random.normal(0.1, 5, 9)
-                    p0_vals.append(p0)
-                    try:
-                        vals_min, pcov = curve_fit(loop_fit_function, xdata, ydata, p0=p0, maxfev=10000)
-                    except:
-                        continue
-                    kk += 1
-                    opt_vals.append(vals_min)
-                    fitted_loop = loop_fit_function(xdata, *vals_min)
-                    yres = ydata - fitted_loop
-                    res.append(yres @ yres)
-                popt = opt_vals[np.argmin(res)]
-                p0_mat[count] = popt
-
-                fitted_loop = loop_fit_function(xdata, *p0_mat[count])
-                fitted_loops_mat[count] = fitted_loop
-                ss = r2_score(ydata, fitted_loop)
-                SumSq[count] = ss
-                sh = np.floor(1 + (2 ** 16 - 1) * ((ss) - scale[0]) / (scale[1] - scale[0]))
-                if sh < 1:
-                    sh = 1
-                if sh > 2 ** 16:
-                    sh = 2 ** 16
-
-                ax.plot(ii, jj, c=cmap(sh / (2 ** 16)), marker='s', markersize=7)
-
-        scbar = plt.cm.ScalarMappable(cmap=plt.cm.plasma_r, norm=plt.Normalize(vmin=scale[0], vmax=scale[1]))
-        scbar._A = []
-        cbar = plt.colorbar(scbar, cax=cbaxs)
-        cbar.ax.set_ylabel('$R^2$', rotation=270, labelpad=20)
-
-        return fig, ax, p0_refs, p0_mat, SumSq, fitted_loops_mat
-
-
-
-    def fit_loops(self,dc_vec, PR_mat, method='Neighbor',NN=1, nclust = []):
+    def _unit_compute_fit_jl_broken(self):
         """
-        Fits loops using default nearest neighbor method.
-
-        dc_vec: vector of DC-biases
-        PR_mat: matrix of data responses
-        method: default nearest neighbor- Neighbor, can be changed to Random or K-Means
-        NN: number of nearest neighbors to consider, default 1.  Only needed for Neighbors method
-        nclust: number of clusters to use for K-Means, default of data size/100
+        JobLib version of the unit computation function that unforunately
+        did not work.
         """
 
+        # 1 - r_squared = _sho_error(guess, data_vec, freq_vector)
 
-        if method not in ['Random', 'Neighbor', 'K-Means', 'Hierarchical']:
+        obj_func = _be_loop_err
+        solver_options = {'jac': 'cs', 'max_nfev': 2}
+
+        resp_2d_list, dc_vec_list = self.data
+
+        # At this point data has been read in. Read in the guess as well:
+        self._read_guess_chunk()
+
+        if self.verbose and self.mpi_rank == 0:
+            print('_unit_compute_fit got:\nobj_func: {}\n'
+                  'solver_options: {}'.format(obj_func, solver_options))
+
+        # TODO: Generalize this bit. Use Parallel compute instead!
+        if self.mpi_size > 1:
+            if self.verbose:
+                print('Rank {}: About to start serial computation'
+                      '.'.format(self.mpi_rank))
+
+            self._results = list()
+            for dc_vec, loops_2d, guess_parms in zip(dc_vec_list, resp_2d_list, self._guess):
+                if self.verbose:
+                    print('Setting up delayed joblib based on DC: {}<{}>, loops: {}<{}>, Guess: {}<{}>'.format(dc_vec.shape, dc_vec.dtype, loops_2d.shape, loops_2d.dtype, guess_parms.shape, guess_parms.dtype))
+
+                '''
+                Shift the loops and vdc vector
+                '''
+                shift_ind, vdc_shifted = shift_vdc(dc_vec)
+                loops_2d_shifted = np.roll(loops_2d, shift_ind, axis=1)
+
+                if self.verbose:
+                    print('Setting up delayed joblib based on DC: {}<{}>, loops: {}<{}>, Guess: {}<{}>'.format(vdc_shifted.shape, vdc_shifted.dtype, loops_2d_shifted.shape, loops_2d_shifted.dtype, guess_parms.shape, guess_parms.dtype))
+
+                for loop_resp, loop_guess in zip(loops_2d_shifted, guess_parms):
+                    curr_results = least_squares(obj_func, loop_guess,
+                                                 args=[loop_resp, vdc_shifted],
+                                                 **solver_options)
+                    self._results.append(curr_results)
+        else:
+            cores = recommend_cpu_cores(len(resp_2d_list) * resp_2d_list[0].shape[0],
+                                        verbose=self.verbose)
+            if self.verbose:
+                print('Starting parallel fitting with {} cores'.format(cores))
+
+            values = list()
+            for dc_vec, loops_2d, guess_parms in zip(dc_vec_list, resp_2d_list, self._guess):
+                if self.verbose:
+                    print('Setting up delayed joblib based on DC: {} loops: {}, Guess: {}'.format(dc_vec.shape, loops_2d.shape, guess_parms.shape))
+                '''
+                Shift the loops and vdc vector
+                '''
+                shift_ind, vdc_shifted = shift_vdc(dc_vec)
+                loops_2d_shifted = np.roll(loops_2d, shift_ind, axis=1)
+
+                if self.verbose:
+                    print('Setting up delayed joblib based on DC: {}<{}>, loops: {}<{}>, Guess: {}<{}>'.format(vdc_shifted.shape, vdc_shifted.dtype, loops_2d_shifted.shape, loops_2d_shifted.dtype, guess_parms.shape, guess_parms.dtype))
+
+                temp = [joblib.delayed(least_squares)(obj_func, loop_guess, args=[loop_resp, vdc_shifted], **solver_options) for loop_resp, loop_guess in zip(loops_2d_shifted, guess_parms)]
+
+
+                values.append(temp)
+            if self.verbose:
+                print('Finished setting up delayed computations. Starting parallel compute')
+                print(temp[0])
+                from pickle import dumps
+                for item in temp[0]:
+                    print(dumps(item))
+            self._results = joblib.Parallel(n_jobs=cores)(values)
+
+        if self.verbose and self.mpi_rank == 0:
             print(
-                'Please use one of the following methods: "Neighbor", "K-Means", "Hierarchical" or "Random".')
-            return
-        if method == 'Hierarchical':
-            'Do tree fitting'
-        if method == 'Neighbor':
-            fig, ax, p0_refs, p0_mat, SumSq, fitted_loops_mat = neighbor_fit(self,dc_vec, PR_mat,NN=NN)
-        if method == 'K-Means':
-            fig, ax, p0_refs, p0_mat, SumSq, fitted_loops_mat = kmeans_fit(self,dc_vec, PR_mat)
-        if method == 'Random':
-            fig, ax, p0_refs, p0_mat, SumSq, fitted_loops_mat = random_fit(self,dc_vec, PR_mat)
-        return fig, ax, p0_refs, p0_mat, SumSq, fitted_loops_mat
+                'Finished computing fits on {} objects'
+                ''.format(len(self._results)))
 
+        # What least_squares returns is an object that needs to be extracted
+        # to get the coefficients. This is handled by the write function
 
+    @staticmethod
+    def _reformat_results_chunk(num_forcs, raw_results, first_n_dim_shape,
+                                first_n_dim_names, dim_labels_s2f,
+                                forc_dim_name, verbose=False):
+        """
+        Reshapes the provided flattened 2D results back to correct 2D form
+        that can be written back to the HDF5 dataset via a few reshape and
+        transpose operations
+
+        Parameters
+        ----------
+        num_forcs : uint
+            Number of FORC cycles in this data chunk / HDF5 dataset
+        raw_results : numpy.ndarray
+            Numpy array of the results (projected loops, guess, fit,
+            loop metrics, etc.
+        first_n_dim_shape : list
+            Shape of the N-dimensional raw data chunk before it was flattened
+            to the 2D or 1D (guess) shape
+        first_n_dim_names : list
+            Corresponding names of the dimensions for first_n_dim_shape
+        dim_labels_s2f : list
+            Names of the dimensions arranged from slowest to fastest
+        forc_dim_name : str
+            Name of the FORC dimension if present.
+        verbose : bool, optional. Default = False
+            Whether or not to print logs for debugging
+
+        Returns
+        -------
+        results_2d : numpy.ndarray
+            2D array that is ready to be written to the HDF5 file
+
+        Notes
+        -----
+        Step 1 will fold back the flattened 1 / 2D array into the N-dim form
+        Step 2 will reverse all transposes
+        Step 3 will flatten back to its original 2D form
+        """
+
+        # What we need to do is put the forc back as the slowest dimension before the pre_flattening shape:
+        if num_forcs > 1:
+            first_n_dim_shape = [num_forcs] + first_n_dim_shape
+            first_n_dim_names = [forc_dim_name] + first_n_dim_names
+        if verbose:
+            print('Dimension sizes & order: {} and names: {} that flattened '
+                  'results will be reshaped to'
+                  '.'.format(first_n_dim_shape, first_n_dim_names))
+
+        # Now, reshape the flattened 2D results to its N-dim form before flattening (now FORC included):
+        first_n_dim_results = raw_results.reshape(first_n_dim_shape)
+
+        # Need to put data back to slowest >> fastest dim
+        map_to_s2f = [first_n_dim_names.index(dim_name) for dim_name in
+                      dim_labels_s2f]
+        if verbose:
+            print('Will permute as: {} to arrange dimensions from slowest to '
+                  'fastest varying'.format(map_to_s2f))
+
+        results_nd_s2f = first_n_dim_results.transpose(map_to_s2f)
+
+        if verbose:
+            print('Shape: {} and dimension labels: {} of results arranged from'
+                  ' slowest to fastest varying'
+                  '.'.format(results_nd_s2f.shape, dim_labels_s2f))
+
+        pos_size = int(np.prod(results_nd_s2f.shape[:1]))
+        spec_size = int(np.prod(results_nd_s2f.shape[1:]))
+
+        if verbose:
+            print('Results will be flattend to: {}'
+                  '.'.format((pos_size, spec_size)))
+
+        results_2d = results_nd_s2f.reshape(pos_size, spec_size)
+
+        return results_2d
+
+    def _write_guess_chunk(self):
+        """
+        Writes the results present in self._results to appropriate HDF5
+        results datasets after appropriate manipulations
+        """
+        proj_loops, loop_mets, all_guesses = self._results
+
+        if self.verbose:
+            print('Unzipped results into Projected loops and Metrics arrays')
+
+        # Step 2: Fold to N-D before reversing transposes:
+        loops_2d = self._reformat_results_chunk(self._num_forcs, proj_loops,
+                                                self._pre_flattening_shape,
+                                                self._pre_flattening_dim_name_order,
+                                                self._dim_labels_s2f,
+                                                self._forc_dim_name,
+                                                verbose=self.verbose)
+
+        met_labels_s2f = self._dim_labels_s2f.copy()
+        met_labels_s2f.remove(self._fit_dim_name)
+
+        mets_2d = self._reformat_results_chunk(self._num_forcs, loop_mets,
+                                               self._pre_flattening_shape[:-1],
+                                               self._pre_flattening_dim_name_order[:-1],
+                                               met_labels_s2f,
+                                               self._forc_dim_name,
+                                               verbose=self.verbose)
+
+        guess_2d = self._reformat_results_chunk(self._num_forcs, all_guesses,
+                                               self._pre_flattening_shape[:-1],
+                                               self._pre_flattening_dim_name_order[:-1],
+                                               met_labels_s2f,
+                                               self._forc_dim_name,
+                                               verbose=self.verbose)
+
+        # Which pixels are we working on?
+        curr_pixels = self._get_pixels_in_current_batch()
+
+        if self.verbose and self.mpi_rank == 0:
+            print(
+                'Writing projected loops of shape: {} and data type: {} to a dataset of shape: {} and data type {}'.format(
+                    loops_2d.shape, loops_2d.dtype,
+                    self.h5_projected_loops.shape,
+                    self.h5_projected_loops.dtype))
+            print(
+                'Writing loop metrics of shape: {} and data type: {} to a dataset of shape: {} and data type {}'.format(
+                    mets_2d.shape, mets_2d.dtype, self.h5_loop_metrics.shape,
+                    self.h5_loop_metrics.dtype))
+
+            print(
+                'Writing Guesses of shape: {} and data type: {} to a dataset of shape: {} and data type {}'.format(
+                    guess_2d.shape, guess_2d.dtype, self._h5_guess.shape,
+                    self._h5_guess.dtype))
+
+        self.h5_projected_loops[curr_pixels, :] = loops_2d
+        self.h5_loop_metrics[curr_pixels, :] = mets_2d
+        self._h5_guess[curr_pixels, :] = guess_2d
+
+        self._h5_guess.file.flush()
+
+    def _write_fit_chunk(self):
+        """
+        Writes the results present in self._results to appropriate HDF5
+        results datasets after appropriate manipulations
+        """
+        # TODO: To compound dataset: Note that this is a memory duplication!
+        temp = np.array(
+            [np.hstack([result.x, result.fun]) for result in self._results])
+        self._results = stack_real_to_compound(temp, loop_fit32)
+
+        all_fits = np.array(self._results)
+
+        if self.verbose and self.mpi_rank == 0:
+            print('Results of shape: {} and dtype: {}'.format(all_fits.shape, all_fits.dtype))
+
+        met_labels_s2f = self._dim_labels_s2f.copy()
+        met_labels_s2f.remove(self._fit_dim_name)
+
+        fits_2d = self._reformat_results_chunk(self._num_forcs, all_fits,
+                                               self._pre_flattening_shape[:-1],
+                                               self._pre_flattening_dim_name_order[:-1],
+                                               met_labels_s2f,
+                                               self._forc_dim_name,
+                                               verbose=self.verbose)
+
+        # Which pixels are we working on?
+        curr_pixels = self._get_pixels_in_current_batch()
+
+        if self.verbose and self.mpi_rank == 0:
+            print(
+                'Writing Fits of shape: {} and data type: {} to a dataset of shape: {} and data type {}'.format(
+                    fits_2d.shape, fits_2d.dtype, self._h5_fit.shape,
+                    self._h5_fit.dtype))
+
+        self._h5_fit[curr_pixels, :] = fits_2d
+
+        self._h5_fit.file.flush()
 
 
 def _be_loop_err(coef_vec, data_vec, dc_vec, *args):

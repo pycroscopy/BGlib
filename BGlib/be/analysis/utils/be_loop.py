@@ -634,14 +634,14 @@ def generate_guess(vdc, pr_vec, show_plots=False):
     '''
     Default values if not intersections can be found.
     '''
-    if len(y_intersections) == 0:
+    if len(y_intersections) < 2:
         min_y_intercept = min(pr_vec)
         max_y_intercept = max(pr_vec)
     else:
         min_y_intercept = min(y_intersections[0][1], y_intersections[1][1])
         max_y_intercept = max(y_intersections[0][1], y_intersections[1][1])
 
-    if len(x_intersections) == 0:
+    if len(x_intersections) < 2:
         min_x_intercept = min(vdc) / 2.0
         max_x_intercept = max(vdc) / 2.0
     else:

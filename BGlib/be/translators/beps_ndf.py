@@ -202,7 +202,11 @@ class BEPSndfTranslator(Translator):
         s_pixels = np.array(parsers[0].get_spatial_pixels())
         self.pos_labels = ['Laser Spot', 'Z', 'Y', 'X']
         self.pos_labels = [self.pos_labels[i] for i in np.where(s_pixels > 1)[0]]
-        self.pos_mat = make_indices_matrix(s_pixels[np.argwhere(s_pixels > 1)].squeeze())
+        if len(self.pos_labels) == 0:
+            self.pos_labels = ['X']
+            self.pos_mat = make_indices_matrix(1)
+        else:
+            self.pos_mat = make_indices_matrix(s_pixels[np.argwhere(s_pixels > 1)].squeeze())
         self.pos_units = ['um' for _ in range(len(self.pos_labels))]
         #         self.pos_mat = np.int32(self.pos_mat)
 
@@ -322,7 +326,7 @@ class BEPSndfTranslator(Translator):
         """
         # Update the number of pixels in the attributes
         meas_grp = self.ds_main.parent
-        meas_grp.attrs['num_pix'] = self.ds_pixel_index
+        write_simple_attrs(meas_grp, {'num_pix': self.ds_pixel_index})
 
         # Write position specific datasets now that the dataset is complete
         pos_slice_dict = dict()
@@ -737,14 +741,24 @@ class BEPSndfTranslator(Translator):
         """
         parsers = []  # Maybe this needs to be a dictionary instead for easier access?
         for wave_type in self.__unique_waves__:
-            filename = self.basename + '_1_'
+            filename = '_1_'
             if wave_type > 0:
-                filename = self.basename + '_1_' + str(wave_type) + '.dat'
+                filename = '_1_' + str(wave_type) + '.dat'
             else:
-                filename = self.basename + '_1_r' + str(abs(wave_type)) + '.dat'
-            datapath = path.join(self.folder_path, filename)
+                filename = '_1_r' + str(abs(wave_type)) + '.dat'
+            datapath = path.join(self.folder_path,
+                                 self.basename + filename)
             if not path.isfile(datapath):
-                raise LookupError('Error!!: {}expected but not found!'.format(filename))
+                # It is possible that the folder was renamed
+                # i.e. - try finding without self.basename
+                temp = [this for this in listdir(self.folder_path) if this.endswith(filename)]
+                if len(temp) == 1:
+                    warn('.dat file: {} did not have same base name as '
+                         'root folder: {}'.format(temp[0], self.basename))
+                    datapath = path.join(self.folder_path, temp[0])
+                else:
+                    raise FileNotFoundError('{} expected but not found!'
+                                            ''.format(filename))
                 # return
             parsers.append(BEPSndfParser(datapath, wave_type))
         return parsers

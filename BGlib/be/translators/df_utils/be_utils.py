@@ -357,7 +357,12 @@ def parmsToDict(filepath, parms_to_remove=[]):
                 name = 'mode'
             if name == 'IO_rate':
                 name = 'IO_rate_[Hz]'
-                value = int(value.split()[0]) * 1E6
+                try:
+                    value = int(value.split()[0]) * 1E6
+                except ValueError:
+                    # very rare
+                    # let it be a string
+                    pass
             if name == 'AO_range':
                 name = 'AO_range_[V]'
                 value = ' '.join(value.split()[:-1])
@@ -640,7 +645,15 @@ def generatePlotGroups(h5_main, mean_resp, folder_path, basename, max_resp=[], m
             continue
         # 4. Access that column of the data through region reference
         steps = np.where(np.isfinite(UDVS[ref]))[0]
-        step_inds = np.array([np.where(UDVS_inds[()] == step)[0] for step in steps]).flatten()
+        udvs_inds = UDVS_inds[()]
+        step_inds = np.array([np.where(udvs_inds == step)[0] for step in steps]).flatten()
+        if step_inds.dtype != np.int:
+            # dtype = Object
+            warn('step indices looked odd. Trying to fix..', UserWarning)
+            # Every alternate element in the array is empty.
+            temp = [item for item in step_inds if len(item) > 0]
+            step_inds = np.array(temp)
+            step_inds = step_inds.flatten()
         """selected_UDVS_steps = UDVS[ref]
         selected_UDVS_steps = selected_UDVS_steps[np.isfinite(selected_UDVS_steps)]"""
 
@@ -855,6 +868,14 @@ def trimUDVS(udvs_mat, udvs_labs, udvs_units, target_col_names):
         Truncated list of UDVS column units
     """
 
+    # Delete UDVS rows which are zeros in the very end:
+    # Look at the first column - UDVS steps
+    step = np.where(np.diff(udvs_mat[:, 0]) < 0)[0]
+    if len(step) > 0:
+        warn('Found zeros at the bottom of the UDVS table. Only keeping the '
+             'first {} rows'.format(step[0]))
+        udvs_mat = udvs_mat[:step[0] + 1]
+
     if len(target_col_names) == 0:
         return udvs_mat, udvs_labs, udvs_units
 
@@ -1034,7 +1055,11 @@ def createSpecVals(udvs_mat, spec_inds, bin_freqs, bin_wfm_type, parm_dict,
                              ''.format(iSpec_var))
 
         if len(iSpec_var) < 1:
-            raise ValueError('Invalid UDVS inputs. No variables were varied')
+            warn('No variables were varied in UDVS table! Using UDVS step as '
+                 'the only variable', UserWarning)
+            return np.asarray(1, np.int), \
+                   np.expand_dims(np.arange(UDVS.shape[0], dtype=np.int), 1)
+
 
         iSpec_var = np.asarray(iSpec_var, np.int)
         ds_spec_val_mat = UDVS[:, iSpec_var]
