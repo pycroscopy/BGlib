@@ -1,7 +1,13 @@
 from pyUSID import USIDataset
 from ..analysis import trKPFM_L_Analyzer
+import os
+import numpy as np
+import matplotlib.pyplot as plt
+from IPython.display import display
+import ipywidgets as widgets
+import h5py
 
-class RawTRKPFM_L_Dataset():
+class RawTRKPFM_L_Dataset(USIDataset):
     """
     Extention of teh USIDataset object for Linear Time-resolved Kelvin Probe Force Microscopy (tr-KPFM) datasets
     This includes various visualization and analysis routines
@@ -12,12 +18,20 @@ class RawTRKPFM_L_Dataset():
     """
 
     def __init__(self,h5_dataset):
-        # super(RawTRKPFM_L_Dataset,self).__init__(h5_ref = h5_dataset)
-        self.h5_main = h5_dataset
+        super(RawTRKPFM_L_Dataset,self).__init__(h5_ref = h5_dataset)
+        # self.h5_main = h5_dataset
         #Prepare the datasets
         self.dataset_type = 'RawTRKPFM_L_Dataset'
-        # self.parm_dict = self.dset.file['/Measurement_000'].attrs
+        self.parm_dict = self.dset.file['/Measurement_000'].attrs
         self.analyzer = trKPFM_L_Analyzer
+
+
+class TRKPFM_L_Dataset(RawTRKPFM_L_Dataset):
+
+    def __init__(self,h5_dataset):
+        super(TRKPFM_L_Dataset,self).__init__(h5_dataset)
+
+        self.dataset_type = 'RawTRKPFM_L_Dataset'
 
     def plot_raw_data(self):
         """
@@ -33,6 +47,7 @@ class RawTRKPFM_L_Dataset():
         except:
             self.unpack_data()
 
+        expt_type = get_attr(self.file, 'data_type')
         fig,ax = plt.subplots(ncols=3,nrows=2,figsize=(12,6))
         ax[0,0].imshow(self.amp,cmap='inferno')
         ax[0,0].set_title('Amplitude')

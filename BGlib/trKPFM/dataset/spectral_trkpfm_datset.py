@@ -19,3 +19,8 @@ class RawTRKPFM_S_Dataset(USIDataset):
         self.parm_dict = self.dset.file['/Measurement_000'].attrs
 
         self.analyzer = trKPFM_S_Analyzer(self)
+
+class TRKPFM_S_Dataset(RawTRKPFM_S_Dataset):
+    def __init__(self,h5_dataset):
+        super(TRKPFM_S_Dataset,self).__init__(h5_dataset)
+        self.dataset_type = 'TRKPFM_S_Dataset'
