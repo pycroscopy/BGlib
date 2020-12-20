@@ -205,6 +205,12 @@ class BEodfTranslator(Translator):
 
             print('\n\tisBEPS = {}'.format(isBEPS))
 
+        if parm_dict['BE_bins_per_band'] > 300:
+            raise ValueError('Too many BE bins per band: {}. Translation would'
+                             ' not have failed but resultant data would be '
+                             'nonsensical'
+                             ''.format(parm_dict['BE_bins_per_band']))
+
         ignored_plt_grps = []
         if isBEPS:
             parm_dict['data_type'] = 'BEPSData'
