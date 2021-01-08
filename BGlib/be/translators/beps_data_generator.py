@@ -9,21 +9,21 @@ from sklearn.utils import gen_batches
 from sidpy.proc.comp_utils import get_available_memory
 from skimage.measure import block_reduce
 # Pycroscopy imports
-from sidpy.hdf.hdf_utils import get_attr, write_simple_attrs
+from sidpy.hdf.hdf_utils import write_simple_attrs
 from sidpy.hdf.dtype_utils import stack_real_to_compound
 from sidpy.sid import Translator
-from pyUSID.io.hdf_utils import link_as_main, copy_dataset, \
+from pyUSID.io.hdf_utils import copy_dataset, \
     write_main_dataset, create_indexed_group, create_results_group, \
     write_reduced_anc_dsets
 
-from pyUSID.io.reg_ref import copy_all_region_refs , write_region_references
-from pyUSID.io.write_utils import Dimension, calc_chunks
+from pyUSID.io.reg_ref import copy_all_region_refs
+from pyUSID.io.write_utils import Dimension
 from pyUSID.io.image import read_image
 
-from ..analysis.utils.be_loop import loop_fit_function
+from ..analysis.utils.be_loop_old import loop_fit_function
 from ..analysis.utils.be_sho import SHOfunc
 from ..analysis.be_sho_fitter import sho32
-from ..analysis.be_loop_fitter import loop_fit32
+from BGlib.be.analysis.utils.be_loop_fitter import loop_fit32
 from .df_utils.beps_gen_utils import get_noise_vec, beps_image_folder
 
 
