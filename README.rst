@@ -1,17 +1,13 @@
 BGlib
 =====
 
-.. image:: https://travis-ci.com/pycroscopy/sidpy.svg?branch=master
-    :target: https://travis-ci.com/pycroscopy/BGlib
-    :alt: TravisCI
+.. image:: https://github.com/pycroscopy/BGlib/workflows/Python%20Package/badge.svg?branch=master
+    :target: https://github.com/pycroscopy/BGlib/actions?query=workflow%3A%22Python+Package%22
+    :alt: GitHub Actions
 
 .. image:: https://img.shields.io/pypi/v/BGlib.svg
     :target: https://pypi.org/project/bglib/
     :alt: PyPI
-
-.. image:: https://coveralls.io/repos/github/pycroscopy/BGlib/badge.svg?branch=master
-    :target: https://coveralls.io/github/pycroscopy/BGlib?branch=master
-    :alt: coverage
 
 .. image:: https://img.shields.io/pypi/l/sidpy.svg
     :target: https://pypi.org/project/sidpy/
@@ -21,4 +17,4 @@ BGlib
     :target: http://pepy.tech/project/BGlib
     :alt: Downloads
 
-Band Excitation and General Mode analysis and visualization codes
+Band Excitation (BE) and General Mode (G-Mode) Scanning Probe Microscopy (SPM) data format translation, analysis and visualization codes
