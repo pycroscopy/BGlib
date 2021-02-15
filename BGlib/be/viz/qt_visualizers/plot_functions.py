@@ -223,7 +223,7 @@ class BEPSwindow(QtGui.QMainWindow):
         '''
         Now populate them
         '''
-        for i in xrange(num_of_cycles):
+        for i in range(num_of_cycles):
             cycle_list.addItem("Cycle " + str(i))
 
         for plot_element in plot_elements_list:
@@ -642,7 +642,7 @@ class BEPSwindow(QtGui.QMainWindow):
         """
         roipos = self.roiPt.pos()
         if self.ndims == 1:
-            for i in xrange(1, len(roipos)):
+            for i in range(1, len(roipos)):
                 roipos[i] = 0
         return roipos
 
@@ -1012,7 +1012,7 @@ class BEPSwindow(QtGui.QMainWindow):
         -------
 
         """
-        from pycroscopy.analysis.utils.be_sho import SHOfunc
+        from BGlib.be.analysis.utils.be_sho import SHOfunc
 
         p = [p[name] for name in p.dtype.names]
 
