@@ -1455,7 +1455,7 @@ class BEodfTranslator(Translator):
         except KeyError as exp:
             raise KeyError(exp)
 
-        if VS_shift is not 0:
+        if VS_shift != 0:
             if self._verbose:
                 print('\tVS_shift = {}'.format(VS_shift))
             VS_shift = translate_val(VS_shift,
