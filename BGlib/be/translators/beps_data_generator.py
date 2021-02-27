@@ -17,7 +17,8 @@ from pyUSID.io.hdf_utils import link_as_main, copy_dataset, \
     write_reduced_anc_dsets
 from sidpy.hdf.reg_ref import copy_all_region_refs , write_region_references
 
-from pyUSID.io.write_utils import Dimension, calc_chunks
+from pyUSID import Dimension
+from pyUSID.io.anc_build_utils import Dimension, calc_chunks
 from pyUSID.io.image import read_image
 
 from ..analysis.utils.be_loop import loop_fit_function

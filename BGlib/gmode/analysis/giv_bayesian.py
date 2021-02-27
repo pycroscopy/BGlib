@@ -15,7 +15,7 @@ import numpy as np
 from sidpy.proc.comp_utils import parallel_compute
 from sidpy.hdf.dtype_utils import stack_real_to_compound
 from sidpy.hdf.hdf_utils import write_simple_attrs, print_tree, get_attributes
-from pyUSID.io.write_utils import Dimension
+from pyUSID import Dimension
 from pyUSID.processing.process import Process
 from pyUSID.io.hdf_utils import write_main_dataset, create_results_group, \
     create_empty_dataset
