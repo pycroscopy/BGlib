@@ -17,7 +17,7 @@ from sidpy.sid import Translator
 from sidpy.hdf.hdf_utils import write_simple_attrs, link_h5_objects_as_attrs
 
 from pyUSID import Dimension
-from pyUSID.io.anc_build_utils import VALUES_DTYPE, Dimension
+from pyUSID.io.anc_build_utils import VALUES_DTYPE
 from pyUSID.io.hdf_utils import create_indexed_group, write_main_dataset
 
 from .df_utils.gmode_utils import readGmodeParms
