@@ -21,7 +21,8 @@ from sidpy.proc.comp_utils import get_available_memory, parallel_compute
 
 from pyUSID.io.hdf_utils import find_dataset, create_indexed_group, \
     write_main_dataset, get_unit_values
-from pyUSID.io.write_utils import create_spec_inds_from_vals, Dimension
+from pyUSID import Dimension
+from pyUSID.io.anc_build_utils import create_spec_inds_from_vals
 
 from .histogram import build_histogram
 from ...analysis.utils.be_sho import SHOestimateGuess

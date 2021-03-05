@@ -14,7 +14,7 @@ from scipy.io.matlab import loadmat  # To load parameters stored in Matlab .mat 
 import h5py
 from sidpy.sid import Translator
 from sidpy.hdf.hdf_utils import write_simple_attrs
-from pyUSID.io.write_utils import INDICES_DTYPE, Dimension
+from pyUSID.io.anc_build_utils import INDICES_DTYPE, Dimension
 from pyUSID.io.hdf_utils import create_indexed_group, write_main_dataset
 
 from .df_utils.be_utils import trimUDVS, getSpectroscopicParmLabel, \
