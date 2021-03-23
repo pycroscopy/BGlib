@@ -29,6 +29,60 @@ from ..analysis.utils.be_loop import loop_fit_function
 from ..analysis.utils.be_sho import SHOfunc
 
 
+def plot_line_family(axis, x_vec, line_family, line_names=None, label_prefix='', label_suffix='',
+                     y_offset=0, show_cbar=False, **kwargs):
+    """
+    Plots a family of lines with a sequence of colors
+
+    Parameters
+    ----------
+    axis : matplotlib.axes.Axes object
+        Axis to plot the curve
+    x_vec : array-like
+        Values to plot against
+    line_family : 2D numpy array
+        family of curves arranged as [curve_index, features]
+    line_names : array-like
+        array of string or numbers that represent the identity of each curve in the family
+    label_prefix : string / unicode
+        prefix for the legend (before the index of the curve)
+    label_suffix : string / unicode
+        suffix for the legend (after the index of the curve)
+    y_offset : (optional) number
+        quantity by which the lines are offset from each other vertically (useful for spectra)
+    show_cbar : (optional) bool
+        Whether or not to show a colorbar (instead of a legend)
+
+    """
+
+    x_vec = np.array(x_vec)
+
+    if not isinstance(line_family, list):
+        line_family = np.array(line_family)
+
+    assert line_family.ndim == 2, 'line_family must be a 2D array'
+
+    num_lines = line_family.shape[0]
+
+    if line_names is None:
+        # label_prefix = 'Line '
+        line_names = [str(line_ind) for line_ind in range(num_lines)]
+
+    line_names = ['{} {} {}'.format(label_prefix, cur_name, label_suffix) for cur_name in line_names]
+
+    print("Line family shape is {}".format(line_family.shape))
+
+    for line_ind in range(num_lines):
+        colors = plt.cm.get_cmap('jet', line_family.shape[-1])
+        axis.plot(x_vec, line_family[line_ind] + line_ind * y_offset,
+                  color=colors(line_ind),
+                  )
+
+    if show_cbar:
+        # put back the cmap parameter:
+        kwargs.update({'cmap': cmap})
+        _ = sidpy.viz.plot_utils.cbar_for_line_plot(axis, num_lines, **kwargs)
+
 def visualize_sho_results(h5_main, save_plots=True, show_plots=True, cmap=None,
                           expt_type=None, meas_type=None, field_mode=None):
     """
@@ -169,7 +223,7 @@ def visualize_sho_results(h5_main, save_plots=True, show_plots=True, cmap=None,
                                                   save_plots, folder_path, basename, num_rows, num_cols))
         else:
             # plot loops at a few locations
-            dc_vec = np.squeeze(h5_spec_vals[h5_spec_vals.attrs['DC_Offset']])
+            dc_vec = np.squeeze(h5_spec_vals[h5_main.spec_dim_descriptors.index('DC_Offset (V)')])
 
             if not isinstance(field_mode, str):
                 field_mode = meas_grp.attrs['VS_measure_in_field_loops']
@@ -1335,7 +1389,7 @@ def plot_loop_sho_raw_comparison(h5_loop_parameters, h5_sho_grp, h5_raw_dset,
     '''
     Get the bias vector to be plotted against
     '''
-    loop_bias_vec = h5_sho_spec_vals[get_attr(h5_sho_spec_vals, step_chan)].squeeze()
+    loop_bias_vec = h5_sho_spec_vals[main_bias_dim].squeeze()
     shift_ind = int(-1 * steps_per_loop / 4)
     loop_bias_vec = loop_bias_vec.reshape(sho_spec_dims[::-1])
     loop_bias_vec = np.moveaxis(loop_bias_vec, len(loop_bias_vec.shape) - sho_bias_dim - 1, 0)
@@ -1345,8 +1399,9 @@ def plot_loop_sho_raw_comparison(h5_loop_parameters, h5_sho_grp, h5_raw_dset,
     '''
     Get the frequency vector to be plotted against
     '''
-    full_w_vec = h5_main_spec_vals[h5_main_spec_vals.attrs['Frequency']]
-    full_w_vec, _ = reshape_to_n_dims(full_w_vec, h5_spec=h5_main_spec_inds)
+    full_w_vec = h5_main_spec_vals[h5_main.spec_dim_descriptors.index('Frequency (Hz)')]
+    print(full_w_vec.shape)
+    full_w_vec = full_w_vec.reshape(tuple(h5_main.spec_dim_sizes))
     full_w_vec = full_w_vec.squeeze()
 
     '''
@@ -1361,7 +1416,7 @@ def plot_loop_sho_raw_comparison(h5_loop_parameters, h5_sho_grp, h5_raw_dset,
         # Also create the title string for the map
         loop_map_title = list()
         for label in loop_spec_labs:
-            val = h5_loop_spec_vals[get_attr(h5_loop_spec_vals, label)].squeeze()[selected_loop_cycle]
+            val = h5_loop_spec_vals[h5_loop_fit.spec_dim_labels.index(label)].squeeze()[selected_loop_cycle]
         loop_map_title.append('{}: {}'.format(label, val))
 
         loop_map_title = ' - '.join(loop_map_title)

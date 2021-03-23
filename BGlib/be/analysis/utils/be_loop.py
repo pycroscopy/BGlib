@@ -16,6 +16,7 @@ from scipy.optimize import least_squares
 from scipy.optimize import leastsq
 from scipy.spatial import ConvexHull
 from scipy.special import erf, erfinv
+from scipy.signal import find_peaks
 import warnings
 
 # switching32 = np.dtype([('V+', np.float32),
@@ -752,3 +753,39 @@ def fit_loop(vdc_shifted, pr_shifted, guess):
     criterion_values = (aic_loop, bic_loop, aic_line, bic_line)
 
     return plsq, criterion_values, pr_fit_vec
+
+def det_phase_offset(phase_mat_lin, num_bins=150):
+    """
+    Input:
+        - phase mat: numpy vector of size N, containing the phase values of every point
+    Output:
+        - phase_offset: float of the phase offset requried to center the phase
+        Here centering means that one side will be 0 and the other will be pi,
+        so the loop can be projected as A*cos(phi)"""
+
+    # First calculate the histogram of the phase values
+
+    num_bins = 150  # number of bins in histogram
+    hist, bin_edges = np.histogram(phase_mat_lin, bins=num_bins)
+
+    # Remove zero values. Sometimes, when phase is undefined the zero bin will have a peak. Remove this,
+    # and replace it with the average of the two surrounding bins on either side
+    hist[num_bins // 2 - 5:num_bins // 2 + 5] = 0.5 * (hist[num_bins // 2 - 5] + hist[num_bins // 2 + 5])
+
+    # Now find the two peaks by finding the two relative maxima
+
+    peak_positions = find_peaks(hist, distance=num_bins // 3)
+
+    phase_1 = bin_edges[peak_positions[0][0]]
+    phase_2 = bin_edges[peak_positions[0][1]]
+
+    print ('The phase difference is {}'.format(np.round(np.abs(phase_1 - phase_2), 3)))
+    print ('The phase offset is {}'.format(np.round(phase_1, 3)))
+
+    if np.abs(np.abs(phase_1 - phase_2) - np.pi) > 0.5:
+        print('There was a problem with automatic phase offset determination! ' +
+              'Do it manually before proceeding by passing phase_offset to the process_sho_data method')
+
+    phase_offset = phase_1
+
+    return phase_offset
