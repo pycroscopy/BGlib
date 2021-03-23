@@ -164,7 +164,7 @@ class BELoopFitter(Fitter):
         if h5_main.dtype != sho32:
             raise TypeError('Provided dataset is not a SHO results dataset.')
 
-        if data_type == 'BEPSData':
+        if data_type.lower() == 'bepsdata':
             if vs_mode not in ['DC modulation mode', 'current mode']:
                 raise ValueError('Provided dataset has a mode: "' + vs_mode +
                                  '" is not a "DC modulation" or "current mode"'
@@ -334,7 +334,7 @@ class BELoopFitter(Fitter):
                 all_but_forc_rows.append(ind)
 
         if self.verbose and self.mpi_rank == 0:
-            print('All but FORC rows: {}'.format(all_but_forc_rows))
+            print('All but FORC spec rows: {}'.format(all_but_forc_rows))
 
         dc_mats = []
 
@@ -383,10 +383,18 @@ class BELoopFitter(Fitter):
                 raise ValueError('Unable to reshape data to N dimensions')
 
             if self.verbose and self.mpi_rank == 0:
-                print(this_forc_nd.shape)
+                print('After reshaping to N dimensions: shape: '
+                      '{}'.format(this_forc_nd.shape))
+                print('Will reorder to slow-to-fast as: '
+                      '{} and squeeze FORC out'.format(order_to_s2f))
 
             this_forc_nd_s2f = this_forc_nd.transpose(
                 order_to_s2f).squeeze()  # squeeze out FORC
+            # Need to account for niche case when number of positions = 1:
+            if self.h5_main.shape[0] == 1:
+                # Add back a singular dimension
+                this_forc_nd_s2f = this_forc_nd_s2f.reshape([1] + list(this_forc_nd_s2f.shape))
+
             dim_names_s2f = self._dim_labels_s2f.copy()
             if self._num_forcs > 0:
                 dim_names_s2f.remove(
@@ -1069,8 +1077,8 @@ class BELoopFitter(Fitter):
                   ' slowest to fastest varying'
                   '.'.format(results_nd_s2f.shape, dim_labels_s2f))
 
-        pos_size = np.prod(results_nd_s2f.shape[:1])
-        spec_size = np.prod(results_nd_s2f.shape[1:])
+        pos_size = int(np.prod(results_nd_s2f.shape[:1]))
+        spec_size = int(np.prod(results_nd_s2f.shape[1:]))
 
         if verbose:
             print('Results will be flattend to: {}'

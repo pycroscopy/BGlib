@@ -1,6 +1,6 @@
 import numpy as np
+from scipy.optimize import curve_fit, differential_evolution
 import pyUSID as usid
-from scipy.optimize import curve_fit
 
 def exp(x, a, k, c):
     return (a * np.exp(-(x/k))) + c
