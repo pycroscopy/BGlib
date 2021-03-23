@@ -34,8 +34,6 @@ requirements = ['numpy>=1.13.0',
                 'pyUSID>=0.0.8',
 
                 'xlrd>=1.0.0',
-                'igor',
-                'gwyfile',
                 ]
 
 setup(
@@ -45,7 +43,7 @@ setup(
                 'codes',
     long_description=long_description,
     classifiers=[
-        'Development Status :: 0 - Gamma',
+        'Development Status :: 2 - Pre-Alpha',
         'Environment :: Console',
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: MIT License',
@@ -53,7 +51,6 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Cython',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
