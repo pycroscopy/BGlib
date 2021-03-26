@@ -9,7 +9,6 @@ from __future__ import division, print_function, absolute_import, unicode_litera
 
 from os import path
 from warnings import warn
-
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
