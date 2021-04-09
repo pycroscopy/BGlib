@@ -28,7 +28,7 @@ from pyUSID.io.hdf_utils import get_unit_values, get_sort_order, \
     reshape_to_n_dims, create_empty_dataset, create_results_group, \
     write_reduced_anc_dsets, write_main_dataset
 from pyUSID.io.usi_data import USIDataset
-from BGlib.be.analysis.utils.be_loop_old import projectLoop, fit_loop, generate_guess, \
+from BGlib.be.analysis.utils.be_loop import projectLoop, fit_loop, generate_guess, \
     loop_fit_function, calc_switching_coef_vec, switching32
 from BGlib.be.analysis.utils.tree import ClusterTree
 from BGlib.be.analysis.be_sho_fitter import sho32

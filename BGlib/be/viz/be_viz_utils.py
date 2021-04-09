@@ -25,7 +25,7 @@ from pyUSID.io.hdf_utils import reshape_to_n_dims, get_sort_order, \
     get_dimensionality, get_source_dataset
 from pyUSID import USIDataset
 
-from ..analysis.utils.be_loop_old import loop_fit_function
+from ..analysis.utils.be_loop import loop_fit_function
 from ..analysis.utils.be_sho import SHOfunc
 
 
