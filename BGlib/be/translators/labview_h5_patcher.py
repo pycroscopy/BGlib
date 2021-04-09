@@ -18,7 +18,7 @@ from sidpy.hdf.hdf_utils import get_attr, write_simple_attrs
 
 from pyUSID.io.hdf_utils import link_as_main, find_results_groups, \
     check_and_link_ancillary, find_dataset
-from pyUSID.io.write_utils import create_spec_inds_from_vals
+from pyUSID.io.anc_build_utils import create_spec_inds_from_vals
 
 from .df_utils.be_utils import remove_non_exist_spec_dim_labs
 

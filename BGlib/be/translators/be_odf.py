@@ -19,13 +19,13 @@ from .df_utils.be_utils import trimUDVS, getSpectroscopicParmLabel, parmsToDict,
     createSpecVals, requires_conjugate, generate_bipolar_triangular_waveform, \
     infer_bipolar_triangular_fraction_phase, nf32
 
-from sidpy.hdf.hdf_utils import write_simple_attrs
+from sidpy.hdf.hdf_utils import write_simple_attrs, copy_attributes
 from sidpy.hdf.reg_ref import write_region_references
 from sidpy.sid import Translator
 from sidpy.proc.comp_utils import get_available_memory
-from pyUSID.io.write_utils import INDICES_DTYPE, VALUES_DTYPE, Dimension, calc_chunks
+from pyUSID.io.anc_build_utils import INDICES_DTYPE, VALUES_DTYPE, Dimension, calc_chunks
 from pyUSID.io.hdf_utils import write_ind_val_dsets, write_main_dataset, \
-    create_indexed_group, write_book_keeping_attrs, copy_attributes,\
+    create_indexed_group, write_book_keeping_attrs,\
     write_reduced_anc_dsets, get_unit_values
 from pyUSID.io.usi_data import USIDataset
 
@@ -204,6 +204,12 @@ class BEodfTranslator(Translator):
                 print('\t\t{} : {}'.format(key, parm_dict[key]))
 
             print('\n\tisBEPS = {}'.format(isBEPS))
+
+        if parm_dict['BE_bins_per_band'] > 300:
+            raise ValueError('Too many BE bins per band: {}. Translation would'
+                             ' not have failed but resultant data would be '
+                             'nonsensical'
+                             ''.format(parm_dict['BE_bins_per_band']))
 
         ignored_plt_grps = []
         if isBEPS:
@@ -1406,7 +1412,7 @@ class BEodfTranslator(Translator):
                 List of results
             """
 
-            if len(strvals) is not len(numvals):
+            if len(strvals) != len(numvals):
                 return None
             for strval, fltval in zip(strvals, numvals):
                 if target == strval:
@@ -1420,14 +1426,14 @@ class BEodfTranslator(Translator):
                                         '1/3 harmonic excitation',
                                         'pure sine'],
                                        [1, 2, 3, 4])
-        if BE_signal_type is None:
+        if BE_signal_type == None:
             raise NotImplementedError('This translator does not know how to '
                                       'handle "BE_phase_content": "{}"'
                                       ''.format(parm_dict['BE_phase_content']))
         # This is necessary when normalizing the AI by the AO
         self.harmonic = BE_signal_type
         self.signal_type = BE_signal_type
-        if BE_signal_type is 4:
+        if BE_signal_type == 4:
             self.harmonic = 1
         BE_amp = parm_dict['BE_amplitude_[V]']
         try:
@@ -1449,7 +1455,7 @@ class BEodfTranslator(Translator):
         except KeyError as exp:
             raise KeyError(exp)
 
-        if VS_shift is not 0:
+        if VS_shift != 0:
             if self._verbose:
                 print('\tVS_shift = {}'.format(VS_shift))
             VS_shift = translate_val(VS_shift,
@@ -1541,13 +1547,13 @@ class BEodfTranslator(Translator):
         # Build UDVS table:
         if self._verbose:
             print('\t\tBuilding UDVS table')
-        if VS_ACDC_cond is 0 or VS_ACDC_cond is 4:
+        if VS_ACDC_cond == 0 or VS_ACDC_cond == 4:
 
-            if VS_ACDC_cond is 0:
+            if VS_ACDC_cond == 0:
                 if self._verbose:
                     print('\t'*3 + 'DC Spectroscopy mode. Appending zeros')
                 UD_dc_vec = np.vstack((vs_amp_vec, np.zeros(len(vs_amp_vec))))
-            if VS_ACDC_cond is 4:
+            if VS_ACDC_cond == 4:
                 if self._verbose:
                     print('\t'*3 + 'Current mode. Tiling vs amp vec')
                 UD_dc_vec = np.vstack((vs_amp_vec, vs_amp_vec))
@@ -1571,11 +1577,11 @@ class BEodfTranslator(Translator):
             Regardless of the field condition, both in and out of field rows
             WILL exist in the table. 
             """
-            if VS_in_out_cond is 0:  # out of field only
+            if VS_in_out_cond == 0:  # out of field only
                 udvs_table[:, 2] = BE_amp * BE_OF_switch
-            elif VS_in_out_cond is 1:  # in field only
+            elif VS_in_out_cond == 1:  # in field only
                 udvs_table[:, 2] = BE_amp * BE_IF_switch
-            elif VS_in_out_cond is 2:  # both in and out of field
+            elif VS_in_out_cond == 2:  # both in and out of field
                 udvs_table[:, 2] = BE_amp * np.ones(num_VS_steps)
 
             udvs_table[:, 3] = np.ones(num_VS_steps)  # wave type
@@ -1587,14 +1593,14 @@ class BEodfTranslator(Translator):
             udvs_table[BE_IF_switch == 1, 5] = udvs_table[BE_IF_switch == 1, 1]
             udvs_table[BE_OF_switch == 1, 6] = udvs_table[BE_OF_switch == 1, 1]
 
-        elif VS_ACDC_cond is 2:
+        elif VS_ACDC_cond == 2:
             if self._verbose:
                 print('\t\t\tAC voltage spectroscopy')
 
             num_VS_steps = vs_amp_vec.size
             half = int(0.5 * num_VS_steps)
 
-            if num_VS_steps is not half * 2:
+            if num_VS_steps != half * 2:
                 raise ValueError('Odd number of UDVS steps found. Exiting!')
 
             UD_dc_vec = VS_offset * np.ones(num_VS_steps)
@@ -1732,7 +1738,7 @@ class BEodfParser(object):
             Content of one pixel's data
         """
         if self.__num_pix__ is not None:
-            if self.__pix_indx__ is self.__num_pix__:
+            if self.__pix_indx__ == self.__num_pix__:
                 warn('BEodfParser - No more pixels to read!')
                 return None
 
@@ -1748,7 +1754,7 @@ class BEodfParser(object):
 
         self.__pix_indx__ += 1
 
-        if self.__pix_indx__ is self.__num_pix__:
+        if self.__pix_indx__ == self.__num_pix__:
             self.f_real.close()
             self.f_imag.close()
 

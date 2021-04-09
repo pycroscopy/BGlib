@@ -20,7 +20,7 @@ from sidpy.sid import Translator
 from sidpy.hdf.hdf_utils import link_h5_objects_as_attrs, write_simple_attrs
 from sidpy.proc.comp_utils import get_available_memory
 
-from pyUSID.io.write_utils import make_indices_matrix, VALUES_DTYPE, \
+from pyUSID.io.anc_build_utils import make_indices_matrix, VALUES_DTYPE, \
     INDICES_DTYPE, calc_chunks
 from pyUSID.io.usi_data import USIDataset
 from pyUSID.io.hdf_utils import create_indexed_group, check_if_main, print_tree

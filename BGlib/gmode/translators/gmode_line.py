@@ -15,7 +15,8 @@ from scipy.io.matlab import loadmat  # To load parameters stored in Matlab .mat 
 from sidpy.sid import Translator
 from sidpy.hdf.hdf_utils import write_simple_attrs
 
-from pyUSID.io.write_utils import VALUES_DTYPE, Dimension
+from pyUSID import Dimension
+from pyUSID.io.anc_build_utils import VALUES_DTYPE
 from pyUSID.io.hdf_utils import write_main_dataset, create_indexed_group, \
     write_ind_val_dsets
 
