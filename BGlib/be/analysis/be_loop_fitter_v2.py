@@ -144,7 +144,7 @@ class BELoopFitter(Fitter):
         self.parms_dict = {'fitting-method': 'K-Means'}
 
         if method not in ['Random', 'Neighbor', 'K-Means', 'Hierarchical']:
-            raise TypeError('Please use one of the follwing methods: Random, Neighbor, Average, Mixed, K-Means, Hierarchical.')
+            raise TypeError('Please use one of the following methods: Random, Neighbor, K-Means, Hierarchical.')
 
 
         #TODO: define h5_f, dc_vec, PR_mat for future use
@@ -156,13 +156,13 @@ class BELoopFitter(Fitter):
             fig,ax,p0_refs,p0_mat,SumSq,fitted_loops_mat = _do_fit()
             return fig,ax,p0_refs,p0_mat,SumSq,fitted_loops_mat
 
-        if method == 'Neighbor'
+        if method == 'Neighbor':
             from .utils.be_neighbor_fit import _do_fit
             self.parms_dict.update({'fitting-method': 'Nearest Neighbor',
                                     'number of neighbors': NN})
 
             fig,ax,p0_refs,p0_mat,SumSq,fitted_loops_mat = _do_fit()
-            return rfig,ax,p0_refs,p0_mat,SumSq,fitted_loops_mat
+            return fig,ax,p0_refs,p0_mat,SumSq,fitted_loops_mat
 
         if method == 'Hierarchical':
             from .utils.be_hierarchical_fit

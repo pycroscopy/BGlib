@@ -17,8 +17,23 @@ from scipy.optimize import least_squares
 from sidpy.proc.comp_utils import recommend_cpu_cores
 from pyUSID.processing.process import Process
 from pyUSID.io.usi_data import USIDataset
+from enum import Enum
 
 # TODO: All reading, holding operations should use Dask arrays
+
+class Guess_Method(Enum):
+    k_means_guess = 0
+    nearest_neighbor_guess = 1
+    hierarchical_tree_guess = 2
+
+class Prop_Method(Enum):
+    k_means_prop = 0
+    nearest_neighbor_prop = 1
+    none_prop = 2
+
+class Fit_Method(Enum):
+    ols = 0
+    tree = 1
 
 
 class Fitter(Process):
@@ -69,12 +84,14 @@ class Fitter(Process):
         self._h5_guess = None
         self._h5_fit = None
         self.__set_up_called = False
+        self.params_dict = None
 
         # Variables from Process:
         self.compute = self.set_up_guess
         self._unit_computation = super(Fitter, self)._unit_computation
         self._create_results_datasets = self._create_guess_datasets
         self._map_function = None
+
 
     def _read_guess_chunk(self):
         """
@@ -148,6 +165,65 @@ class Fitter(Process):
             if not self._is_guess:
                 self._create_fit_datasets()
 
+    def set_up_guess(self, guess_func = Guess_Method.k_means_guess,prop_func = None, h5_partial_guess=None):
+        """
+        Performs necessary book-keeping before do_guess can be called
+
+        Parameters
+        ----------
+        guess_func: k_means_guess, optional.  Which guess method to use.  Default is k-means clustering
+
+        prop_func: None, optional.  #TODO: add different propagation, current method is just sequential
+
+        h5_partial_guess: h5py.Dataset or pyUSID.io.USIDataset, optional
+            HDF5 dataset containing partial Guess. Not implemented
+        """
+        # TODO: h5_partial_guess needs to be utilized
+        if h5_partial_guess is not None:
+            raise NotImplementedError('Provided h5_partial_guess cannot be '
+                                      'used yet. Ask developer to implement')
+
+        if not isinstance(guess_func,Guess_Method):
+            raise TypeError('Please supply Guess_Method.k_means_guess, Guess_Method.nearest_neighbor_guess, or Guess_Method.hierarchical_tree_guess')
+
+        if not isinstance(prop_func,Prop_Method):
+            raise TypeError('Please supply Guess_Method.k_means_prop, Guess_Method.hierarchical_tree_prop, or Guess_Method.none_prop')
+
+        # Set up the parms dict so everything necessary for checking previous
+        # guess / fit is ready
+
+        self._is_guess = True
+
+        if guess_func == Guess_Method.k_means_guess:
+            self.guess_func = guess_func
+            # num_points =
+            self.params_dict.update({'prior guess method': 'K-means clustering'})#,'number clusters': num_points})
+
+        if guess_func == Guess_Method.nearest_neighbor_guess:
+            self.guess_func = guess_func
+            # num_points =
+            self.params_dict.update({'prior guess method': 'Nearest Neighbors'})#,'number of neighbors': num_point})
+
+        if guess_func == Guess_Method.hierarchical_tree_guess:
+            self.guess_func = guess_func
+            self.params_dict.update({'prior guess method': 'Hierarchical Clustering'})
+
+        # self.prop_func = prop_func
+
+        self._status_dset_name = 'completed_guess_positions'
+        ret_vals = self._check_for_duplicates()
+        self.duplicate_h5_groups, self.partial_h5_groups = ret_vals
+
+        if self.verbose and self.mpi_rank == 0:
+            print('Groups with Guess in:\nCompleted: {}\nPartial:{}'.format(
+                self.duplicate_h5_groups, self.partial_h5_groups))
+
+        self._unit_computation = super(Fitter, self)._unit_computation
+        self._create_results_datasets = self._create_guess_datasets
+
+        self.compute = guess_func #TODO: this is where function changes based on guess method
+        self.__set_up_called = True
+
     def do_guess(self, *args, override=False, **kwargs):
         """
         Computes the Guess
@@ -170,12 +246,24 @@ class Fitter(Process):
         if not self.__set_up_called:
             raise ValueError('Please call set_up_guess() before calling '
                              'do_guess()')
-        self.h5_results_grp = super(Fitter, self).compute(override=override)
+
+        if self.guess_func == Guess_Method.k_means_guess:
+            self.p0_init = KMeans_fitting._avg_cluster_fit()  #initial matrix of prior values, each pixel assigned corresponding cluster average
+
+        if self.guess_func == Guess_Method.nearest_neighbor_guess:
+            self.p0_init = Neighbor_fitting._avg_fit() #initial matrix of prior values, each pixel assigned loop fit average
+
+        if self.guess_func == Guess_Method.hierarchical_tree_guess:
+            self.h5_results_grp = super(Fitter, self).compute(override=override) # Not sure what/where the compute function does/is
+
         # to be on the safe side, expect setup again
         self.__set_up_called = False
-        return USIDataset(self.h5_results_grp['Guess'])
+        self.h5_results_grp['Guess'] = self.p0_init #TODO: change p0_init to h5
 
-    def do_fit(self, *args, override=False, **kwargs):
+        return USIDataset(self.h5_results_grp['Guess']) #TODO: how to get the other prior methods into same format as tree method? Separate function, propagate the p0 guesses to the corresponding pixels then run this function?
+
+
+    def do_fit(self, *args, override=False, **kwargs):  #This function looks the same as the do_guess function, how are they different?
         """
         Computes the Fit
 
@@ -202,7 +290,7 @@ class Fitter(Process):
         This value will be used for filling in the status dataset.
         """
         self.h5_results_grp.attrs['last_pixel'] = 0
-        self.h5_results_grp = super(Fitter, self).compute(override=override)
+        self.h5_results_grp = super(Fitter, self).compute(override=override)  # Where is this compute function?
         # to be on the safe side, expect setup again
         self.__set_up_called = False
         return USIDataset(self.h5_results_grp['Fit'])
@@ -228,37 +316,9 @@ class Fitter(Process):
         """
         return np.array(results)
 
-    def set_up_guess(self, h5_partial_guess=None):
-        """
-        Performs necessary book-keeping before do_guess can be called
 
-        Parameters
-        ----------
-        h5_partial_guess: h5py.Dataset or pyUSID.io.USIDataset, optional
-            HDF5 dataset containing partial Guess. Not implemented
-        """
-        # TODO: h5_partial_guess needs to be utilized
-        if h5_partial_guess is not None:
-            raise NotImplementedError('Provided h5_partial_guess cannot be '
-                                      'used yet. Ask developer to implement')
 
-        # Set up the parms dict so everything necessary for checking previous
-        # guess / fit is ready
-        self._is_guess = True
-        self._status_dset_name = 'completed_guess_positions'
-        ret_vals = self._check_for_duplicates()
-        self.duplicate_h5_groups, self.partial_h5_groups = ret_vals
-
-        if self.verbose and self.mpi_rank == 0:
-            print('Groups with Guess in:\nCompleted: {}\nPartial:{}'.format(
-                self.duplicate_h5_groups, self.partial_h5_groups))
-
-        self._unit_computation = super(Fitter, self)._unit_computation
-        self._create_results_datasets = self._create_guess_datasets
-        self.compute = self.do_guess
-        self.__set_up_called = True
-
-    def set_up_fit(self, h5_partial_fit=None, h5_guess=None):
+    def set_up_fit(self, fit_func = Fit_Method.ols, h5_partial_fit=None, h5_guess=None):
         """
         Performs necessary book-keeping before do_fit can be called
 
@@ -340,7 +400,7 @@ class Fitter(Process):
 
         # We want compute to call our own manual unit computation function:
         self._unit_computation = self._unit_compute_fit
-        self.compute = self.do_fit
+        self.compute = fit_func  #TODO: assuming this is where the fit functions go, currently only two: tree and ols curve fitting (for kmeans and neighbor)
         self.__set_up_called = True
 
     def _unit_compute_fit(self, obj_func, obj_func_args=[],
@@ -402,3 +462,71 @@ class Fitter(Process):
 
         # What least_squares returns is an object that needs to be extracted
         # to get the coefficients. This is handled by the write function
+
+    def _create_guess_datasets(self):
+        """
+        Creates the HDF5 Guess dataset
+        """
+        self._create_projection_datasets()
+
+        self._h5_guess = create_empty_dataset(self.h5_loop_metrics, loop_fit32,
+                                              'Guess')
+
+        self._h5_guess = USIDataset(self._h5_guess)
+
+        write_simple_attrs(self.h5_results_grp, self.parms_dict)
+
+        self.h5_main.file.flush()
+
+
+
+def k_means_guess(dc_vec,sho_fit, label, n_clust = None):
+
+    # guess = class
+    #TODO: does this need a superclass?
+    #TODO: how does this keep track of which pixel it is?
+
+    p0 = n_clust[label]
+
+    return p0
+
+def k_means_prop(PR_mat,n_clust = None):
+    if n_clust == None:
+        size = PR_mat.shape[0] * PR_mat.shape[1]
+        n_clusters = int(size / 100)
+
+    PR_mat_flat = PR_mat.reshape(size, int(PR_mat.shape[2]))
+    kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit(PR_mat_flat)
+    labels = kmeans.labels_
+
+    p0_clusters = []
+    cluster_loops = []
+    for pp in trange(n_clusters):
+        opt_vals = []
+        res = []
+        clust = PR_mat_flat[labels == pp]
+        PR_mean = np.mean(clust, axis=0)
+        if dum == 1:
+            PR_mean = np.roll(PR_mean, -max_x)
+        cluster_loops.append(PR_mean)
+        p0 = p0_mat[0]
+        try:
+            popt, pcov = curve_fit(loop_fit_function, xdata, PR_mean, p0=p0, maxfev=10000)
+        except:
+            kk = 0
+            p0 = np.random.normal(0.1, 5, 9)
+            while kk < 20:
+                try:
+                    vals_min, pcov = curve_fit(loop_fit_function, xdata, all_mean, p0=p0, maxfev=10000)
+                except:
+                    continue
+                kk += 1
+                opt_vals.append(vals_min)
+                fitted_loop = loop_fit_function(xdata, *vals_min)
+                yres = PR_mean - fitted_loop
+                res.append(yres @ yres)
+                popt = opt_vals[np.argmin(res)]
+        p0_clusters.append(popt)
+    return labels, p0_clusters
+
+# def nearest_neighbors_guess(dc_vec, PR_mat, NN=2):

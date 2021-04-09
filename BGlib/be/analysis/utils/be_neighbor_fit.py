@@ -1,4 +1,12 @@
-class KMeans_fitting():
+from scipy.optimize import curve_fit
+from tqdm import trange
+from copy import deepcopy
+import pyUSID as usid
+from .be_loop_fitter_v2 import BELoopFitter # Not sure if this is the correct way to call this
+
+
+
+class Neighbor_fitting():
     def __init__(self):
         super(BELoopFitter, self).__init__(h5_main, "Loop_Fit",
                                            variables=None, **kwargs)
@@ -34,6 +42,7 @@ class KMeans_fitting():
         self.popt = opt_vals[np.argmin(res)]
         popt_mean = deepcopy(popt)
         self.p0_mat = [popt] * PR_mat.shape[0] * PR_mat.shape[1]
+        return p0_mat
 
     def _do_fit(self):
         import matplotlib.pyplot as plt

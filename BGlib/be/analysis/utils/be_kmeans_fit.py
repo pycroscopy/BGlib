@@ -64,11 +64,13 @@ class KMeans_fitting():
 
         loop_eval = np.hstack((f1, f2))
         return loop_eval
+
     def loop_resid(coef_vec,vdc, ydata):
         y = loop_fit_function(vdc,*coef_vec)
         res = ydata-y
         ss = res@res
         return ss
+
     def _avg_fit(self):
         for kk in range(20):
             p0 = np.random.normal(0.1, 5, 9)
@@ -104,22 +106,23 @@ class KMeans_fitting():
             cluster_loops.append(PR_mean)
             p0 = p0_mat[0]
             try:
-                popt, pcov = curve_fit(loop_fit_function, xdata, PR_mean, p0=p0, maxfev=10000)
+                popt, pcov = curve_fit(self.loop_fit_function, xdata, PR_mean, p0=p0, maxfev=10000)
             except:
                 kk = 0
                 p0 = np.random.normal(0.1, 5, 9)
                 while kk < 20:
                     try:
-                        vals_min, pcov = curve_fit(loop_fit_function, xdata, all_mean, p0=p0, maxfev=10000)
+                        vals_min, pcov = curve_fit(self.loop_fit_function, xdata, all_mean, p0=p0, maxfev=10000)
                     except:
                         continue
                     kk += 1
                     opt_vals.append(vals_min)
-                    fitted_loop = loop_fit_function(xdata, *vals_min)
+                    fitted_loop = self.loop_fit_function(xdata, *vals_min)
                     yres = PR_mean - fitted_loop
                     res.append(yres @ yres)
                     popt = opt_vals[np.argmin(res)]
             self.p0_clusters.append(popt)
+        return p0_clusters
 
     def _setup_vars(self):
         # TODO: identify PR_mat
