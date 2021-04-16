@@ -100,7 +100,7 @@ class BELoopFitter(Fitter):
 
         self.parms_dict = None
 
-        self.method = 'K-Means'
+        # self.method = 'K-Means'
 
         self._check_validity(h5_main, be_data_type, vs_mode, vs_cycle_frac)
 
@@ -175,6 +175,9 @@ class BELoopFitter(Fitter):
             raise NotImplementedError('Loop fitting not supported for Band '
                                       'Excitation experiment type: {}'
                                       ''.format(data_type))
+        if method is not in ['K-Means','Neighbor','Random','Hierarchical']:
+            raise ValueError('Provided method is not one of the supported modes. '
+                             'Please choose between: K-Means, Neighbor, Random, or Hierarchical')
 
 
     def do_be_fitting(self,method='K-Means',NN=2,h5_partial_guess=None, *func_args, **func_kwargs):
