@@ -127,6 +127,7 @@ class BELoopFitter(Fitter):
         self._met_spec_inds = None
         self._write_results_chunk = None
 
+    @staticmethod
     def _check_validity(h5_main, data_type, vs_mode, vs_cycle_frac):
         """
         Checks whether or not the provided object can be analyzed by this class
