@@ -26,7 +26,7 @@ from sidpy.proc.comp_utils import get_MPI, recommend_cpu_cores
 from pyUSID.io.usi_data import USIDataset
 from .be_sho_fitter import sho32
 from BGlib.be.analysis.utils.fitter import Fitter
-import utils
+# import utils
 '''
 Custom dtypes for the datasets created during fitting.
 '''
