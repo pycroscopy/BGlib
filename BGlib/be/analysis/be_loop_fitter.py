@@ -165,8 +165,8 @@ class BELoopFitter(Fitter):
             return fig,ax,p0_refs,p0_mat,SumSq,fitted_loops_mat
 
         if method == 'Hierarchical':
-            from .utils.be_hierarchical_fit
-            from .utils.fitter
+            # from .utils import be_hierarchical_fit
+            # from .utils import fitter
 
             self.parms_dict.update({'fitting-method': 'Hierarchical'})
             expt_type = usid.hdf_utils.get_attr(h5_f, 'data_type')
