@@ -14,9 +14,11 @@ from igor import binarywave as bw
 from sidpy.sid import Translator
 from sidpy.hdf.hdf_utils import write_simple_attrs
 
-from pyUSID.io.write_utils import VALUES_DTYPE, Dimension
-from pyUSID.io.hdf_utils import create_indexed_group, write_main_dataset, \
-    write_ind_val_dsets
+from sidpy.sid.dimension import Dimension
+from pyUSID.io.anc_build_utils import VALUES_DTYPE
+from sidpy.hdf.prov_utils import create_indexed_group
+from pyUSID.io.hdf_utils.model import write_main_dataset
+from pyUSID.io.hdf_utils.simple import write_ind_val_dsets
 
 if sys.version_info.major == 3:
     unicode = str
