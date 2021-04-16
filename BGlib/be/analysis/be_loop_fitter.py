@@ -127,6 +127,52 @@ class BELoopFitter(Fitter):
         self._met_spec_inds = None
         self._write_results_chunk = None
 
+    def _check_validity(h5_main, data_type, vs_mode, vs_cycle_frac):
+        """
+        Checks whether or not the provided object can be analyzed by this class
+
+        Parameters
+        ----------
+        h5_main : h5py.Dataset instance
+            The dataset containing the SHO Fit (not necessarily the dataset
+            directly resulting from SHO fit)
+            over which the loop projection, guess, and fit will be performed.
+        data_type : str
+            Type of data. This is an attribute written to the HDF5 file at the
+            root level by either the translator or the acquisition software.
+            Accepted values are: 'BEPSData' and 'cKPFMData'
+            Default - this function will attempt to extract this metadata from the
+            HDF5 file
+        vs_mode: str
+            Type of measurement. Accepted values are:
+             'AC modulation mode with time reversal' or 'DC modulation mode'
+             This is an attribute embedded under the "Measurement" group with the
+             following key: 'VS_mode'. Default - this function will attempt to
+             extract this metadata from the HDF5 file
+        vs_cycle_frac : str
+            Fraction of the bi-polar triangle waveform for voltage spectroscopy
+            used in this experiment
+        """
+        if h5_main.dtype != sho32:
+            raise TypeError('Provided dataset is not a SHO results dataset.')
+
+        if data_type.lower() == 'bepsdata':
+            if vs_mode not in ['DC modulation mode', 'current mode']:
+                raise ValueError('Provided dataset has a mode: "' + vs_mode +
+                                 '" is not a "DC modulation" or "current mode"'
+                                 ' BEPS dataset')
+            elif vs_cycle_frac != 'full':
+                raise ValueError('Provided dataset does not have full cycles')
+
+        elif data_type == 'cKPFMData':
+            if vs_mode != 'cKPFM':
+                raise ValueError('Provided dataset has an unsupported VS_mode:'
+                                 ' "' + vs_mode + '"')
+        else:
+            raise NotImplementedError('Loop fitting not supported for Band '
+                                      'Excitation experiment type: {}'
+                                      ''.format(data_type))
+
 
     def do_be_fitting(self,method='K-Means',NN=2,h5_partial_guess=None, *func_args, **func_kwargs):
         """
