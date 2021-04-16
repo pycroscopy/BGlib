@@ -100,6 +100,8 @@ class BELoopFitter(Fitter):
 
         self.parms_dict = None
 
+        self.method = 'K-Means'
+
         self._check_validity(h5_main, be_data_type, vs_mode, vs_cycle_frac)
 
         # Instead of the variables kwarg to the Fitter. Do check here:
