@@ -3,6 +3,8 @@ import os
 import matplotlib.pyplot as plt
 from bglib_process import BGlibProcess
 from bglib_guesser import *
+from sklearn.metrics import r2_score
+from scipy.optimize import curve_fit
 
 # class BGlibFitter(BGlibProcess):
 #     """
@@ -25,16 +27,41 @@ class LoopFitter(BGlibProcess):
 
     def __init__(self):
         super(LoopFitter, self).__init__()
+        self.p_refs = []
+        self.p_mat = []
 
         # TODO: add fitter
 
-    def do_fit(self):
-
+    def do_fit(self,method='K-Means',N=2):
+        self.method = method
+        count = -1
+        self.fitted_loops_mat = [[]]*self.PR_mat.shape[0]*self.PR_mat.shape[1]
+        self.SumSq = []
         if self.method == 'K-Means':
-            guess =
+            p0s = BGlibGuesser.k_mean_guess(self,N)
+        if self.method == 'Random':
+            BGlibGuesser.random_guess(self)
+
+        for ii in range(self.PR_mat.shape[0]):
+            for jj in range(self.PR_mat.shape[1]):
+                p0 = p0s[ii,jj,:]
+                ydata = self.PR_mat[ii,jj,:]
+
+                popt, pcov = curve_fit(self.loop_fit_function, self.xdata, ydata, p0=p0, maxfev=10000)
+
+                self.p0_refs.append(p0)
+                self.p_mat.append(popt)
+
+                fitted_loop = self.loop_fit_function(self.xdata,*popt)
+                self.fitted_loops_mat[count] = fitted_loop
+                ss = r2_score(ydata,fitted_loop)
+                self.SumSq[count] = ss
 
 
-    def loop_fit_function(self, vdc, *coef_vec): #TODO: change from regular function to contain class variables
+
+
+
+    def loop_fit_function(self, *coef_vec): #TODO: change from regular function to contain class variables
         """
         9 parameter fit function
 
@@ -51,6 +78,7 @@ class LoopFitter(BGlibProcess):
             Loop values
         """
         from scipy.special import erf
+        vdc = self.xdata
         a = coef_vec[:5]
         b = coef_vec[5:]
         d = 1000
@@ -70,7 +98,8 @@ class LoopFitter(BGlibProcess):
         loop_eval = np.hstack((f1, f2))
         return loop_eval
 
-    def loop_resid(coef_vec, vdc, ydata):  #TODO: change from regular function to contain class variables
+    def loop_resid(self,coef_vec, ydata):  #TODO: check ydata goes in correctly
+        vdc = self.xdata
         y = loop_fit_function(vdc, *coef_vec)
         res = ydata - y
         ss = res @ res

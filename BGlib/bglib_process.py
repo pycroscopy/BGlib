@@ -14,6 +14,7 @@ from bglib_guesser import
 from dask.distributed import Client, progress
 import dask
 
+#TODO: Process class should include more def for other modes (gmode, trKPFM)
 class BGlibProcess():
     """
     BGlib Process class, branches out to Fitter and Guesser class.
@@ -26,14 +27,14 @@ class BGlibProcess():
         self.num_workers = num_workers
         self.client = Client(threads_per_worker=self.threads, n_workers=self.num_workers)
 
-
     def extract_sho(self):
+        # set for be currently
         sho = SHO_Fitter()
         main_dsets = [] #TODO: add in SHO fit
         self.h5_sho_fit = main_dsets[1]
 
     def extract_PR(self,plot=False):
-
+        # set for be currently
         self.amplitude  = self.h5_sho_fit['Amplitude [V']
         self.phase = self.h5_sho_fit['Phase [rad]']
         adjust = np.max(self.phase) - np.min(self.phase)
@@ -58,6 +59,5 @@ class BGlibProcess():
             ax[1].plot(self.dc_vec_OF,self.PR_OF[11,9,:],'r',label='Off field')
             ax[1].plot(self.dc_vec_IF, self.PR_IF[11, 9, :], 'b',label='On Field')
             ax[1].title('Hysteresis Loops from pixel [11,9]')
-
 
 

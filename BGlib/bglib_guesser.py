@@ -9,7 +9,7 @@ from scipy.optimize import curve_fit
 from bglib_fitter import loop_fit_function
 from copy import deepcopy
 
-class BGlibGuesser(BGlibProcess): #TODO: Define PR_mat
+class BGlibGuesser(BGlibProcess): #TODO: Add validity checks
 
     def __init__(self):
         super(BGlibGuesser, self).__init__()
@@ -65,23 +65,20 @@ class BGlibGuesser(BGlibProcess): #TODO: Define PR_mat
 
         print('Done with average fit')
 
-    def k_means_averages(self,n_clusters=None): # Can be done in parallel but need to set it up that way #TODO: Parallelize
+    def k_means_averages(self): # Can be done in parallel but need to set it up that way #TODO: Parallelize
         self.fit_average()
 
         size = self.PR_mat.shape[0] * self.PR_mat.shape[1]
-        if n_clusters != None:
-            self.n_clusters = n_clusters
-        else:
-            self.n_clusters = int(size / 100)
+
         PR_mat_flat = self.PR_mat.reshape(size, int(self.PR_mat.shape[2]))
         kmeans = KMeans(n_clusters=self.n_clusters, random_state=0).fit(PR_mat_flat)
         self.labels = kmeans.labels_
-        self.p0_clusters = []
+        p0_clusters_dum = []
         cluster_loops = []
         for pp in self.n_clusters:
             opt_vals = []
             res = []
-            clust = PR_mat_flat[labels == pp]
+            clust = PR_mat_flat[self.labels == pp]
             PR_mean = np.mean(clust, axis=0)
             if self.rolled == 1:
                 PR_mean = np.roll(PR_mean, -self.max_x)
@@ -103,19 +100,24 @@ class BGlibGuesser(BGlibProcess): #TODO: Define PR_mat
                     yres = self.PR_mean - fitted_loop
                     res.append(yres @ yres)
                     popt = opt_vals[np.argmin(res)]
-            self.p0_clusters.append(popt)
-            self.fitted_loop = loop_fit_function(self.xdata, *popt)
+            p0_clusters_dum.append(popt)
 
-    def k_mean_guess(self,count):
+        p0_clusters = p0_clusters_dum.reshape((self.PR_mat.shape[0],self.PR_mat.shape[1],9)) #matrix of p0 values corresponding to the associated cluster mean fit
+        return p0_clusters
+
+    def k_mean_guess(self,n_clusters = None):
         """
        Function which uses the previously calculated cluster averages and returns the fitted parameters for those average cluster loops
 
-       :param count: the pixel index of the current loop being fit, fed in from Fitter class function
+       :param n_clusters: the numbers of clusters to use in k_means clustering
         """
+        if n_clusters is None:
+            size = self.PR_mat.shape[0] * self.PR_mat.shape[1]
+            self.n_clusters = int(size / 100)
 
-        lab = self.labels[count]
-        p0 = self.p0_clusters[lab]
-        return p0
+        p0_clusters = self.k_means_averages(self,self.n_clusters)
+
+        return p0_clusters
 
     def neighbor_guess(self,NN=2,ii,jj): # Must be done sequentially!
         """
@@ -146,7 +148,6 @@ class BGlibGuesser(BGlibProcess): #TODO: Define PR_mat
         """
         Function which uses randomly chooses the piors used for loop fitting.
         """
-
         p0 = np.random.normal(0.1, 5, 9)
 
         return p0
