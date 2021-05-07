@@ -175,7 +175,7 @@ class BELoopFitter(Fitter):
             raise NotImplementedError('Loop fitting not supported for Band '
                                       'Excitation experiment type: {}'
                                       ''.format(data_type))
-        if method is not in ['K-Means','Neighbor','Random','Hierarchical']:
+        if method is not ['K-Means','Neighbor','Random','Hierarchical']:
             raise ValueError('Provided method is not one of the supported modes. '
                              'Please choose between: K-Means, Neighbor, Random, or Hierarchical')
 
