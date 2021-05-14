@@ -31,6 +31,7 @@ class BGlibProcess():
         # set for be currently
         sho = SHO_Fitter()
         main_dsets = [] #TODO: add in SHO fit
+
         self.h5_sho_fit = main_dsets[1]
 
     def extract_PR(self,plot=False):
