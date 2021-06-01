@@ -1,0 +1,32 @@
+BGlib.be.translators.be\_odf\_relaxation
+========================================
+
+.. automodule:: BGlib.be.translators.be_odf_relaxation
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :nosignatures:
+   
+      BEodfRelaxationTranslator
+   
+   
+
+   
+   
+   
+
+
+

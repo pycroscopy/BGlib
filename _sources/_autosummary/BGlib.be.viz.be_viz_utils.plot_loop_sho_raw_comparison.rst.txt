@@ -1,0 +1,6 @@
+BGlib.be.viz.be\_viz\_utils.plot\_loop\_sho\_raw\_comparison
+============================================================
+
+.. currentmodule:: BGlib.be.viz.be_viz_utils
+
+.. autofunction:: plot_loop_sho_raw_comparison

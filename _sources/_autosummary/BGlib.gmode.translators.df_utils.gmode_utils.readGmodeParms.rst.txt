@@ -1,0 +1,6 @@
+BGlib.gmode.translators.df\_utils.gmode\_utils.readGmodeParms
+=============================================================
+
+.. currentmodule:: BGlib.gmode.translators.df_utils.gmode_utils
+
+.. autofunction:: readGmodeParms

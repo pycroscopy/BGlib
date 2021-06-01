@@ -1,0 +1,6 @@
+BGlib.gmode.analysis.utils.giv\_utils.plot\_bayesian\_results
+=============================================================
+
+.. currentmodule:: BGlib.gmode.analysis.utils.giv_utils
+
+.. autofunction:: plot_bayesian_results

@@ -1,0 +1,31 @@
+BGlib.gmode.analysis
+====================
+
+.. automodule:: BGlib.gmode.analysis
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. autosummary::
+   :toctree:
+      :template: custom-module-template.rst
+   :recursive:
+
+   BGlib.gmode.analysis.giv_bayesian
+   BGlib.gmode.analysis.utils
+

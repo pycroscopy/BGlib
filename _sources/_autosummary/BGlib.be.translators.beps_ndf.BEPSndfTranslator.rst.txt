@@ -1,0 +1,26 @@
+BGlib.be.translators.beps\_ndf.BEPSndfTranslator
+================================================
+
+.. currentmodule:: BGlib.be.translators.beps_ndf
+
+.. autoclass:: BEPSndfTranslator
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~BEPSndfTranslator.is_valid_file
+      ~BEPSndfTranslator.translate
+   
+   
+
+   
+   
+   

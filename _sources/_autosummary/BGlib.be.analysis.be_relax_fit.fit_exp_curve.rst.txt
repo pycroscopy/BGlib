@@ -1,0 +1,6 @@
+BGlib.be.analysis.be\_relax\_fit.fit\_exp\_curve
+================================================
+
+.. currentmodule:: BGlib.be.analysis.be_relax_fit
+
+.. autofunction:: fit_exp_curve

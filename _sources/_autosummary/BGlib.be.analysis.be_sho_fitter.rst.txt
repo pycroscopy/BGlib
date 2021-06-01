@@ -1,0 +1,43 @@
+BGlib.be.analysis.be\_sho\_fitter
+=================================
+
+.. automodule:: BGlib.be.analysis.be_sho_fitter
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      complex_gaussian
+      wavelet_peaks
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :nosignatures:
+   
+      BESHOfitter
+      SHOFitFunc
+      SHOGuessFunc
+   
+   
+
+   
+   
+   
+
+
+

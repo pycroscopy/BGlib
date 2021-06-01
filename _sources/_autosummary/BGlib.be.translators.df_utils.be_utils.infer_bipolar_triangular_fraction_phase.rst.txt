@@ -1,0 +1,6 @@
+BGlib.be.translators.df\_utils.be\_utils.infer\_bipolar\_triangular\_fraction\_phase
+====================================================================================
+
+.. currentmodule:: BGlib.be.translators.df_utils.be_utils
+
+.. autofunction:: infer_bipolar_triangular_fraction_phase

@@ -1,0 +1,6 @@
+BGlib.gmode.analysis.utils.giv\_utils.plot\_bayesian\_spot\_from\_h5
+====================================================================
+
+.. currentmodule:: BGlib.gmode.analysis.utils.giv_utils
+
+.. autofunction:: plot_bayesian_spot_from_h5

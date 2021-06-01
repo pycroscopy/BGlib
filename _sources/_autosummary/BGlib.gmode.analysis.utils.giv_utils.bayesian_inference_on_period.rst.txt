@@ -1,0 +1,6 @@
+BGlib.gmode.analysis.utils.giv\_utils.bayesian\_inference\_on\_period
+=====================================================================
+
+.. currentmodule:: BGlib.gmode.analysis.utils.giv_utils
+
+.. autofunction:: bayesian_inference_on_period

@@ -1,0 +1,6 @@
+BGlib.be.translators.df\_utils.be\_utils.generate\_bipolar\_triangular\_waveform
+================================================================================
+
+.. currentmodule:: BGlib.be.translators.df_utils.be_utils
+
+.. autofunction:: generate_bipolar_triangular_waveform

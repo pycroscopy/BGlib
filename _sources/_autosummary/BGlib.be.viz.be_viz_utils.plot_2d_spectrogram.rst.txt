@@ -1,0 +1,6 @@
+BGlib.be.viz.be\_viz\_utils.plot\_2d\_spectrogram
+=================================================
+
+.. currentmodule:: BGlib.be.viz.be_viz_utils
+
+.. autofunction:: plot_2d_spectrogram

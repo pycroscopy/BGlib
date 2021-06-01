@@ -1,0 +1,6 @@
+BGlib.be.analysis.utils.be\_loop.calculate\_loop\_centroid
+==========================================================
+
+.. currentmodule:: BGlib.be.analysis.utils.be_loop
+
+.. autofunction:: calculate_loop_centroid

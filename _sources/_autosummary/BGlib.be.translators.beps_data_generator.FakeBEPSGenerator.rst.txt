@@ -1,0 +1,28 @@
+BGlib.be.translators.beps\_data\_generator.FakeBEPSGenerator
+============================================================
+
+.. currentmodule:: BGlib.be.translators.beps_data_generator
+
+.. autoclass:: FakeBEPSGenerator
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~FakeBEPSGenerator.calc_loop_coef_mat
+      ~FakeBEPSGenerator.is_valid_file
+      ~FakeBEPSGenerator.no_bin
+      ~FakeBEPSGenerator.translate
+   
+   
+
+   
+   
+   

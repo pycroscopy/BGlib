@@ -1,0 +1,31 @@
+BGlib.be.translators.df\_utils.histogram
+========================================
+
+.. automodule:: BGlib.be.translators.df_utils.histogram
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      build_histogram
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

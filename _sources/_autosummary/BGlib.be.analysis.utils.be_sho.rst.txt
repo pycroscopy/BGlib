@@ -1,0 +1,36 @@
+BGlib.be.analysis.utils.be\_sho
+===============================
+
+.. automodule:: BGlib.be.analysis.utils.be_sho
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      SHOestimateGuess
+      SHOfastGuess
+      SHOfit
+      SHOfunc
+      SHOlowerBound
+      SHOupperBound
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

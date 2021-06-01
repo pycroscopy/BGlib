@@ -1,0 +1,6 @@
+BGlib.be.translators.df\_utils.be\_utils.visualize\_plot\_groups
+================================================================
+
+.. currentmodule:: BGlib.be.translators.df_utils.be_utils
+
+.. autofunction:: visualize_plot_groups

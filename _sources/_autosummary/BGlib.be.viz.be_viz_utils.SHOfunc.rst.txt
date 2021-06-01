@@ -1,0 +1,6 @@
+BGlib.be.viz.be\_viz\_utils.SHOfunc
+===================================
+
+.. currentmodule:: BGlib.be.viz.be_viz_utils
+
+.. autofunction:: SHOfunc

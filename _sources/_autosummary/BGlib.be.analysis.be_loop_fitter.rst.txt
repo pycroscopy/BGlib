@@ -1,0 +1,41 @@
+BGlib.be.analysis.be\_loop\_fitter
+==================================
+
+.. automodule:: BGlib.be.analysis.be_loop_fitter
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      guess_loops_hierarchically
+      shift_vdc
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :nosignatures:
+   
+      BELoopFitter
+   
+   
+
+   
+   
+   
+
+
+

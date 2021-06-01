@@ -1,0 +1,25 @@
+BGlib.be.analysis.be\_sho\_fitter.SHOGuessFunc
+==============================================
+
+.. currentmodule:: BGlib.be.analysis.be_sho_fitter
+
+.. autoclass:: SHOGuessFunc
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~SHOGuessFunc.complex_gaussian
+      ~SHOGuessFunc.wavelet_peaks
+   
+   
