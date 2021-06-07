@@ -1,545 +1,216 @@
-import numpy as np
-import os
-import matplotlib.pyplot as plt
-from bglib_process import BGlibProcess
-from bglib_guesser import *
-from sklearn.metrics import r2_score
 from scipy.optimize import curve_fit
-
-# class BGlibFitter(BGlibProcess):
-#     """
-#     Fitter class for BGlib, contains fitter for SHO fit of raw data and hysteresis loop fitter.
-#     """
-#     def __init__(self):
-#         super(BGlibFitter, self).__init__(h5_main, "Fitter",
-#                                            method='K-Means', **kwargs)  #TODO: still don't quite understand the super()
+from copy import deepcopy
+from sklearn.cluster import KMeans
 
 
-class SHO_Fitter(BGlibProcess): #TODO:  ALL THESE FUNCTIONS ARE FROM OLD SHO FITTER, NEED TO LOOK OVER AND CONVERT TO NEW FITTER/GUESSER
+def fit_func(xvec, yvec, p0):
+    #         if self.dum == 1:
+    yvec = np.roll(yvec, -self.max_x)
+    popt, pcov = curve_fit(loop_fit_func, xvec, yvec, p0=p0)
+    return popt, pcov
 
-    def __init__(self):
-        super(SHO_Fitter, self).__init__()
 
-        # TODO: add fitter
-        self.parm_dict = None
-        self._fit_dim_name = 'Frequency'
+class LoopFitter():
 
-        freq_dim_ind = self.h5_main.spec_dim_labels.index('Frequency')
-        self.step_start_inds = np.where(self.h5_main.h5_spec_inds[freq_dim_ind] == 0)[0]
-        self.num_udvs_steps = len(self.step_start_inds)
+    def __init__(self, xvec, sidpy_dataset, pos_dims=None, prior_computation='KMeans', _computation=None,
+                 num_workers=1, threads=4, *args, **kwargs):
+        from dask import delayed
+        self.dataset = sidpy_dataset
+        #         self.dataset = self.extract_PR()
+        self.prior_computation = prior_computation
+        self.num_workers = num_workers
+        self.threads = threads
+        self.fit_results = []
+        self._computation = _computation
 
-        # find the frequency vector and hold in memory
-        self.freq_vec = None
-        self._get_frequency_vector()
+        self.client = Client(threads_per_worker=self.threads, n_workers=self.num_workers)
 
-        # This is almost always True but think of this more as a sanity check.
-        self.is_reshapable = _is_reshapable(self.h5_main, self.step_start_inds)
+        num_fit_dims = self.dataset.ndim - len(pos_dims)
 
-        # accounting for memory copies
-        self._max_raw_pos_per_read = self._max_pos_per_read
-        # set limits in the set up functions
+        self.pos_dim_shapes = tuple([self.dataset.shape[pos_dim] for pos_dim in range(len(pos_dims))])
+        self.num_computations = np.prod([self.dataset.shape[pos_dim] for pos_dim in range(len(pos_dims))])
 
-        self.results_pix_byte_size = sho32.itemsize * self.num_udvs_steps
+        remaining_dataset_shape = [self.dataset.shape[y] for y in np.arange(self.dataset.ndim)
+                                   if y not in pos_dims]
 
-    def _get_frequency_vector(self):
-        """
-        Reads the frequency vector from the Spectroscopic_Values dataset.
-        This assumes that the data is reshape-able.
-        """
-        h5_spec_vals = self.h5_main.h5_spec_vals
-        freq_dim = np.argwhere('Frequency' == np.array(self.h5_main.spec_dim_labels)).squeeze()
+        self.shape_tuple = tuple([self.num_computations]) + tuple(remaining_dataset_shape)
 
-        if len(self.step_start_inds) == 1:  # BE-Line
-            end_ind = h5_spec_vals.shape[1]
-        else:  # BEPS
-            end_ind = self.step_start_inds[1]
+        print("shape tuple is {}".format(self.shape_tuple))
 
-        self.freq_vec = h5_spec_vals[freq_dim, self.step_start_inds[0]:end_ind]
+        self.dataset_flat = self.dataset.reshape(self.shape_tuple)
 
-    def _create_guess_datasets(self):
-        """
-        Creates the h5 group, guess dataset, corresponding spectroscopic datasets and also
-        links the guess dataset to the spectroscopic datasets.
-        """
-        self.h5_results_grp = create_results_group(self.h5_main,
-                                                   self.process_name,
-                                                   h5_parent_group=self._h5_target_group)
-        write_simple_attrs(self.h5_results_grp, self.parms_dict)
+        xvec, max_x = self.format_xvec(xvec)
+        self.max_x = max_x
+        self.prior_mat_flat = self.calc_priors(xvec)
+        self.prior_mat_flat = np.asarray(self.prior_mat_flat).reshape((self.shape_tuple[0], 9))
 
-        # If writing to a new HDF5 file:
-        # Add back the data_type attribute - still being used in the visualizer
-        if self.h5_results_grp.file != self.h5_main.file:
-            write_simple_attrs(self.h5_results_grp.file,
-                               {'data_type': get_attr(self.h5_main.file,
-                                                      'data_type')})
+        pdb.set_trace()
 
-        ret_vals = write_reduced_anc_dsets(self.h5_results_grp,
-                                           self.h5_main.h5_spec_inds,
-                                           self.h5_main.h5_spec_vals,
-                                           self._fit_dim_name,
-                                           verbose=self.verbose)
+        if self.prior_computation == 'KMeans' or self.prior_computation == 'Random':
+            for ind in range(self.num_computations):
+                lazy_result = dask.delayed(self._computation)(xvec, self.dataset_flat[ind, :],
+                                                              p0=self.prior_mat_flat[ind, :])
+                self.fit_results.append(lazy_result)
 
-        h5_sho_inds, h5_sho_vals = ret_vals
+        if self.prior_computation == 'Neighbor':
+            self.xvec = xvec
+            self.NN = NN
+            self.prior_mat = self.prior_mat_flat.reshape(self.dataset.shape)
 
-        self._h5_guess = write_main_dataset(self.h5_results_grp,
-                                            (self.h5_main.shape[0],
-                                             self.num_udvs_steps),
-                                            'Guess', 'SHO', 'compound',
-                                            None, None,
-                                            h5_pos_inds=self.h5_main.h5_pos_inds,
-                                            h5_pos_vals=self.h5_main.h5_pos_vals,
-                                            h5_spec_inds=h5_sho_inds,
-                                            h5_spec_vals=h5_sho_vals,
-                                            chunks=(1, self.num_udvs_steps),
-                                            dtype=sho32,
-                                            main_dset_attrs=self.parms_dict,
-                                            verbose=self.verbose)
+    # -------------------- Support Functions --------------------#
 
-        # Does not make sense to propagate region refs - nobody uses them
-        # copy_region_refs(self.h5_main, self._h5_guess)
+    #     def extract_PR(self):
+    #         amplitude = self.sho_dataset['Amplitude']
+    #         phase = self.sho_dataset['Phase [rad]']
+    #         adjust = np.max(phase) - np.min(phase)
+    #         phase_wrap = []
+    #         for ii in range(phase.shape[0]):
+    #             phase_wrap.append([x+adjust if x < -2 else x for x in phase[ii,:]])
+    #         phase = np.asarray(phase_wrap)
+    #         PR_mat = amplitude*np.cos(phase)
+    #         PR_mat = -PR_mat.reshape(h5_sho_fit.pos_dim_sizes[0],h5_sho_fit.pos_dim_sizes[1],-1 )
+    #         dc_vec_OF = h5_sho_fit.h5_spec_vals[0,:][np.logical_and(h5_sho_fit.h5_spec_vals[1,:]==0,h5_sho_fit.h5_spec_vals[2,:]==2)]
+    #         dc_vec_IF = h5_sho_fit.h5_spec_vals[0,:][np.logical_and(h5_sho_fit.h5_spec_vals[1,:]==1,h5_sho_fit.h5_spec_vals[2,:]==2)]
+    #         PR_OF = PR_mat[:,:,129::2] # off field
+    #         PR_IF = PR_mat[:,:,128::2] # on field
 
-        self._h5_guess.file.flush()
+    #         data = PR_OF
+    #         xvec = dc_vec_OF
+    #         return PR_mat, xvec
 
-        if self.verbose and self.mpi_rank == 0:
-            print('Finished creating Guess dataset')
-
-    def _create_fit_datasets(self):
-        """
-        Creates the HDF5 fit dataset. pycroscopy requires that the h5 group, guess dataset,
-        corresponding spectroscopic and position datasets be created and populated at this point.
-        This function will create the HDF5 dataset for the fit and link it to same ancillary datasets as the guess.
-        The fit dataset will NOT be populated here but will instead be populated using the __setData function
-        """
-
-        if self._h5_guess is None or self.h5_results_grp is None:
-            warn('Need to guess before fitting!')
-            return
-
-        """
-        Once the guess is complete, the last_pixel attribute will be set to complete for the group.
-        Once the fit is initiated, during the creation of the status dataset, this last_pixel
-        attribute will be used and it wil make the fit look like it was already complete. Which is not the case.
-        This is a problem of doing two processes within the same group. 
-        Until all legacy is removed, we will simply reset the last_pixel attribute.
-        """
-        self.h5_results_grp.attrs['last_pixel'] = 0
-
-        write_simple_attrs(self.h5_results_grp, self.parms_dict)
-
-        # Create the fit dataset as an empty dataset of the same size and dtype
-        # as the guess.
-        # Also automatically links in the ancillary datasets.
-        self._h5_fit = USIDataset(create_empty_dataset(self._h5_guess,
-                                                       dtype=sho32,
-                                                       dset_name='Fit'))
-
-        self._h5_fit.file.flush()
-
-        if self.verbose and self.mpi_rank == 0:
-            print('Finished creating Fit dataset')
-
-    def _read_data_chunk(self):
-        """
-        Returns the next chunk of data for the guess or the fit
-        """
-
-        # The Fitter class should take care of all the basic reading
-        super(BESHOfitter, self)._read_data_chunk()
-
-        # At this point the self.data object is the raw data that needs to be
-        # reshaped to a single UDVS step:
-        if self.data is not None:
-            if self.verbose and self.mpi_rank == 0:
-                print('Got raw data of shape {} from super'
-                      '.'.format(self.data.shape))
-            self.data = _reshape_to_one_step(self.data, self.num_udvs_steps)
-            if self.verbose and self.mpi_rank == 0:
-                print('Reshaped raw data to shape {}'.format(self.data.shape))
-
-    def _read_guess_chunk(self):
-
-        def _write_results_chunk(self):
-            """
-            Writes the provided chunk of data into the guess or fit datasets.
-            This method is responsible for any and all book-keeping.
-            """
-            prefix = 'guess' if self._is_guess else 'fit'
-            self._results = self._reformat_results(self._results,
-                                                   self.parms_dict[prefix + '-algorithm'])
-
-            if self._is_guess:
-                self._guess = np.hstack(tuple(self._results))
-                # prepare to reshape:
-                self._guess = np.transpose(np.atleast_2d(self._guess))
-                if self.verbose and self.mpi_rank == 0:
-                    print('Prepared guess of shape {} before reshaping'.format(self._guess.shape))
-                self._guess = _reshape_to_n_steps(self._guess, self.num_udvs_steps)
-                if self.verbose and self.mpi_rank == 0:
-                    print('Reshaped guess to shape {}'.format(self._guess.shape))
-            else:
-                self._fit = self._results
-                self._fit = np.transpose(np.atleast_2d(self._fit))
-                self._fit = _reshape_to_n_steps(self._fit, self.num_udvs_steps)
-
-            # ask super to take care of the rest, which is a standardized operation
-            super(BESHOfitter, self)._write_results_chunk()
-
-    def set_up_guess(self, guess_func=SHOGuessFunc.complex_gaussian, #TODO: maybe move to Guesser
-                     h5_partial_guess=None, *func_args, **func_kwargs):
-        """
-        Need this because during the set up, we won't know which strategy is being used.
-        Should Guess be its own Process class in that case? If so, it would end up having
-        its own group etc.
-        Parameters
-        -----
-        guess_func : SHOGuessFunc, optional
-            Which guess method to use. Default is complex gaussian
-        h5_partial_guess : h5py.Dataset, optional
-            Partial guess results dataset to continue computing on
-        """
-        self.parms_dict = {'guess-method': "pycroscopy BESHO"}
-
-        if not isinstance(guess_func, SHOGuessFunc):
-            raise TypeError(
-                'Please supply SHOGuessFunc.complex_gaussian or SHOGuessFunc.wavelet_peaks for the guess_func')
-
-        partial_func = None
-
-        if guess_func == SHOGuessFunc.complex_gaussian:
-
-            num_points = func_kwargs.pop('num_points', 5)
-
-            self.parms_dict.update({'guess-algorithm': 'complex_gaussian',
-                                    'guess-complex_gaussian-num_points': num_points})
-
-            partial_func = partial(complex_gaussian, w_vec=self.freq_vec,
-                                   num_points=num_points)
-
-        elif guess_func == SHOGuessFunc.wavelet_peaks:
-
-            peak_width_bounds = func_kwargs.pop('peak_width_bounds', [10, 200])
-            peak_width_step = func_kwargs.pop('peak_width_step', 20)
-
-            if len(func_args) > 0:
-                # Assume that the first argument is what we are looking for
-                peak_width_bounds = func_args[0]
-
-            self.parms_dict.update({'guess_algorithm': 'wavelet_peaks',
-                                    'guess-wavelet_peaks-peak_width_bounds': peak_width_bounds,
-                                    'guess-wavelet_peaks-peak_width_step': peak_width_step})
-
-            partial_func = partial(wavelet_peaks, peak_width_bounds=peak_width_bounds,
-                                   peak_width_step=peak_width_step, **func_kwargs)
-
-        self._map_function = partial_func
-
-        self._max_pos_per_read = self._max_raw_pos_per_read // 1.5
-
-        # ask super to take care of the rest, which is a standardized operation
-        super(BESHOfitter, self).set_up_guess(h5_partial_guess=h5_partial_guess)  #
-
-    def set_up_fit(self, fit_func=SHOFitFunc.least_squares,
-                   *func_args, h5_partial_fit=None, h5_guess=None, **func_kwargs):
-        """
-        Need this because during the set up, we won't know which strategy is being used.
-        Should Guess be its own Process class in that case? If so, it would end up having
-        its own group etc.
-        """
-        self.parms_dict = {'fit-method': "pycroscopy BESHO"}
-
-        if not isinstance(fit_func, SHOFitFunc):
-            raise TypeError('Please supply SHOFitFunc.least_squares for the fit_func')
-
-        if fit_func == SHOFitFunc.least_squares:
-            self.parms_dict.update({'fit-algorithm': 'least_squares'})
-
-        self._max_pos_per_read = self._max_raw_pos_per_read // 1.75
-
-        # ask super to take care of the rest, which is a standardized operation
-        super(BESHOfitter, self).set_up_fit(h5_partial_fit=h5_partial_fit,
-                                            h5_guess=h5_guess)
-
-    def _unit_compute_fit(self):
-        """
-        Punts unit computation on a chunk of data to Process
-        """
-        super(BESHOfitter, self)._unit_compute_fit(_sho_error,
-                                                   obj_func_args=[self.freq_vec],
-                                                   solver_options={'jac': 'cs'})
-
-    def _reformat_results(self, results, strategy='wavelet_peaks'):
-        """
-        Model specific calculation and or reformatting of the raw guess or fit results
-        Parameters
-        ----------
-        results : array-like
-            Results to be formatted for writing
-        strategy : str
-            The strategy used in the fit.  Determines how the results will be reformatted.
-            Default 'wavelet_peaks'
-        Returns
-        -------
-        sho_vec : numpy.ndarray
-            The reformatted array of parameters.
-        """
-        if self.verbose and self.mpi_rank == 0:
-            print('Strategy to use for reformatting results: "{}"'.format(strategy))
-        # Create an empty array to store the guess parameters
-        sho_vec = np.zeros(shape=(len(results)), dtype=sho32)
-        if self.verbose and self.mpi_rank == 0:
-            print('Raw results and compound SHO vector of shape {}'.format(len(results)))
-
-        # Extracting and reshaping the remaining parameters for SHO
-        if strategy in ['wavelet_peaks', 'relative_maximum', 'absolute_maximum']:
-            if self.verbose and self.mpi_rank == 0:
-                print('Reformatting results from a peak-position-finding algorithm')
-            # wavelet_peaks sometimes finds 0, 1, 2, or more peaks. Need to handle that:
-            # peak_inds = np.array([pixel[0] for pixel in results])
-            peak_inds = np.zeros(shape=(len(results)), dtype=np.uint32)
-            for pix_ind, pixel in enumerate(results):
-                if len(pixel) == 1:  # majority of cases - one peak found
-                    peak_inds[pix_ind] = pixel[0]
-                elif len(pixel) == 0:  # no peak found
-                    peak_inds[pix_ind] = int(0.5 * self.data.shape[1])  # set to center of band
-                else:  # more than one peak found
-                    dist = np.abs(np.array(pixel) - int(0.5 * self.data.shape[1]))
-                    peak_inds[pix_ind] = pixel[np.argmin(dist)]  # set to peak closest to center of band
-            if self.verbose and self.mpi_rank == 0:
-                print('Peak positions of shape {}'.format(peak_inds.shape))
-            # First get the value (from the raw data) at these positions:
-            comp_vals = np.array(
-                [self.data[pixel_ind, peak_inds[pixel_ind]] for pixel_ind in np.arange(peak_inds.size)])
-            if self.verbose and self.mpi_rank == 0:
-                print('Complex values at peak positions of shape {}'.format(comp_vals.shape))
-            sho_vec['Amplitude [V]'] = np.abs(comp_vals)  # Amplitude
-            sho_vec['Phase [rad]'] = np.angle(comp_vals)  # Phase in radians
-            sho_vec['Frequency [Hz]'] = self.freq_vec[peak_inds]  # Frequency
-            sho_vec['Quality Factor'] = np.ones_like(comp_vals) * 10  # Quality factor
-            # Add something here for the R^2
-            sho_vec['R2 Criterion'] = np.array([self.r_square(self.data, self._sho_func, self.freq_vec, sho_parms)
-                                                for sho_parms in sho_vec])
-        elif strategy in ['complex_gaussian']:
-            if self.verbose and self.mpi_rank == 0:
-                print('Reformatting results from the SHO Guess algorithm')
-            for iresult, result in enumerate(results):
-                sho_vec['Amplitude [V]'][iresult] = result[0]
-                sho_vec['Frequency [Hz]'][iresult] = result[1]
-                sho_vec['Quality Factor'][iresult] = result[2]
-                sho_vec['Phase [rad]'][iresult] = result[3]
-                sho_vec['R2 Criterion'][iresult] = result[4]
-        elif strategy in ['least_squares']:
-            if self.verbose and self.mpi_rank == 0:
-                print('Reformatting results from a list of least_squares result objects')
-            for iresult, result in enumerate(results):
-                sho_vec['Amplitude [V]'][iresult] = result.x[0]
-                sho_vec['Frequency [Hz]'][iresult] = result.x[1]
-                sho_vec['Quality Factor'][iresult] = result.x[2]
-                sho_vec['Phase [rad]'][iresult] = result.x[3]
-                sho_vec['R2 Criterion'][iresult] = 1 - result.fun
+    def format_xvec(self, xvec):
+        max_x = np.where(xvec == np.max(xvec))[0]
+        if max_x != 0 or max_x != len(xdata0):
+            xvec = np.roll(xvec, -max_x)  # assumes voltages are a symmetric triangle wave
+            self.dum = 1
         else:
-            if self.verbose and self.mpi_rank == 0:
-                print(
-                    '_reformat_results() will not reformat results since the provided algorithm: {} does not match anything that this function can handle.'.format(
-                        strategy))
+            xvec = xvec  # just in case voltages are already rolled
+            self.dum = 0
+        return xvec, max_x
 
-        return sho_vec
+    def calc_priors(self, xvec):
+        p0_mat = [[]] * self.shape_tuple[0]
 
-    def _reshape_to_one_step(raw_mat, num_steps):
-        """
-        Reshapes provided data from (pos, step * bin) to (pos * step, bin).
-        This is useful when unraveling data for parallel processing.
-        Parameters
-        -------------
-        raw_mat : 2D numpy array
-            Data organized as (positions, step * bins)
-        num_steps : unsigned int
-            Number of spectroscopic steps per pixel (eg - UDVS steps)
-        Returns
-        --------------
-        two_d : 2D numpy array
-            Data rearranged as (positions * step, bin)
-        """
-        num_pos = raw_mat.shape[0]
-        num_bins = int(raw_mat.shape[1] / num_steps)
-        one_d = raw_mat
-        one_d = one_d.reshape((num_bins * num_steps * num_pos))
-        two_d = one_d.reshape((num_steps * num_pos, num_bins))
-        return two_d
+        if self.prior_computation == 'KMeans':
+            popt_mean = self.calc_mean_fit(xvec)
+            self.popt_mean = popt_mean
+            n_clusters = int(self.shape_tuple[0] / 100)
+            kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit(self.dataset_flat)
+            labels = kmeans.labels_
+            p0_clusters = []
+            cluster_loops = []
+            for pp in range(n_clusters):
+                opt_vals = []
+                res = []
+                clust = self.dataset_flat[labels == pp]
+                clust = np.asarray(clust)
+                PR_mean = np.mean(clust, axis=0)
+                if self.dum == 1:
+                    PR_mean = np.roll(PR_mean, -self.max_x)
+                cluster_loops.append(PR_mean)
+                p0 = popt_mean
+                try:
+                    popt, pcov = curve_fit(self.loop_fit_func2, xvec, PR_mean, p0=p0, maxfev=10000)
+                except:
+                    kk = 0
+                    p0 = np.random.normal(0.1, 5, 9)
+                    while kk < 20:
+                        try:
+                            vals_min, pcov = curve_fit(self.loop_fit_func2, xvec, all_mean, p0=p0, maxfev=10000)
+                        except:
+                            continue
+                        kk += 1
+                        opt_vals.append(vals_min)
+                        fitted_loop = self.loop_fit_func2(xvec, *vals_min)
+                        yres = PR_mean - fitted_loop
+                        res.append(yres @ yres)
+                        popt = opt_vals[np.argmin(res)]
+                p0_clusters.append(popt)
+                fitted_loop = self.loop_fit_func(xvec, *popt)
 
-    def _reshape_to_n_steps(raw_mat, num_steps):
-        """
-        Reshapes provided data from (positions * step, bin) to (positions, step * bin).
-        Use this to restructure data back to its original form after parallel computing
-        Parameters
-        --------------
-        raw_mat : 2D numpy array
-            Data organized as (positions * step, bin)
-        num_steps : unsigned int
-             Number of spectroscopic steps per pixel (eg - UDVS steps)
-        Returns
-        ---------------
-        two_d : 2D numpy array
-            Data rearranged as (positions, step * bin)
-        """
-        num_bins = raw_mat.shape[1]
-        num_pos = int(raw_mat.shape[0] / num_steps)
-        one_d = raw_mat
-        one_d = one_d.reshape(num_bins * num_steps * num_pos)
-        two_d = one_d.reshape((num_pos, num_steps * num_bins))
-        return two_d
+            p0_mat_flat = np.asarray([p0_clusters[k] for k in labels])
+            # TODO: make array of associated p0 values
+            return p0_mat_flat
 
-    def _is_reshapable(h5_main, step_start_inds=None):
-        """
-        A BE dataset is said to be reshape-able if the number of bins per steps is constant. Even if the dataset contains
-        multiple excitation waveforms (harmonics), We know that the measurement is always at the resonance peak, so the
-        frequency vector should not change.
-        Parameters
-        ----------
-        h5_main : h5py.Dataset object
-            Reference to the main dataset
-        step_start_inds : list or 1D array
-            Indices that correspond to the start of each BE pulse / UDVS step
-        Returns
-        ---------
-        reshapable : Boolean
-            Whether or not the number of bins per step are constant in this dataset
-        """
-        h5_main = USIDataset(h5_main)
-        if step_start_inds is None:
-            step_start_inds = np.where(h5_main.h5_spec_inds[0] == 0)[0]
-        # Adding the size of the main dataset as the last (virtual) step
-        step_start_inds = np.hstack((step_start_inds, h5_main.shape[1]))
-        num_bins = np.diff(step_start_inds)
-        step_types = np.unique(num_bins)
-        return len(step_types) == 1
+        if self.prior_computation == 'Neighbor':
+            # TODO: cannot use dask parallel computation
+            popt_mean = self.calc_mean_fit(xvec)
+            p0_mat_mean = [popt_mean] * self.shape_tuple[0]
 
-    def _r_square(data_vec, func, *args, **kwargs):
+        if self.prior_computation == 'Random':
+            p0_mat_flat = [np.random.normal(0.1, 5, 9) for x in range(self.shape_tuple[0])]
+            return p0_mat_flat
 
-    def wavelet_peaks(vector, peak_width_bounds, peak_width_step=20, **kwargs):
-        """
-        This is the function that will be mapped by multiprocess. This is a wrapper around the scipy function.
-        It uses a parameter - wavelet_widths that is configured outside this function.
-        Parameters
-        ----------
-        vector : 1D numpy array
-            Feature vector containing peaks
-        Returns
-        -------
-        peak_indices : list
-            List of indices of peaks within the prescribed peak widths
-        """
-        # The below numpy array is used to configure the returned function wpeaks
-        wavelet_widths = np.linspace(peak_width_bounds[0], peak_width_bounds[1],
-                                     peak_width_step)
+    def calc_mean_fit(self, xvec):
+        opt_vals = []
+        res = []
+        all_mean = self.dataset.mean(axis=1).mean(axis=0)
+        all_mean = np.asarray(all_mean)
+        if self.dum == 1:
+            all_mean = np.roll(all_mean, -self.max_x)
+        for kk in range(20):
 
-        peak_indices = find_peaks_cwt(np.abs(vector), wavelet_widths, **kwargs)
+            # TODO: convert this fitting to dask
 
-        return peak_indices
+            p0 = np.random.normal(0.1, 5, 9)
+            try:
+                vals_min, pcov = curve_fit(self.loop_fit_func2, xvec, all_mean, p0=p0, maxfev=10000)
+            except:
+                continue
+            opt_vals.append(vals_min)
+            fitted_loop = self.loop_fit_func2(xvec, *vals_min)
+            yres = all_mean - fitted_loop
+            res.append(yres @ yres)
 
-    def complex_gaussian(resp_vec, w_vec, num_points=5):
-        """
-        Sets up the needed parameters for the analytic approximation for the
-        Gaussian fit of complex data.
-        Parameters
-        ----------
-        resp_vec : numpy.ndarray
-            Data vector to be fit.
-        args: numpy arrays.
-        kwargs: Passed to SHOEstimateFit().
-        Returns
-        -------
-        sho_guess: callable function.
-        """
-        guess = SHOestimateGuess(resp_vec, w_vec, num_points)
+        popt = opt_vals[np.argmin(res)]
+        popt_mean = deepcopy(popt)
+        return popt_mean
 
-        # Calculate the error and append it.
-        guess = np.hstack(
-            [guess, np.array(_r_square(resp_vec, SHOfunc, guess, w_vec))])
+    def fit_parallel(self):
+        if self.prior_computation == 'Neighbor':
+            return print('Please use "fit_series" to fit loops rather than fit_parallel')
 
-        return guess
+        self.results = dask.compute(*self.fit_results)
+        self.results_arr = np.array(self.results)
+        pdb.set_trace()
+        # convert to sidpy and return it
 
-    def _sho_error(guess, data_vec, freq_vector):
-        """
-        Generates the single Harmonic Oscillator response over the given vector
-        Parameters
-        ----------
-        guess : array-like
-            The set of guess parameters (Amp,w0,Q,phi) to be tested
-        data_vec : numpy.ndarray
-            The data vector to compare the current guess against
-        freq_vector : numpy.ndarray
-            The frequencies that correspond to each data point in `data_vec`
-        Notes
-        -----
-        Amp: amplitude
-        w0: resonant frequency
-        Q: Quality Factor
-        phi: Phase
-        Returns
-        -------
-        fitness : float
-            The 1-r^2 value for the current set of SHO coefficients
-        """
+        self.results_reshaped_shape = self.pos_dim_shapes + tuple([-1])
+        self.results_reshaped = np.array(self.results_arr).reshape(self.results_reshaped_shape)
 
-        if len(guess) < 4:
-            raise ValueError(
-                'Error: The Single Harmonic Oscillator requires 4 parameter guesses!')
+        return self.results, self.results_reshaped
 
-        Amp, w_0, Q, phi = guess[:4]
-        guess_vec = Amp * np.exp(1.j * phi) * w_0 ** 2 / (
-                freq_vector ** 2 - 1j * freq_vector * w_0 / Q - w_0 ** 2)
+    def fit_series(self, xvec):
+        count = 0
+        ref_counts = np.arange(self.shape_tuple).reshape(self.dataset.shape)
+        for ii in range(self.pos_dim_shapes[0]):
+            xind = ii
+            for jj in range(self.pos_dim_shapes[1]):
+                count += 1
+                yind = jj
+                ydata0 = self.dataset[xind, yind, :]
+                xs = [ii + k for k in range(-self.NN, self.NN + 1)]
+                ys = [jj + k for k in range(-self.NN, self.NN + 1)]
+                nbrs = [(n, m) for n in xs for m in ys]
+                cond = [all(x >= 0 for x in list(y)) for y in nbrs]
+                nbrs = [d for (d, remove) in zip(nbrs, cond) if remove]
+                cond2 = [all(x < self.pos_dim_shapes[0] for x in list(y)) for y in nbrs]
+                nbrs = [d for (d, remove) in zip(nbrs, cond2) if remove]
+                NN_indx = [ref_counts[v] for v in nbrs]
+                prior_coefs = [self.prior_mat[k] for k in NN_indx if len(self.prior_mat[k]) != 0]
+                p0 = np.mean(prior_coefs, axis=0)
+                prior_mat_flat_ref = deepcopy(self.prior_mat_flat)
+                prior_mat_flat_ref[count] = p0
 
-        data_mean = np.mean(data_vec)
+                popt, pcov = self.fit_func(xvec, ydata0, p0)
 
-        ss_tot = np.sum(np.abs(data_vec - data_mean) ** 2)
-        ss_res = np.sum(np.abs(data_vec - guess_vec) ** 2)
+                self.prior_mat_flat[count] = popt
+                self.results[count] = deepcopy(popt)
 
-        r_squared = 1 - ss_res / ss_tot if ss_tot > 0 else 0
+        self.results_shaped = self.results.reshape(self.dataset.shape)
+        return self.results, self.results_shaped
 
-        # print('tot: {}\tres: {}\tr2: {}'.format(ss_tot, ss_res, r_squared))
-
-        return 1 - r_squared
-
-
-class LoopFitter(BGlibProcess):
-
-    def __init__(self):
-        super(LoopFitter, self).__init__()
-        self.p_refs = []
-        self.p_mat = []
-
-        # TODO: add fitter
-
-    def do_fit(self,method='K-Means',N=2):
-        self.method = method
-        count = -1
-        self.fitted_loops_mat = [[]]*self.PR_mat.shape[0]*self.PR_mat.shape[1]
-        self.SumSq = []
-        if self.method == 'K-Means':
-            p0s = BGlibGuesser.k_mean_guess(self,N)
-        if self.method == 'Random':
-            BGlibGuesser.random_guess(self)
-
-        for ii in range(self.PR_mat.shape[0]):
-            for jj in range(self.PR_mat.shape[1]):
-                p0 = p0s[ii,jj,:]
-                ydata = self.PR_mat[ii,jj,:]
-
-                popt, pcov = curve_fit(self.loop_fit_function, self.xdata, ydata, p0=p0, maxfev=10000)
-
-                self.p0_refs.append(p0)
-                self.p_mat.append(popt)
-
-                fitted_loop = self.loop_fit_function(self.xdata,*popt)
-                self.fitted_loops_mat[count] = fitted_loop
-                ss = r2_score(ydata,fitted_loop)
-                self.SumSq[count] = ss
-
-
-
-
-
-    def loop_fit_function(self, *coef_vec): #TODO: change from regular function to contain class variables
+    def loop_fit_func2(self, vdc, *coef_vec):
         """
         9 parameter fit function
 
@@ -556,7 +227,6 @@ class LoopFitter(BGlibProcess):
             Loop values
         """
         from scipy.special import erf
-        vdc = self.xdata
         a = coef_vec[:5]
         b = coef_vec[5:]
         d = 1000
@@ -576,10 +246,5 @@ class LoopFitter(BGlibProcess):
         loop_eval = np.hstack((f1, f2))
         return loop_eval
 
-    def loop_resid(self,coef_vec, ydata):  #TODO: check ydata goes in correctly
-        vdc = self.xdata
-        y = loop_fit_function(vdc, *coef_vec)
-        res = ydata - y
-        ss = res @ res
-        return ss
+
 
