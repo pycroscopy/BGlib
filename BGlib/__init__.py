@@ -9,7 +9,6 @@ Submodules
 """
 from .__version__ import version as __version__
 from . import be, gmode, trKPFM
-from . import bglib_fitter
 
-__all__ = ['__version__', 'be', 'gmode', 'trKPFM', 'bglib_fitter']
+__all__ = ['__version__', 'be', 'gmode', 'trKPFM']
 
