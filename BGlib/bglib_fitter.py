@@ -16,12 +16,12 @@ class LoopFitter():
                  num_workers=1, threads=4, *args, **kwargs):
         from dask import delayed
         self.dataset = sidpy_dataset
-        #         self.dataset = self.extract_PR()
         self.prior_computation = prior_computation
         self.num_workers = num_workers
         self.threads = threads
         self.fit_results = []
         self._computation = _computation
+        self.results = []
 
         self.client = Client(threads_per_worker=self.threads, n_workers=self.num_workers)
 
@@ -44,39 +44,19 @@ class LoopFitter():
         self.prior_mat_flat = self.calc_priors(xvec)
         self.prior_mat_flat = np.asarray(self.prior_mat_flat).reshape((self.shape_tuple[0], 9))
 
-        pdb.set_trace()
-
         if self.prior_computation == 'KMeans' or self.prior_computation == 'Random':
             for ind in range(self.num_computations):
                 lazy_result = dask.delayed(self._computation)(xvec, self.dataset_flat[ind, :],
                                                               p0=self.prior_mat_flat[ind, :])
+                #                 lazy_result = dask.delayed(self.loop_fit_func2)(xvec, self.dataset_flat[ind,:],p0=self.prior_mat_flat[ind,:])
                 self.fit_results.append(lazy_result)
 
         if self.prior_computation == 'Neighbor':
             self.xvec = xvec
-            self.NN = NN
-            self.prior_mat = self.prior_mat_flat.reshape(self.dataset.shape)
+            self.NN = kwargs['NN']
+            self.prior_mat = self.prior_mat_flat.reshape((self.dataset.shape[0], self.dataset.shape[1], 9))
 
     # -------------------- Support Functions --------------------#
-
-    #     def extract_PR(self):
-    #         amplitude = self.sho_dataset['Amplitude']
-    #         phase = self.sho_dataset['Phase [rad]']
-    #         adjust = np.max(phase) - np.min(phase)
-    #         phase_wrap = []
-    #         for ii in range(phase.shape[0]):
-    #             phase_wrap.append([x+adjust if x < -2 else x for x in phase[ii,:]])
-    #         phase = np.asarray(phase_wrap)
-    #         PR_mat = amplitude*np.cos(phase)
-    #         PR_mat = -PR_mat.reshape(h5_sho_fit.pos_dim_sizes[0],h5_sho_fit.pos_dim_sizes[1],-1 )
-    #         dc_vec_OF = h5_sho_fit.h5_spec_vals[0,:][np.logical_and(h5_sho_fit.h5_spec_vals[1,:]==0,h5_sho_fit.h5_spec_vals[2,:]==2)]
-    #         dc_vec_IF = h5_sho_fit.h5_spec_vals[0,:][np.logical_and(h5_sho_fit.h5_spec_vals[1,:]==1,h5_sho_fit.h5_spec_vals[2,:]==2)]
-    #         PR_OF = PR_mat[:,:,129::2] # off field
-    #         PR_IF = PR_mat[:,:,128::2] # on field
-
-    #         data = PR_OF
-    #         xvec = dc_vec_OF
-    #         return PR_mat, xvec
 
     def format_xvec(self, xvec):
         max_x = np.where(xvec == np.max(xvec))[0]
@@ -125,17 +105,19 @@ class LoopFitter():
                         yres = PR_mean - fitted_loop
                         res.append(yres @ yres)
                         popt = opt_vals[np.argmin(res)]
-                p0_clusters.append(popt)
-                fitted_loop = self.loop_fit_func(xvec, *popt)
+                p0_clusters.append(deepcopy(popt))
+                fitted_loop = self.loop_fit_func2(xvec, *popt)
 
             p0_mat_flat = np.asarray([p0_clusters[k] for k in labels])
-            # TODO: make array of associated p0 values
+            self.p0_clusters = p0_clusters
+            self.labels = labels
             return p0_mat_flat
 
         if self.prior_computation == 'Neighbor':
             # TODO: cannot use dask parallel computation
             popt_mean = self.calc_mean_fit(xvec)
-            p0_mat_mean = [popt_mean] * self.shape_tuple[0]
+            p0_mat_flat = [popt_mean] * self.shape_tuple[0]
+            return p0_mat_flat
 
         if self.prior_computation == 'Random':
             p0_mat_flat = [np.random.normal(0.1, 5, 9) for x in range(self.shape_tuple[0])]
@@ -164,15 +146,19 @@ class LoopFitter():
 
         popt = opt_vals[np.argmin(res)]
         popt_mean = deepcopy(popt)
+
+        loop_avg = self.loop_fit_func2(xvec, *popt_mean)
+        plt.figure()
+        plt.plot(xvec, all_mean, 'k')
+        plt.plot(xvec, loop_avg, 'r')
         return popt_mean
 
-    def fit_parallel(self):
+    def fit_parallel(self):  # NEED HELP -- Issues with Dask
         if self.prior_computation == 'Neighbor':
             return print('Please use "fit_series" to fit loops rather than fit_parallel')
 
         self.results = dask.compute(*self.fit_results)
         self.results_arr = np.array(self.results)
-        pdb.set_trace()
         # convert to sidpy and return it
 
         self.results_reshaped_shape = self.pos_dim_shapes + tuple([-1])
@@ -181,34 +167,105 @@ class LoopFitter():
         return self.results, self.results_reshaped
 
     def fit_series(self, xvec):
-        count = 0
-        ref_counts = np.arange(self.shape_tuple).reshape(self.dataset.shape)
+        count = -1
+        SSqRes = []
+        fitted_data = []
+        ref_counts = np.arange(self.shape_tuple[0]).reshape(self.dataset.shape[:2])
         for ii in range(self.pos_dim_shapes[0]):
             xind = ii
             for jj in range(self.pos_dim_shapes[1]):
                 count += 1
                 yind = jj
-                ydata0 = self.dataset[xind, yind, :]
-                xs = [ii + k for k in range(-self.NN, self.NN + 1)]
-                ys = [jj + k for k in range(-self.NN, self.NN + 1)]
-                nbrs = [(n, m) for n in xs for m in ys]
-                cond = [all(x >= 0 for x in list(y)) for y in nbrs]
-                nbrs = [d for (d, remove) in zip(nbrs, cond) if remove]
-                cond2 = [all(x < self.pos_dim_shapes[0] for x in list(y)) for y in nbrs]
-                nbrs = [d for (d, remove) in zip(nbrs, cond2) if remove]
-                NN_indx = [ref_counts[v] for v in nbrs]
-                prior_coefs = [self.prior_mat[k] for k in NN_indx if len(self.prior_mat[k]) != 0]
-                p0 = np.mean(prior_coefs, axis=0)
-                prior_mat_flat_ref = deepcopy(self.prior_mat_flat)
-                prior_mat_flat_ref[count] = p0
+                ydata0 = np.asarray(self.dataset[xind, yind, :])
 
-                popt, pcov = self.fit_func(xvec, ydata0, p0)
+                if self.prior_computation == 'Neighbor':
+                    xs = [ii + k for k in range(-self.NN, self.NN + 1)]
+                    ys = [jj + k for k in range(-self.NN, self.NN + 1)]
+                    nbrs = [(n, m) for n in xs for m in ys]
+                    cond = [all(x >= 0 for x in list(y)) for y in nbrs]
+                    nbrs = [d for (d, remove) in zip(nbrs, cond) if remove]
+                    cond2 = [all(x < self.pos_dim_shapes[0] for x in list(y)) for y in nbrs]
+                    nbrs = [d for (d, remove) in zip(nbrs, cond2) if remove]
+                    NN_indx = [ref_counts[v] for v in nbrs]
+                    #                     prior_coefs = [self.prior_mat_flat[k] for k in NN_indx if len(self.prior_mat[k]) != 0]
+                    prior_coefs = [self.prior_mat_flat[k] for k in NN_indx]
 
-                self.prior_mat_flat[count] = popt
-                self.results[count] = deepcopy(popt)
+                    p0 = np.mean(prior_coefs, axis=0)
+                    prior_mat_flat_ref = deepcopy(self.prior_mat_flat)
+                    prior_mat_flat_ref[count] = p0
+                    try:
+                        popt, pcov = self.fit_func(xvec, ydata0, p0)
+                    except:
+                        try:
+                            popt, pcov = self.fit_func(xvec, ydata0, self.popt_mean)
+                        except:
+                            popt = np.repeat(np.nan, 9)
+                    self.prior_mat_flat[count] = popt
 
-        self.results_shaped = self.results.reshape(self.dataset.shape)
-        return self.results, self.results_shaped
+                if self.prior_computation == 'KMeans' or 'Random':
+                    p0 = self.prior_mat_flat[count]
+                    ydata0 = np.asarray(self.dataset_flat[count])
+                    try:
+                        popt, pcov = self.fit_func(xvec, ydata0, p0)
+                    except:
+                        try:
+                            popt, pcov = self.fit_func(xvec, ydata0, self.popt_mean)
+                        except:
+                            popt = np.repeat(np.nan, 9)
+
+                if self.prior_computation == 'Random':
+                    p0 = self.prior_mat_flat[count]
+                    ydata0 = np.asarray(self.dataset_flat[count])
+                    try:
+                        popt, pcov = self.fit_func(xvec, ydata0, p0)
+                    except:
+                        try:
+                            p0 = np.random.normal(0.1, 5, 9)
+                            popt, pcov = self.fit_func(xvec, ydata0, p0)
+                        except:
+                            popt = np.repeat(np.nan, 9)
+
+                self.results.append(deepcopy(popt))
+                fitted_loop = self.loop_fit_func2(xvec, *popt)
+                fitted_data.append(fitted_loop)
+                SSqRes.append(np.sum((ydata0 - fitted_loop) ** 2))
+        self.results_shaped = np.asarray(self.results).reshape((self.dataset.shape[0], self.dataset.shape[1], 9))
+        self.SSqRes = SSqRes
+
+        self.fit_dataset = sidpy.Dataset.from_array(self.results_shaped, name='Fitted Coefficients')
+        self.fit_dataset.data_type = sidpy.DataType.SPECTRAL_IMAGE
+        x_pos = np.arange(0, self.dataset.shape[0])
+        y_pos = np.arange(0, self.dataset.shape[1])
+        self.fit_dataset.set_dimension(0, sidpy.Dimension(x_pos,
+                                                          name='x',
+                                                          units='um',
+                                                          quantity='x',
+                                                          dimension_type='spatial'))
+        self.fit_dataset.set_dimension(1, sidpy.Dimension(y_pos,
+                                                          name='y',
+                                                          units='um',
+                                                          quantity='y',
+                                                          dimension_type='spatial'))
+
+        self.fitted_loops = sidpy.Dataset.from_array(np.asarray(fitted_data).reshape(self.dataset.shape),
+                                                     name='Fitted Loops')
+        self.fitted_loops.data_type = sidpy.DataType.SPECTRAL_IMAGE
+        self.fitted_loops.set_dimension(0, sidpy.Dimension(x_pos,
+                                                           name='x',
+                                                           units='um',
+                                                           quantity='x',
+                                                           dimension_type='spatial'))
+        self.fitted_loops.set_dimension(1, sidpy.Dimension(y_pos,
+                                                           name='y',
+                                                           units='um',
+                                                           quantity='y',
+                                                           dimension_type='spatial'))
+        self.fitted_loops.set_dimension(2, sidpy.Dimension(xvec,
+                                                           name='Voltage',
+                                                           units='V',
+                                                           quantity='Voltage',
+                                                           dimension_type='spectral'))
+        return self.fit_dataset, self.fitted_loops  # self.results, self.results_shaped
 
     def loop_fit_func2(self, vdc, *coef_vec):
         """
@@ -246,5 +303,9 @@ class LoopFitter():
         loop_eval = np.hstack((f1, f2))
         return loop_eval
 
-
+    def fit_func(self, xvec, yvec, p0):
+        if self.dum == 1:
+            yvec = np.roll(yvec, -self.max_x)
+        popt, pcov = curve_fit(self.loop_fit_func2, xvec, yvec, p0=p0, maxfev=10000)
+        return popt, pcov
 
