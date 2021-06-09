@@ -10,7 +10,6 @@ import sidpy as sid
 import pyNSID as nsid
 import pyUSID as usid
 from bglib_fitter import *
-from bglib_guesser import
 from dask.distributed import Client, progress
 import dask
 
