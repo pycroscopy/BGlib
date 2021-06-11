@@ -1,9 +1,14 @@
 from scipy.optimize import curve_fit
 from copy import deepcopy
 from sklearn.cluster import KMeans
-
+import numpy as np
+from dask.distributed import Client, progress
+import dask
+import matplotlib.pyplot as plt
+import sidpy
 
 def fit_func(xvec, yvec, p0, **kwargs):
+    from LoopFitter import loop_fit_func #not sure if this will fix the issue....
     dum = kwargs['dum']
     if dum == 1:
         yvec = np.roll(yvec, -kwargs['max_x'])
@@ -67,7 +72,7 @@ class LoopFitter():
 
     def format_xvec(self, xvec):
         max_x = np.where(xvec == np.max(xvec))[0]
-        if max_x != 0 or max_x != len(xdata0):
+        if max_x != 0 or max_x != len(xvec):
             xvec = np.roll(xvec, -max_x)  # assumes voltages are a symmetric triangle wave
             self.dum = 1
         else:
@@ -103,7 +108,7 @@ class LoopFitter():
                     p0 = np.random.normal(0.1, 5, 9)
                     while kk < 20:
                         try:
-                            vals_min, pcov = curve_fit(self.loop_fit_func2, xvec, all_mean, p0=p0, maxfev=10000)
+                            vals_min, pcov = curve_fit(self.loop_fit_func2, xvec, self.all_mean, p0=p0, maxfev=10000)
                         except:
                             continue
                         kk += 1
@@ -135,6 +140,7 @@ class LoopFitter():
         res = []
         all_mean = self.dataset.mean(axis=1).mean(axis=0)
         all_mean = np.asarray(all_mean)
+        self.all_mean = deepcopy(all_mean)
         if self.dum == 1:
             all_mean = np.roll(all_mean, -self.max_x)
         for kk in range(20):

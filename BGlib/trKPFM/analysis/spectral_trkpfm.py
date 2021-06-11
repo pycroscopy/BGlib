@@ -1,6 +1,7 @@
 """
 Analysis code for spectral tr-KPFM
 """
+import pyUSID as usid
 
 class trKPFM_S_Analyzer():
     def __init__(self,h5_file):

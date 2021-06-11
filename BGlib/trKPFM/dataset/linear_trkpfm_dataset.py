@@ -3,9 +3,8 @@ from ..analysis import trKPFM_L_Analyzer
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from IPython.display import display
-import ipywidgets as widgets
 import h5py
+from sidpy.hdf.hdf_utils import get_attr
 
 class RawTRKPFM_L_Dataset(USIDataset):
     """

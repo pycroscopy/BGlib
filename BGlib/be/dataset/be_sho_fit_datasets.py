@@ -1,12 +1,13 @@
 from sidpy.hdf.hdf_utils import get_auxiliary_datasets, get_attr
 from pyUSID import USIDataset
 from pyUSID.io.hdf_utils import reshape_to_n_dims
-from sidpy.viz.plot_utils import plot_curves, plot_map_stack, get_cmap_object, plot_map, set_tick_font_size, \
-    plot_complex_spectra
+from sidpy.viz.plot_utils import plot_curves, plot_map_stack, get_cmap_object, plot_map, set_tick_font_size, plot_complex_spectra
 import os
 import numpy as np
 import matplotlib.pyplot as plt
 from warnings import warn
+import pyUSID as usid
+
 
 #SHOBEPSDataset
 #SHOBELINEDataset
@@ -487,7 +488,7 @@ class SHOcKPFMDataset(SHOBEDataset):
 
         Nd_mat = self.h5_sho_fit.get_n_dim_form()
 
-        phase_offset = det_phase_offset(Nd_mat[:, :, :, :, :]['Phase [rad]'].ravel())
+        phase_offset = get_phase_offset(Nd_mat[:, :, :, :, :]['Phase [rad]'].ravel()) #TODO: function is not defined....
 
         Nd_mat[:, :, :, :, :]['Phase [rad]'] = Nd_mat[:, :, :, :, :]['Phase [rad]'] - phase_offset
 

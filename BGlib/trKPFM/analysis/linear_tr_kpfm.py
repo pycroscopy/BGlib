@@ -10,7 +10,7 @@ class trKPFM_L_Analyzer():
         scan_size: physical dimension of scan (ex: 80 um)
         dim: distance between electrodes in cm (for Efield calculations)
         """
-        # self.source_h5_dataset = usid_dataset
+        self.h5_main = usid_dataset
         # self.dataset_type = 'trKPFM-USIDataset'
         super(trKPFM_L_Analyzer, self).__init__(h5_main,'Linear_trKPFM')
 
@@ -351,7 +351,7 @@ class trKPFM_L_Analyzer():
         def exp_decay(x, a, b, k):
             return a * np.exp(x * k) + b
 
-        ii = data.indx.index(indx)
+        ii = self.indx.index(indx)  #TODO: Make sure this line is correct...
         if indx == self.indx[-1]:
             y_array = self.pot[indx:-1, jj] - self.zeroavg[jj]
         else:

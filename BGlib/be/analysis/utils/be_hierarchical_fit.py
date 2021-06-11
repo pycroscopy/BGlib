@@ -527,7 +527,7 @@ class KMeans_fitting():
             t2 = time.time()
 
             if self.verbose and self.mpi_rank == 0:
-                print('Dask Setup time: {} sec. Compute time: {} sec'.format(t 1- t0, t2 - t1))
+                print('Dask Setup time: {} sec. Compute time: {} sec'.format(1 - t0, t2 - t1))
         else:
             if self.verbose:
                 print('Rank {}: Serial compute time: {} sec'.format(self.mpi_rank, t1 - t0))

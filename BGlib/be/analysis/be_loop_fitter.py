@@ -12,7 +12,7 @@ Created on Thu Nov 20 11:48:53 2019
 
 from __future__ import division, print_function, absolute_import, \
     unicode_literals
-import dask
+import pyUSID as usid
 import time
 import numpy as np
 from sklearn.cluster import KMeans
@@ -91,16 +91,16 @@ class BELoopFitter(Fitter):
         kwargs : passed onto pyUSID.Process
         """
 
-        super(BELoopFitter, self).__init__(h5_main, "Loop_Fit",
+        super(BELoopFitter, self).__init__(h5_main, "Loop_Fit", method = 'K-Means'
                                            variables=None, **kwargs)
 
         # This will be reset h5_main to this value before guess / fit
         # Some simple way to guard against failure
         self.__h5_main_orig = USIDataset(h5_main)
-
+        self.h5_f = h5_main
         self.parms_dict = None
 
-        # self.method = 'K-Means'
+        self.method = method
 
         self._check_validity(h5_main, be_data_type, vs_mode, vs_cycle_frac)
 
@@ -175,7 +175,7 @@ class BELoopFitter(Fitter):
             raise NotImplementedError('Loop fitting not supported for Band '
                                       'Excitation experiment type: {}'
                                       ''.format(data_type))
-        if method is not ['K-Means','Neighbor','Random','Hierarchical']:
+        if self.method is not ['K-Means','Neighbor','Random','Hierarchical']:
             raise ValueError('Provided method is not one of the supported modes. '
                              'Please choose between: K-Means, Neighbor, Random, or Hierarchical')
 
@@ -195,20 +195,20 @@ class BELoopFitter(Fitter):
         """
         self.parms_dict = {'fitting-method': 'K-Means'}
 
-        if method not in ['Random', 'Neighbor', 'K-Means', 'Hierarchical']:
+        if self.method not in ['Random', 'Neighbor', 'K-Means', 'Hierarchical']:
             raise TypeError('Please use one of the following methods: Random, Neighbor, K-Means, Hierarchical.')
 
 
         #TODO: define h5_f, dc_vec, PR_mat for future use
 
-        if method == 'K-Means':
+        if self.method == 'K-Means':
             from .utils.be_kmeans_fit import _do_fit
             self.parms_dict.update({'fitting-method': 'K-Means'})
 
             fig,ax,p0_refs,p0_mat,SumSq,fitted_loops_mat = _do_fit()
             return fig,ax,p0_refs,p0_mat,SumSq,fitted_loops_mat
 
-        if method == 'Neighbor':
+        if self.method == 'Neighbor':
             from .utils.be_neighbor_fit import _do_fit
             self.parms_dict.update({'fitting-method': 'Nearest Neighbor',
                                     'number of neighbors': NN})
@@ -216,18 +216,19 @@ class BELoopFitter(Fitter):
             fig,ax,p0_refs,p0_mat,SumSq,fitted_loops_mat = _do_fit()
             return fig,ax,p0_refs,p0_mat,SumSq,fitted_loops_mat
 
-        if method == 'Hierarchical':
+        if self.method == 'Hierarchical':
             # from .utils import be_hierarchical_fit
             # from .utils import fitter
 
             self.parms_dict.update({'fitting-method': 'Hierarchical'})
-            expt_type = usid.hdf_utils.get_attr(h5_f, 'data_type')
-            h5_main = usid.hdf_utils.find_dataset(h5_f, 'Raw_Data')[0]
+            expt_type = usid.hdf_utils.get_attr(self.h5_f, 'data_type')
+            h5_main = usid.hdf_utils.find_dataset(self.h5_f, 'Raw_Data')[0]
             h5_meas_grp = h5_main.parent.parent
             vs_mode = usid.hdf_utils.get_attr(h5_meas_grp, 'VS_mode')
             vs_cycle_frac = usid.hdf_utils.get_attr(h5_meas_grp, 'VS_cycle_fraction')
             max_cores = 1
             # Do the Loop Fitting on the SHO Fit dataset
+            h5_sho_fit = usid.hdf_utils.find_dataset(self.h5_f,'SHO_Fit')
             h5_loop_group = None
             # TODO: I don't think loop_fitter is being properly called since I moved the functions into be_hierarchical_fit
             loop_fitter = BELoopFitter(h5_sho_fit, expt_type, vs_mode, vs_cycle_frac,

@@ -15,7 +15,7 @@ import ipywidgets as widgets
 import numpy as np
 from IPython.display import display
 from matplotlib import pyplot as plt
-
+import sidpy
 from sidpy.viz.plot_utils import plot_curves, plot_map_stack, get_cmap_object, plot_map, set_tick_font_size, \
     plot_complex_spectra
 from sidpy.viz.jupyter_utils import save_fig_filebox_button
@@ -80,6 +80,7 @@ def plot_line_family(axis, x_vec, line_family, line_names=None, label_prefix='',
 
     if show_cbar:
         # put back the cmap parameter:
+        cmap = 'jet' #TODO: not sure if this is the correct way to specify the color map for sidpy
         kwargs.update({'cmap': cmap})
         _ = sidpy.viz.plot_utils.cbar_for_line_plot(axis, num_lines, **kwargs)
 

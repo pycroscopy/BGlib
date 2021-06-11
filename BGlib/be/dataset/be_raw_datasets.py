@@ -12,6 +12,7 @@ from sidpy.viz.jupyter_utils import save_fig_filebox_button
 from sidpy.hdf.hdf_utils import get_attr
 import ipywidgets as widgets
 import h5py
+from .be_sho_fit_datasets import SHOBEDataset
 
 #The following classes inherit from RawBEDataset
 #RawBEPSDataset

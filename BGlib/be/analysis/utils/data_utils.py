@@ -1,4 +1,11 @@
 @staticmethod
+
+from .be_loop_fitter import BELoopFitter
+from pyUSID.io.hdf_utils import get_unit_values, get_sort_order, \
+    reshape_to_n_dims, create_empty_dataset, create_results_group, \
+import time
+import numpy as np
+
 def _check_validity(h5_main, data_type, vs_mode, vs_cycle_frac):
     """
     Checks whether or not the provided object can be analyzed by this class
@@ -25,7 +32,7 @@ def _check_validity(h5_main, data_type, vs_mode, vs_cycle_frac):
         Fraction of the bi-polar triangle waveform for voltage spectroscopy
         used in this experiment
     """
-    if h5_main.dtype != sho32:
+    if h5_main.dtype != 'sho32': #TODO: not sure if this is correct
         raise TypeError('Provided dataset is not a SHO results dataset.')
 
     if data_type.lower() == 'bepsdata':
