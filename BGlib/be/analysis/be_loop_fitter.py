@@ -1220,7 +1220,7 @@ def _be_loop_err(coef_vec, data_vec, dc_vec, *args):
     return 1 - r_squared
 
 
-def guess_loops_kmeans(vdc_vec, projected_loops_2d):
+def guess_loops_kmeans(vdc_vec, projected_loops_2d, refine_w_fit=False):
     """
     Provides loop parameter guesses for a given set of loops
 
@@ -1230,6 +1230,8 @@ def guess_loops_kmeans(vdc_vec, projected_loops_2d):
         DC voltage offsets for the loops
     projected_loops_2d : 2D numpy float array
         Projected loops arranged as [instance or position x dc voltage steps]
+    refine_w_fits : bool, Optional
+        Whether or not to refine the guess by fitting
 
     Returns
     -------
@@ -1254,15 +1256,22 @@ def guess_loops_kmeans(vdc_vec, projected_loops_2d):
 
     guess_parms = np.zeros((proj_shifted.shape[0]), dtype=loop_fit32)
     for ind in range(num_clusters):
-        parms = generate_guess(vdc_shifted, centroids[ind],
-                               show_plots=False)
+        this_guess_coeffs = generate_guess(vdc_shifted, centroids[ind],
+                                           show_plots=False)
 
-        # TODO: This is inaccurate - calculate r2 for each position independently
-        guess_loop = loop_fit_function(vdc_shifted, parms)
-        error = results.cluster_centers_[ind] - guess_loop
-        r2 = 1 - np.sum(np.abs(error ** 2))
+        if refine_w_fit:
+            this_fit_results = \
+            fit_loop(vdc_shifted, centroids[ind], this_guess_coeffs)[0]
+            this_coeffs = this_fit_results.x
+            r2 = 1 - np.sum(np.abs(this_fit_results.fun ** 2))
+        else:
+            # TODO: This is inaccurate - calculate r2 for each position independently
+            guess_loop = loop_fit_function(vdc_shifted, this_guess_coeffs)
+            error = results.cluster_centers_[ind] - guess_loop
+            r2 = 1 - np.sum(np.abs(error ** 2))
+            this_coeffs = this_guess_coeffs
 
-        temp = stack_real_to_compound(np.hstack([parms, r2]), loop_fit32)
+        temp = stack_real_to_compound(np.hstack([this_coeffs, r2]), loop_fit32)
         guess_parms[labels == ind] = temp
 
     return guess_parms
