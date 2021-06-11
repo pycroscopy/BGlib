@@ -1241,7 +1241,7 @@ def guess_loops_kmeans(vdc_vec, projected_loops_2d, refine_w_fit=False):
     """
 
     shift_ind, vdc_shifted = shift_vdc(vdc_vec)
-    proj_shifted = np.roll(projected_loops_2d, shift_ind)
+    proj_shifted = np.roll(projected_loops_2d, shift_ind, axis=-1)
 
     if proj_shifted.shape[0] == 1:
         num_clusters = 1
