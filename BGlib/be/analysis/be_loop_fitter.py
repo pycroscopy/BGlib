@@ -1241,11 +1241,11 @@ def guess_loops_kmeans(vdc_vec, projected_loops_2d):
     shift_ind, vdc_shifted = shift_vdc(vdc_vec)
     proj_shifted = np.roll(projected_loops_2d, shift_ind)
 
-    num_clusters = max(2, int(projected_loops_2d.shape[0] ** 0.6))
+    num_clusters = max(2, int(proj_shifted.shape[0] ** 0.6))
     estimator = KMeans(num_clusters)
-    results = estimator.fit(projected_loops_2d)
+    results = estimator.fit(proj_shifted)
 
-    guess_parms = np.zeros((projected_loops_2d.shape[0]), dtype=loop_fit32)
+    guess_parms = np.zeros((proj_shifted.shape[0]), dtype=loop_fit32)
     for ind in range(num_clusters):
         parms = generate_guess(vdc_shifted, results.cluster_centers_[ind],
                                show_plots=False)
