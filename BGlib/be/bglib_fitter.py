@@ -3,10 +3,15 @@ from copy import deepcopy
 from sklearn.cluster import KMeans
 
 
-def fit_func(xvec, yvec, p0):
-    #         if self.dum == 1:
-    yvec = np.roll(yvec, -self.max_x)
-    popt, pcov = curve_fit(loop_fit_func, xvec, yvec, p0=p0)
+def fit_func(xvec, yvec, p0, **kwargs):
+    dum = kwargs['dum']
+    if dum == 1:
+        yvec = np.roll(yvec, -kwargs['max_x'])
+    try:
+        popt, pcov = curve_fit(loop_fit_func, xvec, yvec, p0=p0)
+    except:
+        popt = np.repeat(np.nan, 9)
+        pcov = np.repeat(np.nan, 9)
     return popt, pcov
 
 
@@ -41,13 +46,15 @@ class LoopFitter():
 
         xvec, max_x = self.format_xvec(xvec)
         self.max_x = max_x
+        self.xvec = xvec
         self.prior_mat_flat = self.calc_priors(xvec)
         self.prior_mat_flat = np.asarray(self.prior_mat_flat).reshape((self.shape_tuple[0], 9))
 
         if self.prior_computation == 'KMeans' or self.prior_computation == 'Random':
             for ind in range(self.num_computations):
                 lazy_result = dask.delayed(self._computation)(xvec, self.dataset_flat[ind, :],
-                                                              p0=self.prior_mat_flat[ind, :])
+                                                              p0=self.prior_mat_flat[ind, :], dum=self.dum,
+                                                              max_x=self.max_x)
                 #                 lazy_result = dask.delayed(self.loop_fit_func2)(xvec, self.dataset_flat[ind,:],p0=self.prior_mat_flat[ind,:])
                 self.fit_results.append(lazy_result)
 
@@ -158,15 +165,33 @@ class LoopFitter():
             return print('Please use "fit_series" to fit loops rather than fit_parallel')
 
         self.results = dask.compute(*self.fit_results)
-        self.results_arr = np.array(self.results)
-        # convert to sidpy and return it
+        popt_vals = [v[0] for v in self.results]
+        self.pcov_vals = [v[1] for v in self.results]
+        self.results_arr = np.asarray(popt_vals)
 
         self.results_reshaped_shape = self.pos_dim_shapes + tuple([-1])
         self.results_reshaped = np.array(self.results_arr).reshape(self.results_reshaped_shape)
+        #         self.pcov_reshaped = np.array(np.asarray(pcov_vals)).reshape(self.results_reshaped_shape)
 
-        return self.results, self.results_reshaped
+        self.fit_dataset = sidpy.Dataset.from_array(self.results_reshaped, name='Fitted Coefficients')
+        self.fit_dataset.data_type = sidpy.DataType.SPECTRAL_IMAGE
+        x_pos = np.arange(0, self.dataset.shape[0])
+        y_pos = np.arange(0, self.dataset.shape[1])
+        self.fit_dataset.set_dimension(0, sidpy.Dimension(x_pos,
+                                                          name='x',
+                                                          units='um',
+                                                          quantity='x',
+                                                          dimension_type='spatial'))
+        self.fit_dataset.set_dimension(1, sidpy.Dimension(y_pos,
+                                                          name='y',
+                                                          units='um',
+                                                          quantity='y',
+                                                          dimension_type='spatial'))
 
-    def fit_series(self, xvec):
+        return self.fit_dataset, self.pcov_vals
+
+    def fit_series(self):
+        xvec = deepcopy(self.xvec)
         count = -1
         SSqRes = []
         fitted_data = []
@@ -267,6 +292,37 @@ class LoopFitter():
                                                            dimension_type='spectral'))
         return self.fit_dataset, self.fitted_loops  # self.results, self.results_shaped
 
+    def convert_coeff2loop(self):
+        xvec = deepcopy(self.xvec)
+        fit_loops = []
+        fit_coeff = self.fit_dataset.reshape((self.num_computations, 9))
+        for ind in range(self.num_computations):
+            fit_loops.append(self.loop_fit_func2(xvec, *fit_coeff[ind, :]))
+        #             lazy_result = dask.delayed(self.loop_fit_func2)(xvec, *fit_coeff[ind,:])
+        #             fit_loops.append(lazy_result)
+        #         pdb.set_trace()
+        #         self.fitted_loops = dask.compute(*fit_loops)
+        self.fitted_loops = fit_loops
+        self.fitted_loops = sidpy.Dataset.from_array(np.asarray(self.fitted_loops).reshape(self.dataset.shape),
+                                                     name='Fitted Loops')
+        self.fitted_loops.data_type = sidpy.DataType.SPECTRAL_IMAGE
+        self.fitted_loops.set_dimension(0, sidpy.Dimension(x_pos,
+                                                           name='x',
+                                                           units='um',
+                                                           quantity='x',
+                                                           dimension_type='spatial'))
+        self.fitted_loops.set_dimension(1, sidpy.Dimension(y_pos,
+                                                           name='y',
+                                                           units='um',
+                                                           quantity='y',
+                                                           dimension_type='spatial'))
+        self.fitted_loops.set_dimension(2, sidpy.Dimension(xvec,
+                                                           name='Voltage',
+                                                           units='V',
+                                                           quantity='Voltage',
+                                                           dimension_type='spectral'))
+        return self.fitted_loops
+
     def loop_fit_func2(self, vdc, *coef_vec):
         """
         9 parameter fit function
@@ -277,7 +333,6 @@ class LoopFitter():
             DC voltages
         coef_vec : 1D numpy array or list
             9 parameter coefficient vector
-
         Returns
         ---------
         loop_eval : 1D numpy array
