@@ -713,8 +713,8 @@ class BELoopFitter(Fitter):
         for proj_loops_this_forc, curr_vdc in zip(proj_forc, dc_vec_list):
             # this works on batches and not individual loops
             # Cannot be done in parallel
-            this_guesses = guess_loops_hierarchically(curr_vdc,
-                                                      proj_loops_this_forc)
+            guess_func = guess_loops_kmeans # guess_loops_hierarchically
+            this_guesses = guess_func(curr_vdc, proj_loops_this_forc)
             all_guesses.append(this_guesses)
 
         self._results = proj_loops, loop_mets, np.array(all_guesses)
