@@ -1230,7 +1230,7 @@ def guess_loops_kmeans(vdc_vec, projected_loops_2d, refine_w_fit=False):
         DC voltage offsets for the loops
     projected_loops_2d : 2D numpy float array
         Projected loops arranged as [instance or position x dc voltage steps]
-    refine_w_fits : bool, Optional
+    refine_w_fit : bool, Optional. Default = False
         Whether or not to refine the guess by fitting
 
     Returns
@@ -1267,7 +1267,7 @@ def guess_loops_kmeans(vdc_vec, projected_loops_2d, refine_w_fit=False):
         else:
             # TODO: This is inaccurate - calculate r2 for each position independently
             guess_loop = loop_fit_function(vdc_shifted, this_guess_coeffs)
-            error = results.cluster_centers_[ind] - guess_loop
+            error = centroids[ind] - guess_loop
             r2 = 1 - np.sum(np.abs(error ** 2))
             this_coeffs = this_guess_coeffs
 
