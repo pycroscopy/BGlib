@@ -1220,6 +1220,47 @@ def _be_loop_err(coef_vec, data_vec, dc_vec, *args):
     return 1 - r_squared
 
 
+def guess_loops_kmeans(vdc_vec, projected_loops_2d):
+    """
+    Provides loop parameter guesses for a given set of loops
+
+    Parameters
+    ----------
+    vdc_vec : 1D numpy float numpy array
+        DC voltage offsets for the loops
+    projected_loops_2d : 2D numpy float array
+        Projected loops arranged as [instance or position x dc voltage steps]
+
+    Returns
+    -------
+    guess_parms : 1D compound numpy array
+        Loop parameter guesses for the provided projected loops
+
+    """
+
+    shift_ind, vdc_shifted = shift_vdc(vdc_vec)
+    proj_shifted = np.roll(projected_loops_2d, shift_ind)
+
+    num_clusters = max(2, int(projected_loops_2d.shape[0] ** 0.6))
+    estimator = KMeans(num_clusters)
+    results = estimator.fit(projected_loops_2d)
+
+    guess_parms = np.zeros((projected_loops_2d.shape[0]), dtype=loop_fit32)
+    for ind in range(num_clusters):
+        parms = generate_guess(vdc_shifted, results.cluster_centers_[ind],
+                               show_plots=False)
+
+        # TODO: This is inaccurate - calculate r2 for each position independently
+        guess_loop = loop_fit_function(vdc_shifted, parms)
+        error = results.cluster_centers_[ind] - guess_loop
+        r2 = 1 - np.sum(np.abs(error ** 2))
+
+        temp = stack_real_to_compound(np.hstack([parms, r2]), loop_fit32)
+        guess_parms[results.labels_ == ind] = temp
+
+    return guess_parms
+
+
 def guess_loops_hierarchically(vdc_vec, projected_loops_2d):
     """
     Provides loop parameter guesses for a given set of loops
