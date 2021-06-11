@@ -1241,13 +1241,20 @@ def guess_loops_kmeans(vdc_vec, projected_loops_2d):
     shift_ind, vdc_shifted = shift_vdc(vdc_vec)
     proj_shifted = np.roll(projected_loops_2d, shift_ind)
 
-    num_clusters = max(2, int(proj_shifted.shape[0] ** 0.6))
-    estimator = KMeans(num_clusters)
-    results = estimator.fit(proj_shifted)
+    if proj_shifted.shape[0] == 1:
+        num_clusters = 1
+        labels = np.array([0])
+        centroids = proj_shifted
+    else:
+        num_clusters = int(proj_shifted.shape[0] ** 0.5)
+        estimator = KMeans(num_clusters)
+        results = estimator.fit(proj_shifted)
+        labels = results.labels_
+        centroids = results.cluster_centers_
 
     guess_parms = np.zeros((proj_shifted.shape[0]), dtype=loop_fit32)
     for ind in range(num_clusters):
-        parms = generate_guess(vdc_shifted, results.cluster_centers_[ind],
+        parms = generate_guess(vdc_shifted, centroids[ind],
                                show_plots=False)
 
         # TODO: This is inaccurate - calculate r2 for each position independently
@@ -1256,7 +1263,7 @@ def guess_loops_kmeans(vdc_vec, projected_loops_2d):
         r2 = 1 - np.sum(np.abs(error ** 2))
 
         temp = stack_real_to_compound(np.hstack([parms, r2]), loop_fit32)
-        guess_parms[results.labels_ == ind] = temp
+        guess_parms[labels == ind] = temp
 
     return guess_parms
 
