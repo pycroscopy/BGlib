@@ -14,7 +14,6 @@ Submodules
 """
 
 from . import analysis, translators, viz
-import bglib_fitter
 
 
-__all__ = ['analysis', 'translators', 'viz', 'bglib_fitter']
+__all__ = ['analysis', 'translators', 'viz']

@@ -16,9 +16,8 @@ Submodules
 """
 
 from . import utils
-# from BGlib.be.analysis.utils.fitter import Fitter
 from .be_sho_fitter import BESHOfitter
-# from BGlib.be.analysis.utils.be_loop_fitter import BELoopFitter
 from .be_relax_fit import BERelaxFit
+from .bglib_fitter import LoopFitter
 
-__all__ = ['BESHOfitter', 'utils', 'BERelaxFit']
+__all__ = ['BESHOfitter', 'utils', 'BERelaxFit','LoopFitter']

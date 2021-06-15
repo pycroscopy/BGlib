@@ -9,7 +9,7 @@ import h5py
 import sidpy as sid
 import pyNSID as nsid
 import pyUSID as usid
-from bglib_fitter import *
+from BGlib.be.bglib_fitter import *
 from dask.distributed import Client, progress
 import dask
 
