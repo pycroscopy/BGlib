@@ -24,7 +24,7 @@ from pyUSID.io.image import read_image
 from ..analysis.utils.be_loop import loop_fit_function
 from ..analysis.utils.be_sho import SHOfunc
 from ..analysis.be_sho_fitter import sho32
-from ..analysis.be_loop_fitter import loop_fit32
+# from ..analysis.be_loop_fitter import loop_fit32
 from .df_utils.beps_gen_utils import get_noise_vec, beps_image_folder
 
 

@@ -1,6 +1,6 @@
 @staticmethod
 
-from .be_loop_fitter import BELoopFitter
+# from .be_loop_fitter import BELoopFitter
 from pyUSID.io.hdf_utils import get_unit_values, get_sort_order, \
     reshape_to_n_dims, create_empty_dataset, create_results_group, \
 import time

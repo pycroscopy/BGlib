@@ -20,7 +20,7 @@ from pyUSID.io.usi_data import USIDataset
 
 from scipy.signal import find_peaks_cwt
 from .utils.be_sho import SHOestimateGuess, SHOfunc
-from BGlib.be.analysis.utils.fitter import Fitter
+# from BGlib.be.analysis.utils.fitter import Fitter
 
 
 '''
