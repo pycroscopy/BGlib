@@ -41,7 +41,7 @@ class SHOFitFunc(Enum):
     least_squares = 0
 
 
-class BESHOfitter(Fitter):
+class BESHOfitter():
 
     def __init__(self, h5_main, **kwargs):
         """
