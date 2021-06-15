@@ -303,15 +303,17 @@ class LoopFitter():
         fit_loops = []
         fit_coeff = self.fit_dataset.reshape((self.num_computations, 9))
         for ind in range(self.num_computations):
-            fit_loops.append(self.loop_fit_func2(xvec, *fit_coeff[ind, :]))
-        #             lazy_result = dask.delayed(self.loop_fit_func2)(xvec, *fit_coeff[ind,:])
-        #             fit_loops.append(lazy_result)
+            # fit_loops.append(self.loop_fit_func2(xvec, *fit_coeff[ind, :]))
+                    lazy_result = dask.delayed(self.loop_fit_func2)(xvec, *fit_coeff[ind,:])
+                    fit_loops.append(lazy_result)
         #         pdb.set_trace()
-        #         self.fitted_loops = dask.compute(*fit_loops)
-        self.fitted_loops = fit_loops
+        self.fitted_loops = dask.compute(*fit_loops)
+        # self.fitted_loops = fit_loops
         self.fitted_loops = sidpy.Dataset.from_array(np.asarray(self.fitted_loops).reshape(self.dataset.shape),
                                                      name='Fitted Loops')
         self.fitted_loops.data_type = sidpy.DataType.SPECTRAL_IMAGE
+        x_pos = np.arange(0, self.dataset.shape[0])
+        y_pos = np.arange(0, self.dataset.shape[1])
         self.fitted_loops.set_dimension(0, sidpy.Dimension(x_pos,
                                                            name='x',
                                                            units='um',
