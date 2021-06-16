@@ -836,6 +836,79 @@ class BELoopFitter(Fitter):
         initial conditions.
         Results of the computation are captured in self._results
         """
+        resp_2d_list, dc_vec_list = self.data
+
+        # At this point data has been read in. Read in the guess as well:
+        self._read_guess_chunk()
+
+        self._results = list()
+
+        for dc_vec, loops_2d, guess_parms in zip(dc_vec_list, resp_2d_list,
+                                                 self._guess):
+            '''
+            Shift the loops and vdc vector
+            '''
+            shift_ind, vdc_shifted = shift_vdc(dc_vec)
+            loops_2d_shifted = np.roll(loops_2d, shift_ind, axis=1)
+
+            if self.verbose and self.mpi_rank == 0:
+                print('Computing on set: DC: {}<{}>, loops: {}<{}>, Guess: '
+                      '{}<{}>'.format(
+                        vdc_shifted.shape, vdc_shifted.dtype,
+                        loops_2d_shifted.shape, loops_2d_shifted.dtype,
+                        guess_parms.shape, guess_parms.dtype))
+
+                print('\n' * 5)
+
+            if self.mpi_size == 1 and self._cores > 1:
+
+                if self.verbose:
+                    print('Using Joblib for parallel computation using {} '
+                          'cores'.format(self._cores))
+
+                delayed_ops = list()
+                for loop_resp, loop_guess in zip(loops_2d_shifted, guess_parms):
+                    func_args = [loop_guess, vdc_shifted]
+                    func_kwargs = dict()
+                    delayed_ops.append(joblib.delayed(fit_func_reorg)(loop_resp, *func_args, **func_kwargs))
+
+                raw_results = joblib.Parallel(n_jobs=self._cores,
+                                              backend="multiprocessing")(delayed_ops)
+                # Only need the 1st of the 3 components returned by scipy
+                results = [item[0] for item in raw_results]
+
+            else:
+                if self.verbose and self.mpi_rank == 0:
+                    print('Computing loop fits serially')
+                results = list()
+                for loop_resp, loop_guess in zip(loops_2d_shifted, guess_parms):
+                    # Only need the 1st of the 3 components returned by scipy
+                    results.append(fit_loop(vdc_shifted, loop_resp, loop_guess)[0])
+
+            if self.verbose and self.mpi_rank == 0:
+                print('Raw results from loop fitting of length: {}'
+                      ''.format((len(results))))
+
+            """
+            fit_coeffs = np.zeros(shape=(len(results)), dtype=loop_fit32)
+            for ind, item in enumerate(results):
+                r2_err = 1 - np.sum(np.abs(item[0].fun ** 2))
+                fit_coeffs[ind] = stack_real_to_compound(np.hstack([item[0].x, r2_err]), loop_fit32)
+
+            if self.verbose and self.mpi_rank == 0:
+                print('Loop coefficients array for this FORC of shape: {}'
+                      ''.format(fit_coeffs.shape))
+
+            self._results.append(fit_coeffs)
+            """
+            self._results += results
+
+    def _unit_compute_fit_old(self):
+        """
+        Performs least-squares fitting on self.data using self.guess for
+        initial conditions.
+        Results of the computation are captured in self._results
+        """
 
         obj_func = _be_loop_err
         opt_func = least_squares
@@ -1155,7 +1228,7 @@ class BELoopFitter(Fitter):
         """
         # TODO: To compound dataset: Note that this is a memory duplication!
         temp = np.array(
-            [np.hstack([result.x, result.fun]) for result in self._results])
+            [np.hstack([result.x, 1 - np.sum(np.abs(result.fun ** 2))]) for result in self._results])
         self._results = stack_real_to_compound(temp, loop_fit32)
 
         all_fits = np.array(self._results)
@@ -1388,6 +1461,10 @@ def guess_loops_hierarchically(vdc_vec, projected_loops_2d):
             np.hstack([temp, np.atleast_2d(r2)]), loop_fit32)
 
     return guess_parms
+
+
+def fit_func_reorg(proj_loop_shifted, guess_coeff_vec, vdc_shifted):
+    return fit_loop(vdc_shifted, proj_loop_shifted, guess_coeff_vec)
 
 
 def shift_vdc(vdc_vec):
