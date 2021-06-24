@@ -1687,27 +1687,8 @@ class BEodfTranslator(Translator):
 
         chosen_spectra = np.array(chosen_spectra)
 
-        import matplotlib.pyplot as plt
-        fig, axes = plt.subplots(nrows=2, figsize=(5, 10))
-        axes[0].imshow(np.abs(chosen_spectra))
-        axes[1].imshow(np.angle(chosen_spectra))
-        fig.tight_layout()
-
-        plot_pos = np.linspace(0, num_spectra-1, num=25, endpoint=True, dtype=int)
-        fig, axes = plt.subplots(nrows=5, ncols=5, figsize=(12, 12))
-        for axis, this_ind in zip(axes.flat, plot_pos):
-            axis.plot(np.abs(chosen_spectra[this_ind]))
-            axis.set_title('Spectrum: {}'.format(this_ind))
-        fig.tight_layout()
-        fig, axes = plt.subplots(nrows=5, ncols=5, figsize=(12, 12))
-        for axis, this_ind in zip(axes.flat, plot_pos):
-            axis.plot(np.angle(chosen_spectra[this_ind]))
-            axis.set_title('Spectrum: {}'.format(this_ind))
-        fig.tight_layout()
-
-
         if verbose:
-            print('\t' * 5 + 'chosen spectra of shape: {}'
+            print('\t' * 2 + 'chosen spectra of shape: {}'
                              ''.format(chosen_spectra.shape))
 
         return chosen_spectra
