@@ -685,10 +685,12 @@ class BEodfTranslator(Translator):
 
         if mode == 'out-of-field':
             parsers = [BEodfParser(path_dict['read_real'], path_dict['read_imag'],
-                                   self.h5_raw.shape[0], bytes_per_pix)]
+                                   self.h5_raw.shape[0], bytes_per_pix,
+                                   num_udvs_steps=udvs_steps)]
         elif mode == 'in-field':
             parsers = [BEodfParser(path_dict['write_real'], path_dict['write_imag'],
-                                   self.h5_raw.shape[0], bytes_per_pix)]
+                                   self.h5_raw.shape[0], bytes_per_pix,
+                                   num_udvs_steps=udvs_steps)]
         elif mode == 'in and out-of-field':
             # each file will only have half the udvs steps:
             if 0.5 * udvs_steps % 1:
@@ -697,9 +699,11 @@ class BEodfTranslator(Translator):
             udvs_steps = int(0.5 * udvs_steps)
             # be careful - each pair contains only half the necessary bins - so read half
             parsers = [BEodfParser(path_dict['write_real'], path_dict['write_imag'],
-                                   self.h5_raw.shape[0], int(bytes_per_pix / 2)),
+                                   self.h5_raw.shape[0], int(bytes_per_pix / 2),
+                                   num_udvs_steps=udvs_steps),
                        BEodfParser(path_dict['read_real'], path_dict['read_imag'],
-                                   self.h5_raw.shape[0], int(bytes_per_pix / 2))]
+                                   self.h5_raw.shape[0], int(bytes_per_pix / 2),
+                                   num_udvs_steps=udvs_steps)]
 
             if step_size % 1:
                 raise ValueError('strange number of bins per UDVS step. Exiting')
@@ -707,7 +711,7 @@ class BEodfTranslator(Translator):
             step_size = int(step_size)
 
         rand_spectra = self._get_random_spectra(parsers, self.h5_raw.shape[0], udvs_steps, step_size,
-                                                num_spectra=self.num_rand_spectra)
+                                                num_spectra=self.num_rand_spectra, verbose=self._verbose)
         take_conjugate = requires_conjugate(rand_spectra, cores=self._cores)
 
         self.mean_resp = np.zeros(shape=(self.h5_raw.shape[1]), dtype=np.complex64)
@@ -775,7 +779,8 @@ class BEodfTranslator(Translator):
             Number of UDVS steps
         """
         parser = BEodfParser(real_path, imag_path, self.h5_raw.shape[0],
-                             self.h5_raw.shape[1] * 4)
+                             self.h5_raw.shape[1] * 4,
+                             num_udvs_steps=udvs_steps)
 
         step_size = self.h5_raw.shape[1] / udvs_steps
         rand_spectra = self._get_random_spectra([parser],
@@ -1648,8 +1653,8 @@ class BEodfTranslator(Translator):
             spectrogram or spectra arranged as [instance, spectrum]
         """
         if verbose:
-            print('\t' * 4 + 'Getting random spectra for Q factor testing')
-            print('\t' * 4 + 'num_pixels: {} num_udvs_steps: {}, num_bins: {},'
+            print('\t' * 2 + 'Getting random spectra for Q factor testing')
+            print('\t' * 2 + 'num_pixels: {} num_udvs_steps: {}, num_bins: {},'
                   ' num_spectra: {}'.format(num_pixels, num_udvs_steps,
                                             num_bins, num_spectra))
         num_pixels = int(num_pixels)
@@ -1661,41 +1666,45 @@ class BEodfTranslator(Translator):
         selected_steps = np.random.randint(0, num_udvs_steps, size=num_spectra)
         selected_parsers = np.random.randint(0, len(parsers), size=num_spectra)
 
-        if verbose and False:
-            print('\t' * 4 + 'Selecting the following random pixels, '
-                             'UDVS steps, parsers')
-            print('\t' * 4 + 'num_spectra: {}'.format(num_spectra))
-            print('\t' * 4 + 'selected_pixels:\n{}'.format(selected_pixels))
-            print('\t' * 4 + 'selected_steps:\n{}'.format(selected_steps))
-            print('\t' * 4 + 'selected_parsers:\n{}'.format(selected_parsers))
-
         chosen_spectra = list()
         # np.zeros(shape=(num_spectra, num_bins), dtype=np.complex64)
 
         for spectra_index in range(num_spectra):
             prsr = parsers[selected_parsers[spectra_index]]
-            prsr.seek_to_pixel(selected_pixels[spectra_index])
-            if verbose and False:
-                print('\t' * 5 + 'Seeking and reading pixel #{}'
-                                 ''.format(selected_pixels[spectra_index]))
-            raw_vec = prsr.read_pixel()
+            if verbose:
+                print('\t' * 3 + 'Reading pixel: {}\tstep: {}\tParser: {}'.format(selected_pixels[spectra_index], selected_steps[spectra_index], prsr))
+            raw_vec = prsr.read_single_spectrum(int(selected_pixels[spectra_index]),
+                                                int(selected_steps[spectra_index]))
             if len(raw_vec) < 1:
                 # Empty pixel at the end of the file that may be missing
+                warn('Got an empty array when attempting to read random spectrum at pixel: {} and UDVS step: {}'.format(selected_pixels[spectra_index], selected_steps[spectra_index]))
                 continue
-            spectrogram = raw_vec.reshape(num_udvs_steps, -1)
-            if verbose and False:
-                print('\t' * 5 + 'reshaped raw vector for pixel of shape {} by'
-                                 ' UDVS step to: {} and taking spectrum at '
-                                 'index: {}'.format(raw_vec.shape,
-                                                    spectrogram.shape,
-                                                    selected_steps[spectra_index]))
-            # chosen_spectra[spectra_index] = spectrogram[selected_steps[spectra_index]]
-            chosen_spectra.append(spectrogram[selected_steps[spectra_index]])
+
+            chosen_spectra.append(raw_vec)
 
         for prsr in parsers:
             prsr.reset()
 
         chosen_spectra = np.array(chosen_spectra)
+
+        import matplotlib.pyplot as plt
+        fig, axes = plt.subplots(nrows=2, figsize=(5, 10))
+        axes[0].imshow(np.abs(chosen_spectra))
+        axes[1].imshow(np.angle(chosen_spectra))
+        fig.tight_layout()
+
+        plot_pos = np.linspace(0, num_spectra-1, num=25, endpoint=True, dtype=int)
+        fig, axes = plt.subplots(nrows=5, ncols=5, figsize=(12, 12))
+        for axis, this_ind in zip(axes.flat, plot_pos):
+            axis.plot(np.abs(chosen_spectra[this_ind]))
+            axis.set_title('Spectrum: {}'.format(this_ind))
+        fig.tight_layout()
+        fig, axes = plt.subplots(nrows=5, ncols=5, figsize=(12, 12))
+        for axis, this_ind in zip(axes.flat, plot_pos):
+            axis.plot(np.angle(chosen_spectra[this_ind]))
+            axis.set_title('Spectrum: {}'.format(this_ind))
+        fig.tight_layout()
+
 
         if verbose:
             print('\t' * 5 + 'chosen spectra of shape: {}'
@@ -1705,7 +1714,8 @@ class BEodfTranslator(Translator):
 
 
 class BEodfParser(object):
-    def __init__(self, real_path, imag_path, num_pix, bytes_per_pix):
+
+    def __init__(self, real_path, imag_path, num_pix, bytes_per_pix, num_udvs_steps=1):
         """
         This object reads the two binary data files (real and imaginary data).
         Use separate parser instances for in-field and out-field data sets.
@@ -1720,6 +1730,8 @@ class BEodfParser(object):
             Number of pixels in this image
         bytes_per_pix : unsigned int
             Number of bytes per pixel
+        num_udvs_steps : unsigned int
+            Number of UDVS steps per pixel
         """
         self.f_real = open(real_path, "rb")
         self.f_imag = open(imag_path, "rb")
@@ -1727,6 +1739,12 @@ class BEodfParser(object):
         self.__num_pix__ = num_pix
         self.__bytes_per_pix__ = bytes_per_pix
         self.__pix_indx__ = 0
+        self.__num_udvs_steps__ = num_udvs_steps
+        self.__bytes_per_step__ = bytes_per_pix / num_udvs_steps
+        if self.__bytes_per_step__ % 1 > 0:
+            raise ValueError('Bytes per UDVS step: {} not a whole number'
+                             ''.format(self.__bytes_per_step__))
+        self.__bytes_per_step__ = int(self.__bytes_per_step__)
 
     def read_pixel(self):
         """
@@ -1784,22 +1802,62 @@ class BEodfParser(object):
 
     def seek_to_pixel(self, pixel_ind):
         """
+        Seeks to a particular pixel
 
         Parameters
         ----------
-        pixel_ind
-
-        Returns
-        -------
+        pixel_ind : int
+            Pixel index
 
         """
         if self.__num_pix__ is not None:
             pixel_ind = min(pixel_ind, self.__num_pix__)
         self.__pix_indx__ = pixel_ind
 
+    def read_single_spectrum(self, pixel_ind, step_ind):
+        """
+        Reads a single BE spectrum from the provided dataset
+
+        Parameters
+        ----------
+        pixel_ind : int
+            Pixel index
+        step_ind : int
+            UDVS step number
+
+        Returns
+        -------
+        numpy.ndarray
+            1D complex array with data for the requested spectrum
+        """
+        if pixel_ind < 0 or pixel_ind >= self.__num_pix__:
+            raise IndexError('pixel index {} not within 0 and maximum number '
+                             'of pixels: {}'.format(pixel_ind, self.__num))
+        if step_ind < 0 or step_ind >= self.__num_udvs_steps__:
+            raise IndexError('step index: {} is not within 0 and total UDVS '
+                             'steps: {}'.format(step_ind,
+                                                self.__num_udvs_steps__))
+
+        offset = pixel_ind * self.__bytes_per_pix__
+        offset += step_ind * self.__bytes_per_step__
+
+        self.f_real.seek(offset, 0)
+        real_vec = np.fromstring(self.f_real.read(self.__bytes_per_step__),
+                                 dtype='f')
+
+        self.f_imag.seek(offset, 0)
+        imag_vec = np.fromstring(self.f_imag.read(self.__bytes_per_step__),
+                                 dtype='f')
+
+        raw_vec = np.zeros(len(real_vec), dtype=np.complex64)
+        raw_vec.real = real_vec
+        raw_vec.imag = imag_vec
+        return raw_vec
+
+
     def reset(self):
         """
-
+        Reset seek offsets to 0
         """
         self.f_real.seek(0, 0)
         self.f_imag.seek(0, 0)
