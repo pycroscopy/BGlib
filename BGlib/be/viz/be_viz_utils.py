@@ -183,12 +183,14 @@ def visualize_sho_results(h5_main, save_plots=True, show_plots=True, cmap=None,
                 out_phase = np.squeeze(phase_mat[:, slice(1, None, 2)])
                 out_amp = np.squeeze(amp_mat[:, slice(1, None, 2)])
 
-                for win_title, resp_mat in zip(['In_Field', 'Out_of_Field'], [in_phase * in_amp, out_phase * out_amp]):
+                for win_title, resp_mat in zip(['In_Field', 'Out_of_Field'],
+                                               [np.cos(in_phase) * in_amp,
+                                                np.cos(out_phase) * out_amp]):
                     fig_list.append(__plot_loops_maps(dc_vec, resp_mat, grp_name, win_title, 'DC Bias',
                                                       'Piezoresponse (a.u.)', save_plots, folder_path,
                                                       basename, num_rows, num_cols))
             else:
-                fig_list.append(__plot_loops_maps(dc_vec, phase_mat * amp_mat, grp_name, '', 'DC Bias',
+                fig_list.append(__plot_loops_maps(dc_vec, np.cos(phase_mat) * amp_mat, grp_name, '', 'DC Bias',
                                                   'Piezoresponse (a.u.)', save_plots, folder_path, basename,
                                                   num_rows, num_cols))
 
