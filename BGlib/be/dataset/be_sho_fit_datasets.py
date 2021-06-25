@@ -17,7 +17,6 @@ from warnings import warn
 
 class SHOBEDataset(USIDataset):
     """
-
       Extension of the USIDataset object for SHO-Fitted Band-excitation (BE) datasets
       This includes various visualization routines
 
@@ -46,7 +45,7 @@ class SHOBEPSDataset(SHOBEDataset):
       """
 
     def __init__(self, h5_dataset):
-        super(SHOBEPSDataset, self).__init__(h5_ref=h5_dataset)
+        super(SHOBEPSDataset, self).__init__(h5_dataset)
         # Populate some data tags
         self.dataset_type = 'SHOBEPSDataset'
 
