@@ -100,6 +100,8 @@ class LabViewH5Patcher(Translator):
             path to the patched dataset
 
         """
+        #TODO: Need a way to choose which channels to apply the patcher to, 
+        #fails for multi-channel files where not all files are capable of being main datasets
         # Open the file and check if a patch is needed
         h5_file = h5py.File(os.path.abspath(h5_path), 'r+')
         if h5_file.attrs.get('translator') is not None and not force_patch:
