@@ -87,7 +87,7 @@ def visualize_sho_results(h5_main, save_plots=True, show_plots=True, cmap=None,
         plt_title = grp_name + '_' + win_title + '_Snaps'
         fig, axes = plot_map_stack(resp_mat.reshape(num_rows, num_cols, resp_mat.shape[1]),
                                    color_bar_mode="each", evenly_spaced=True, subtitle='UDVS Step #',
-                                   title=plt_title, cmap=cmap)
+                                   title=plt_title, reverse_dims=True, cmap=cmap)
         if save_plots:
             fig.savefig(os.path.join(folder_path, basename + '_' + plt_title + '.png'), format='png', dpi=300)
 
