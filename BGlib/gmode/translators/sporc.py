@@ -15,8 +15,11 @@ from scipy.io.matlab import loadmat  # To load parameters stored in Matlab .mat 
 
 from sidpy.sid import Translator
 from sidpy.hdf.hdf_utils import get_h5_obj_refs, link_h5_objects_as_attrs
-
 from pyUSID.io.write_utils import Dimension, INDICES_DTYPE, VALUES_DTYPE
+
+from .df_utils.write_utils import build_ind_val_dsets
+from .df_utils.hdf_writer import HDFwriter
+from .df_utils.virtual_data import VirtualDataset, VirtualGroup
 
 
 class SporcTranslator(Translator):
