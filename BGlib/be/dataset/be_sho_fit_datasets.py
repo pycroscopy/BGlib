@@ -1,6 +1,7 @@
 from ..analysis import BELoopFitter
 from .be_process_datasets import BEPSLoopsDataset
 from sidpy.hdf.hdf_utils import get_auxiliary_datasets, get_attr
+from sidpy.viz.plot_utils.curve import cbar_for_line_plot
 from pyUSID import USIDataset
 from pyUSID.io.hdf_utils import reshape_to_n_dims
 from sidpy.viz.plot_utils import plot_curves, plot_map_stack, get_cmap_object, plot_map, set_tick_font_size, \
@@ -518,7 +519,7 @@ class SHOcKPFMDataset(SHOBEDataset):
 
         Nd_mat = self.h5_sho_fit.get_n_dim_form()
 
-        phase_offset = det_phase_offset(Nd_mat[:, :, :, :, :]['Phase [rad]'].ravel())
+        phase_offset = 0 #TODO: Add phase offset function #det_phase_offset(Nd_mat[:, :, :, :, :]['Phase [rad]'].ravel())
 
         Nd_mat[:, :, :, :, :]['Phase [rad]'] = Nd_mat[:, :, :, :, :]['Phase [rad]'] - phase_offset
 
@@ -613,7 +614,7 @@ class SHOcKPFMDataset(SHOBEDataset):
 
         if show_cbar:
             # put back the cmap parameter:
-            kwargs.update({'cmap': cmap})
+            #kwargs.update({'cmap': cmap})
             _ = cbar_for_line_plot(axis, num_lines, **kwargs)
 
     def plot_cKPFM_static(self):
