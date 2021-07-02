@@ -13,6 +13,7 @@ from sidpy.hdf.hdf_utils import get_attr
 import ipywidgets as widgets
 import h5py
 
+from .be_sho_fit_datasets import SHOBEPSDataset
 #The following classes inherit from RawBEDataset
 #RawBEPSDataset
 #RawBELINEDataset
@@ -112,7 +113,7 @@ class RawBEPSDataset(RawBEDataset):
                     if average_spect:
                         spec_title = 'Mean' + titles[ind]
                     else:
-                        titles[ind] + 'at px ' + str(px)
+                        spec_title = titles[ind] + ' at px  ' + str(px)
 
                     ax.set_title(spec_title)
             elif method == 'real':
@@ -396,7 +397,7 @@ class RawBEPSDataset(RawBEDataset):
 
         # TODO: return the be_sho_dataset object
 
-        return SHOBEDataset(h5_sho_fit)
+        return SHOBEPSDataset(h5_sho_fit)
 
 class RawBELINEDataset(RawBEDataset):
 
@@ -468,7 +469,7 @@ class RawBELINEDataset(RawBEDataset):
                     if average_spect:
                         spec_title = 'Mean' + titles[ind]
                     else:
-                        titles[ind] + 'at row ' + str(row)
+                        spec_title = titles[ind] + 'at row ' + str(row)
                     ax.set_title(spec_title)
             elif method == 'real':
                 titles = ['Real', 'Imaginary']
@@ -477,7 +478,7 @@ class RawBELINEDataset(RawBEDataset):
                     if average_spect:
                         spec_title = 'Mean' + titles[ind]
                     else:
-                        titles[ind] + 'at row ' + str(row)
+                        spec_title = titles[ind] + 'at row ' + str(row)
 
                     ax.set_title(spec_title)
         fig.tight_layout()

@@ -1,3 +1,5 @@
+from ..analysis import BELoopFitter
+from .be_process_datasets import BEPSLoopsDataset
 from sidpy.hdf.hdf_utils import get_auxiliary_datasets, get_attr
 from pyUSID import USIDataset
 from pyUSID.io.hdf_utils import reshape_to_n_dims
@@ -17,7 +19,6 @@ from warnings import warn
 
 class SHOBEDataset(USIDataset):
     """
-
       Extension of the USIDataset object for SHO-Fitted Band-excitation (BE) datasets
       This includes various visualization routines
 
@@ -46,7 +47,7 @@ class SHOBEPSDataset(SHOBEDataset):
       """
 
     def __init__(self, h5_dataset):
-        super(SHOBEPSDataset, self).__init__(h5_ref=h5_dataset)
+        super(SHOBEPSDataset, self).__init__(h5_dataset)
         # Populate some data tags
         self.dataset_type = 'SHOBEPSDataset'
 
@@ -241,6 +242,36 @@ class SHOBEPSDataset(SHOBEDataset):
             plt.show()
 
         return fig_list
+
+    def fit_loops(self, override = False):
+        """
+        Plots some loops, amplitude, phase maps for BE-Line and BEPS datasets.\n
+        Note: The file MUST contain SHO fit guesses at the very least
+
+        Parameters
+        ----------
+        self : SHOBEPSDataset
+            SHO-Fitted dataset to be fit
+
+        Returns
+        -------
+        fit_results:  BEPSFitDataset
+            Dataset with results of Loop fitting
+
+        """
+        loop_fitter = BELoopFitter(self, be_data_type='BEPSData', vs_mode = 'DC modulation mode', vs_cycle_frac='full',
+                                                  cores=None, h5_target_group=None,
+                                                  verbose=True)
+        loop_fitter.set_up_guess()
+        h5_loop_guess = loop_fitter.do_guess(override=override)
+        # Calling explicitely here since Fitter won't do it automatically
+        h5_guess_loop_parms = loop_fitter.extract_loop_parameters(h5_loop_guess)
+
+        loop_fitter.set_up_fit()
+        h5_loop_fit = loop_fitter.do_fit(override=override)
+        h5_loop_group = h5_loop_fit.parent
+
+        return BEPSLoopsDataset(h5_loop_fit)
 
 class SHOBELINEDataset(SHOBEDataset):
     """

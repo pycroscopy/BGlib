@@ -13,6 +13,6 @@ Submodules
 
 """
 
-from . import analysis, translators, viz
+from . import analysis, translators, viz, dataset
 
-__all__ = ['analysis', 'translators', 'viz']
+__all__ = ['analysis', 'translators', 'viz', 'dataset']
