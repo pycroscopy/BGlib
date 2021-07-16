@@ -24,5 +24,27 @@ class TestFitFunc(unittest.TestCase):
         with self.assertRaises(TypeError):
             _ = fit_func([0,1,3], [5,7,11], [13,17,23]) #test lists
 
+    def test_format_xvec(self):
+        return
+
+    def test_calc_priors(self):
+        return
+
+    def test_calc_mean_fit(self):
+        return
+
+    def test_fit_parallel(self):
+        return
+
+    def test_fit_series(self):
+        return
+
+    def test_convert_coeff2loop(self):
+        return
+
+    def test_loop_fit_func2(self):
+        return
+
+
 
 
