@@ -110,12 +110,12 @@ class BELoopFitter(Fitter):
         self._check_validity(h5_main, be_data_type, vs_mode, vs_cycle_frac)
 
         # Instead of the variables kwarg to the Fitter. Do check here:
-        if 'DC_Offset' in self.h5_main.spec_dim_labels:
-            self._fit_dim_name = 'DC_Offset'
+        if 'VS_Offset' in self.h5_main.spec_dim_labels:
+            self._fit_dim_name = 'VS_Offset'
         elif 'write_bias' in self.h5_main.spec_dim_labels:
             self._fit_dim_name = 'write_bias'
         else:
-            raise ValueError('Neither "DC_Offset", nor "write_bias" were '
+            raise ValueError('Neither "VS_Offset", nor "write_bias" were '
                              'spectroscopic dimension in the provided dataset '
                              'which has dimensions: {}'
                              '.'.format(self.h5_main.spec_dim_labels))
