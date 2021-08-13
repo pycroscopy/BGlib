@@ -1,22 +1,25 @@
 from __future__ import division, print_function, unicode_literals, \
     absolute_import
 import unittest
-import sys
 
 from BGlib.be.analysis.BELoopFitter import *
+
+test_data = np.load('test_data_2x2.npy')
+test_data_coeff = np.load('test_data_2x2_coeff.npy')
+test_data_xvec = np.load('xvec.npy')
 
 class TestFitFunc(unittest.TestCase):
     """
     Tests for fit_func in BELoopFitter
     test for:
-    fit_func -> TODO: roll, curve_fit
-    format_xvec -> TODO
-    calc_priors -> TODO
-    calc_mean_fit -> TODO
+    fit_func
+    format_xvec
+    calc_priors
+    calc_mean_fit
     fit_parallel -> TODO
     fit_series -> TODO
     convert_coeff2loop -> TODO
-    loop_fit_func2 -> TODO
+    loop_fit_func2
     """
     def test_fit_func_inputs(self):
         arr1 = np.asarray([1,3,5])
@@ -44,6 +47,16 @@ class TestFitFunc(unittest.TestCase):
         with self.assertRaises(TypeError):
             _ = fit_func([0,1,3], [5,7,11], [13,17,23]) #test lists
 
+    def test_fit_func(self):
+        """
+        Check the loop values come back as the pre-defined values
+        """
+        expected = test_data[0,0]
+        p0 = test_data_coeff[0,0]
+        loop = fit_func(xvec,*p0)
+        self.assertEqual(expected,loop)
+
+
 class TestFormatXvec(unittest.TestCase):
     def test_format_xvec_input(self):
         """
@@ -51,7 +64,7 @@ class TestFormatXvec(unittest.TestCase):
         """
         arr1 = np.asarray([1])
         with self.assertRaises(TypeError):
-            _ = format_xvec(arr1)
+            _ = LoopFitter.format_xvec(arr1)
 
     def test_format_xvec_input2(self):
         """
@@ -59,7 +72,7 @@ class TestFormatXvec(unittest.TestCase):
         """
         arr1 = np.asarray(['test','test2'])
         with self.assertRaises(TypeError):
-            _ = format_xvec(arr1)
+            _ = LoopFitter.format_xvec(arr1)
 
     def test_max(self):
         """
@@ -123,15 +136,23 @@ class TestCalcMeanFit(unittest.TestCase):
             _ = calc_mean_fit(arr1)
 #TODO: need to make tests for basic functions like append, curve_fit, @, deepcopy, argmin?
 
-class TestFitParallel(unittest.TestCase): #TODO
+class TestFitParallel(unittest.TestCase):
     def test_fit_parallel(self):
+        # TODO: mostly uses functions/data already set up in the class
+        # TODO: how to make a test to check dask is running? This function just sets up dask and calls other functions
         return
 
 class TestFitSeries(unittest.TestCase): #TODO
-    def test_fit_series(self):
+    def test_fit_series_method(self):
+        method_list = ['Kmeans','Random','Neighbor']
+        prior_computation = ['Random','Neighbor','KMeans','text']
+        for k in prior_computation:
+            if k not in method_list:
+                with self.assertRaises(TypeError):
+                    _ = fit_series(self)
         return
 
-class TestConvertCoeff2loop(unittest.TestCase): #TODO
+class TestConvertCoeff2loop(unittest.TestCase): #TODO: how to run tests on dask.compute?
     def test_convert_coeff2loop(self):
         return
 
