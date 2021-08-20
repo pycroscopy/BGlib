@@ -211,6 +211,11 @@ class LabViewH5Patcher(Translator):
                 write_simple_attrs(h5_meas, missing_metadata)
 
             # Link the references to the Indices and Values datasets to the Raw_Data
+            print(h5_raw.shape,
+                  h5_pos_vals.shape, h5_spec_vals.shape)
+            print(h5_spec_inds.shape, h5_pos_inds.shape)
+
+
             link_as_main(h5_raw, h5_pos_inds, h5_pos_vals, h5_spec_inds, h5_spec_vals)
 
             # Also link the Bin_Frequencies and Bin_Wfm_Type datasets
@@ -236,6 +241,30 @@ class LabViewH5Patcher(Translator):
 
                 # Get the labels and units for the Spectroscopic datasets
                 h5_sho_spec_labels = get_attr(h5_sho_spec_inds, 'labels')
+                h5_sho_spec_units = get_attr(h5_sho_spec_vals, 'units')
+                if h5_sho_spec_inds.shape[-1] != h5_sho_guess.shape[-1]:
+                    print('Warning! Found incorrect spectral dimension for dataset {}. Attempting a fix.'.format(h5_sho_guess))
+                    try:
+                        h5_sho_spec_inds = h5_sho_guess.parent.create_dataset("h5_sho_spec_inds_fixed",
+                                                                  shape=(1, 1),dtype = 'uint32')
+                        h5_sho_spec_inds.attrs['labels'] = 'labels'
+                        h5_sho_spec_inds.attrs['units'] = 'units'
+                    except RuntimeError:
+                        print("It seems that the file has already been patched."
+                              " Will use previously computed ancilliary datasets")
+                        h5_sho_spec_inds = h5_sho_guess.parent['h5_sho_spec_inds_fixed']
+                    try:
+                        h5_sho_spec_vals = h5_sho_guess.parent.create_dataset("h5_sho_spec_vals_fixed",
+                                                              shape=(1, 1), dtype = 'uint32')
+                        h5_sho_spec_vals[:] = 0
+                        h5_sho_spec_vals.attrs['labels'] = 'labels'
+                        h5_sho_spec_vals.attrs['units'] = 'units'
+                    except RuntimeError:
+                        print("It seems that the file has already been patched."
+                              " Will use previously computed ancilliary datasets")
+
+                        h5_sho_spec_vals = h5_sho_guess.parent['h5_sho_spec_vals_fixed2']
+
                 link_as_main(h5_sho_guess, h5_pos_inds, h5_pos_vals, h5_sho_spec_inds, h5_sho_spec_vals)
                 sho_inds_and_vals = [h5_sho_spec_inds, h5_sho_spec_vals]
 
