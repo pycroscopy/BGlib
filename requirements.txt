@@ -1,0 +1,14 @@
+matplotlib~=3.4.2
+numpy~=1.20.3
+h5py~=3.2.1
+scipy~=1.6.2
+ipywidgets~=7.6.3
+ipython~=7.26.0
+sidpy~=0.0.5
+pyUSID~=0.0.10
+joblib~=1.0.1
+dask~=2021.8.0
+scikit-learn~=0.24.2
+xlrd~=2.0.1
+scikit-image~=0.18.1
+setuptools~=52.0.0.post20210125

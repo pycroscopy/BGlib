@@ -1,6 +1,7 @@
 from __future__ import division, print_function, unicode_literals, \
     absolute_import
 import unittest
+import numpy as np
 
 from BGlib.be.analysis.BELoopFitter import *
 
@@ -16,9 +17,9 @@ class TestFitFunc(unittest.TestCase):
     format_xvec
     calc_priors
     calc_mean_fit
-    fit_parallel -> TODO
-    fit_series -> TODO
-    convert_coeff2loop -> TODO
+    fit_parallel
+    fit_series
+    convert_coeff2loop
     loop_fit_func2
     """
     def test_fit_func_inputs(self):
