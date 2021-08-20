@@ -8,7 +8,7 @@ from BGlib.be.analysis.BELoopFitter import *
 test_data = np.load('test_data_2x2.npy')
 test_data_coeff = np.load('test_data_2x2_coeff.npy')
 test_data_xvec = np.load('xvec.npy')
-
+#TODO: Check dataset input is a sidpy dataset with dimensions
 class TestFitFunc(unittest.TestCase):
     """
     Tests for fit_func in BELoopFitter
