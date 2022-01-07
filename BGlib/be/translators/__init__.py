@@ -12,7 +12,7 @@ from .be_odf_relaxation import BEodfRelaxationTranslator
 from .beps_ndf import BEPSndfTranslator
 from .beps_data_generator import FakeBEPSGenerator
 from .labview_h5_patcher import LabViewH5Patcher
-from .forc_iv import ForcIVTranslator
+#from .forc_iv import ForcIVTranslator
 
 __all__ = ['BEodfTranslator', 'BEPSndfTranslator', 'BEodfRelaxationTranslator',
-           'FakeBEPSGenerator', 'LabViewH5Patcher', 'ForcIVTranslator']
+           'FakeBEPSGenerator', 'LabViewH5Patcher']
