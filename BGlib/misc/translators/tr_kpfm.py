@@ -15,8 +15,9 @@ from scipy.io import loadmat
 from sidpy.sid import Translator
 from sidpy.hdf.hdf_utils import write_simple_attrs
 
-from pyUSID.io.write_utils import Dimension
-from pyUSID.io.hdf_utils import write_main_dataset, create_indexed_group
+from pyUSID.io.dimension  import Dimension
+from sidpy.hdf.prov_utils import create_indexed_group
+from pyUSID.io.hdf_utils.model import write_main_dataset
 
 if sys.version_info.major == 3:
     unicode = str

@@ -7,7 +7,7 @@ Created on Fri Jan 07 16:25:00 2022
 
 @author: Rama Vasudevan
 """
-from .forc_iv import ForcIVTranslator
+
 from .tr_kpfm import TRKPFMTranslator
 
-__all__ = ['ForcIVTranslator', 'TRKPFMTranslator']
+__all__ = ['TRKPFMTranslator']
