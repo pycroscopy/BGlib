@@ -58,24 +58,37 @@ class ForcIVTranslator(Translator):
         self.h5_read = True
         try:
             h5_raw = h5py.File(raw_data_path, 'r')
-        except ImportError:
+        except:
             self.h5_read = False
             h5_raw = loadmat(raw_data_path)
 
-        excite_cell = h5_raw['dc_amp_cell3']
+
+        try:
+            excite_cell = h5_raw['dc_amp_cell3']
+        except KeyError:
+            excite_cell = [h5_raw['VS_amp_vec']]
         test = excite_cell[0][0]
         if self.h5_read:
             excitation_vec = h5_raw[test]
         else:
             excitation_vec = np.float32(np.squeeze(test))
 
-        current_cell = h5_raw['current_cell3']
+        try:
+            current_cell = h5_raw['current_cell3']
+        except KeyError:
+            current_cell = h5_raw['IV_dat']
+
 
         num_rows = current_cell.shape[0]
         num_cols = current_cell.shape[1]
         num_iv_pts = excitation_vec.size
+        num_cycles = 0
+        if len(current_cell.shape)==4:
+            num_cycles = current_cell.shape[-1]
+            current_data = np.zeros(shape=(num_rows * num_cols, num_iv_pts*num_cycles), dtype=np.float32)
+        else:
+            current_data = np.zeros(shape=(num_rows * num_cols, num_iv_pts), dtype=np.float32)
 
-        current_data = np.zeros(shape=(num_rows * num_cols, num_iv_pts), dtype=np.float32)
         for row_ind in range(num_rows):
             for col_ind in range(num_cols):
                 pix_ind = row_ind * num_cols + col_ind
@@ -83,13 +96,19 @@ class ForcIVTranslator(Translator):
                     curr_val = np.squeeze(h5_raw[current_cell[row_ind][col_ind]].value)
                 else:
                     curr_val = np.float32(np.squeeze(current_cell[row_ind][col_ind]))
+                curr_val = curr_val.reshape(current_data[0,:].shape)
                 current_data[pix_ind, :] = 1E+9 * curr_val
 
         parm_dict = self._read_parms(h5_raw)
         parm_dict.update({'translator': 'FORC_IV'})
 
         pos_desc = [Dimension('Y', 'm', np.arange(num_rows)), Dimension('X', 'm', np.arange(num_cols))]
-        spec_desc = [Dimension('DC Bias', 'V', excitation_vec)]
+        
+        if num_cycles>0:
+            spec_desc = [Dimension('DC Bias', 'V', excitation_vec),
+                        Dimension('Cycles', 'number', np.arange(num_cycles))]
+        else:
+            spec_desc = [Dimension('DC Bias', 'V', excitation_vec)]
 
         meas_grp = create_indexed_group(h5_f, 'Measurement')
         chan_grp = create_indexed_group(meas_grp, 'Channel')
@@ -100,7 +119,7 @@ class ForcIVTranslator(Translator):
                                      'Current', '1E-9 A',
                                      pos_desc, spec_desc)
 
-        return
+        return h5_main
 
     def _read_parms(self, raw_data_file_handle):
         """
