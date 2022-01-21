@@ -1,14 +1,15 @@
-from ..analysis import BELoopFitter
-from .be_process_datasets import BEPSLoopsDataset
+import os
+import numpy as np
+import matplotlib.pyplot as plt
+from warnings import warn
+from scipy.signal import find_peaks
 from sidpy.hdf.hdf_utils import get_auxiliary_datasets, get_attr
 from pyUSID import USIDataset
 from pyUSID.io.hdf_utils import reshape_to_n_dims
 from sidpy.viz.plot_utils import plot_curves, plot_map_stack, get_cmap_object, plot_map, set_tick_font_size, \
     plot_complex_spectra
-import os
-import numpy as np
-import matplotlib.pyplot as plt
-from warnings import warn
+from ..analysis import BELoopFitter
+from .be_process_datasets import BEPSLoopsDataset
 
 #SHOBEPSDataset
 #SHOBELINEDataset
@@ -487,6 +488,43 @@ class SHOcKPFMDataset(SHOBEDataset):
 
         return
 
+    def det_phase_offset(self, Nd_mat_phase_lin):
+        """Input:
+            - phase mat: numpy vector of size N, containing the phase values of every point
+        Output:
+            - phase_offset: float of the phase offset requried to center the phase
+            Here centering means that one side will be 0 and the other will be pi, 
+            so the loop can be projected as A*cos(phi)"""
+
+        #First calculate the histogram of the phase values
+        
+        num_bins = 150 #number of bins in histogram
+        hist, bin_edges = np.histogram(Nd_mat_phase_lin, bins = num_bins)
+        
+        #Remove zero values. Sometimes, when phase is undefined the zero bin will have a peak. Remove this,
+        #and replace it with the average of the two surrounding bins on either side
+        hist[num_bins//2-5:num_bins//2+5] = 0.5*(hist[num_bins//2-5] + hist[num_bins//2+5])
+        
+        #Now find the two peaks by finding the two relative maxima
+
+        peak_positions = find_peaks(hist, distance = num_bins//3)
+
+        phase_1 = bin_edges[peak_positions[0][0]]
+        phase_2 = bin_edges[peak_positions[0][1]]
+
+        print ('The phase difference is {}'.format(np.round(np.abs(phase_1 - phase_2),3)))
+        print ('The phase offset is {}'.format(np.round(phase_1,3)))
+
+        plt.plot(phase_1, hist[peak_positions[0][0]], 'rx')
+        plt.plot(phase_2, hist[peak_positions[0][1]], 'rx')
+
+        if np.abs(np.abs(phase_1 - phase_2) - np.pi) >0.5:
+            print('There was a problem with automatic phase offset determination! Do it manually before proceeding!!')
+        phase_offset = phase_1
+        
+        return phase_offset
+
+
     def process_sho_data(self, phase_offset=None, option=1):
         '''This method will process SHO data, adjusting the phase and setting up the Ndimensional matrices
         that will make plotting easier down the line
@@ -496,7 +534,7 @@ class SHOcKPFMDataset(SHOBEDataset):
 
         Nd_mat = self.h5_sho_fit.get_n_dim_form()
 
-        phase_offset = det_phase_offset(Nd_mat[:, :, :, :, :]['Phase [rad]'].ravel())
+        phase_offset = self.det_phase_offset(Nd_mat[:, :, :, :, :]['Phase [rad]'].ravel())
 
         Nd_mat[:, :, :, :, :]['Phase [rad]'] = Nd_mat[:, :, :, :, :]['Phase [rad]'] - phase_offset
 
@@ -589,8 +627,9 @@ class SHOcKPFMDataset(SHOBEDataset):
 
         if show_cbar:
             # put back the cmap parameter:
-            kwargs.update({'cmap': cmap})
-            _ = cbar_for_line_plot(axis, num_lines, **kwargs)
+            print('Not implemented')
+            #kwargs.update({'cmap': cmap})
+            #_ = cbar_for_line_plot(axis, num_lines, **kwargs)
 
     def plot_cKPFM_static(self):
         print('here we can plot out stuff')
