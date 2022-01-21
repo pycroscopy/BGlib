@@ -4,6 +4,12 @@ Created on Thursday July 27 2017
 @author: Rama Vasudevan, Suhas Somnath, Chris R. Smith
 """
 
+# TODO: 
+# 1. Add back the forc_iv translator (from rama_dev branch)
+# 2. Add the dataset class extensions (from rama_dev branch)
+# 3. Update notebooks to utilize the newer classes
+
+
 from __future__ import division, print_function, absolute_import, unicode_literals
 import sys
 from os import path, remove, listdir  # File Path formatting
