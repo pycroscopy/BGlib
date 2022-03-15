@@ -164,7 +164,7 @@ class BELoopFitter(Fitter):
         if h5_main.dtype != sho32:
             raise TypeError('Provided dataset is not a SHO results dataset.')
 
-        if data_type.lower() == 'bepsdata':
+        if data_type.lower() == 'bepsdata' or data_type.lower() =='beps2banddata':
             if vs_mode not in ['DC modulation mode', 'current mode']:
                 raise ValueError('Provided dataset has a mode: "' + vs_mode +
                                  '" is not a "DC modulation" or "current mode"'
@@ -370,9 +370,12 @@ class BELoopFitter(Fitter):
             dc_mats.append(this_forc_dc_vec)
 
             this_forc_2d = self.data[:, this_forc_spec_inds]
+            print('h5 spec is {}'.format(self.h5_main.h5_spec_inds[
+                                                              :,
+                                                              this_forc_spec_inds]))
             if self.verbose and self.mpi_rank == 0:
                 print('2D slice shape for this FORC: {}'.format(this_forc_2d.shape))
-
+           
             this_forc_nd, success = reshape_to_n_dims(this_forc_2d,
                                                       h5_pos=None,
                                                       h5_spec=self.h5_main.h5_spec_inds[
