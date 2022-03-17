@@ -370,9 +370,7 @@ class BELoopFitter(Fitter):
             dc_mats.append(this_forc_dc_vec)
 
             this_forc_2d = self.data[:, this_forc_spec_inds]
-            print('h5 spec is {}'.format(self.h5_main.h5_spec_inds[
-                                                              :,
-                                                              this_forc_spec_inds]))
+   
             if self.verbose and self.mpi_rank == 0:
                 print('2D slice shape for this FORC: {}'.format(this_forc_2d.shape))
            
@@ -380,7 +378,7 @@ class BELoopFitter(Fitter):
                                                       h5_pos=None,
                                                       h5_spec=self.h5_main.h5_spec_inds[
                                                               :,
-                                                              this_forc_spec_inds])
+                                                              this_forc_spec_inds.nonzero()[0]])
 
             if success != True:
                 raise ValueError('Unable to reshape data to N dimensions')
@@ -508,7 +506,7 @@ class BELoopFitter(Fitter):
                                                       h5_pos=None,
                                                       h5_spec=self._h5_guess.h5_spec_inds[
                                                               :,
-                                                              this_forc_spec_inds])
+                                                              this_forc_spec_inds.nonzero()[0]])
 
             if success != True:
                 raise ValueError('Unable to reshape 2D guess to N dimensions')
