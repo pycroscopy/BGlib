@@ -114,6 +114,8 @@ class BELoopFitter(Fitter):
             self._fit_dim_name = 'VS_Offset'
         elif 'write_bias' in self.h5_main.spec_dim_labels:
             self._fit_dim_name = 'write_bias'
+        elif 'DC_Offset' in self.h5_main.spec_dim_labels:
+            self._fit_dim_name = 'DC_Offset'    
         else:
             raise ValueError('Neither "VS_Offset", nor "write_bias" were '
                              'spectroscopic dimension in the provided dataset '
