@@ -18,7 +18,7 @@ from scipy.io.matlab import loadmat  # To load parameters stored in Matlab .mat 
 
 from sidpy.sid import Translator
 from sidpy.hdf.hdf_utils import link_h5_objects_as_attrs, write_simple_attrs
-from sidpy.proc.comp_utils import get_available_memory
+from pyUSID.processing.comp_utils import get_available_memory
 
 from pyUSID.io.anc_build_utils import make_indices_matrix, VALUES_DTYPE, \
     INDICES_DTYPE, calc_chunks

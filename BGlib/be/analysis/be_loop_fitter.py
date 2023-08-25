@@ -23,7 +23,7 @@ from scipy.spatial.distance import pdist
 from sidpy.hdf.dtype_utils import stack_real_to_compound, \
     flatten_compound_to_real
 from sidpy.hdf.hdf_utils import get_attr, write_simple_attrs
-from sidpy.proc.comp_utils import get_MPI, recommend_cpu_cores
+from pyUSID.processing.comp_utils import get_MPI, recommend_cpu_cores
 from pyUSID.io.hdf_utils import get_unit_values, get_sort_order, \
     reshape_to_n_dims, create_empty_dataset, create_results_group, \
     write_reduced_anc_dsets, write_main_dataset

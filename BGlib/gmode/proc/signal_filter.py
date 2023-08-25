@@ -14,7 +14,7 @@ import h5py
 import numpy as np
 from collections import Iterable
 
-from sidpy.proc.comp_utils import parallel_compute
+from pyUSID.processing.comp_utils import parallel_compute
 from sidpy.hdf.hdf_utils import write_simple_attrs
 
 from pyUSID import Dimension

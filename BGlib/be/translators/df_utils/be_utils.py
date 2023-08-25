@@ -17,7 +17,7 @@ import xlrd as xlreader
 
 from sidpy.hdf.hdf_utils import write_simple_attrs, link_h5_objects_as_attrs, \
     get_attr, get_auxiliary_datasets
-from sidpy.proc.comp_utils import get_available_memory, parallel_compute
+from pyUSID.processing.comp_utils import get_available_memory, parallel_compute
 
 from pyUSID.io.hdf_utils import find_dataset, create_indexed_group, \
     write_main_dataset, get_unit_values
