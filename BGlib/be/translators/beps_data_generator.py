@@ -6,7 +6,7 @@ import os
 import numpy as np
 import h5py
 from sklearn.utils import gen_batches
-from sidpy.proc.comp_utils import get_available_memory
+from pyUSID.processing.comp_utils import get_available_memory
 from skimage.measure import block_reduce
 # Pycroscopy imports
 from sidpy.hdf.hdf_utils import get_attr, write_simple_attrs

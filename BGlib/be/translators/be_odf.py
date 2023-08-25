@@ -22,7 +22,7 @@ from .df_utils.be_utils import trimUDVS, getSpectroscopicParmLabel, parmsToDict,
 from sidpy.hdf.hdf_utils import write_simple_attrs, copy_attributes
 from sidpy.hdf.reg_ref import write_region_references
 from sidpy.sid import Translator
-from sidpy.proc.comp_utils import get_available_memory
+from pyUSID.processing.comp_utils import get_available_memory
 from pyUSID.io.anc_build_utils import INDICES_DTYPE, VALUES_DTYPE, Dimension, calc_chunks
 from pyUSID.io.hdf_utils import write_ind_val_dsets, write_main_dataset, \
     create_indexed_group, write_book_keeping_attrs,\

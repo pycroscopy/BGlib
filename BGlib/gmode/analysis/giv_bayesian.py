@@ -12,7 +12,7 @@ Created on Thu Nov 02 11:48:53 2017
 from __future__ import division, print_function, absolute_import, unicode_literals
 
 import numpy as np
-from sidpy.proc.comp_utils import parallel_compute
+from pyUSID.processing.comp_utils import parallel_compute
 from sidpy.hdf.dtype_utils import stack_real_to_compound
 from sidpy.hdf.hdf_utils import write_simple_attrs, print_tree, get_attributes
 from pyUSID import Dimension
