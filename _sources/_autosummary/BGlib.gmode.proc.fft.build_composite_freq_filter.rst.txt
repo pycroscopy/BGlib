@@ -1,0 +1,6 @@
+BGlib.gmode.proc.fft.build\_composite\_freq\_filter
+===================================================
+
+.. currentmodule:: BGlib.gmode.proc.fft
+
+.. autofunction:: build_composite_freq_filter

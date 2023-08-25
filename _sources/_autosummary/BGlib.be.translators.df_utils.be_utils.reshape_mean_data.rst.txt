@@ -1,0 +1,6 @@
+BGlib.be.translators.df\_utils.be\_utils.reshape\_mean\_data
+============================================================
+
+.. currentmodule:: BGlib.be.translators.df_utils.be_utils
+
+.. autofunction:: reshape_mean_data

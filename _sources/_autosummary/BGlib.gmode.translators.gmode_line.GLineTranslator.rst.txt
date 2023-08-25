@@ -1,0 +1,26 @@
+BGlib.gmode.translators.gmode\_line.GLineTranslator
+===================================================
+
+.. currentmodule:: BGlib.gmode.translators.gmode_line
+
+.. autoclass:: GLineTranslator
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~GLineTranslator.is_valid_file
+      ~GLineTranslator.translate
+   
+   
+
+   
+   
+   

@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BGlib.be.viz.qt_visualizers.io_funcs &mdash; BGlib 0.0.4 documentation</title>
+      <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../_static/documentation_options.js?v=8c5712d9"></script>
+        <script src="../../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../../../../../about.html" />
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            BGlib
+          </a>
+              <div class="version">
+                0.0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">BGlib</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../about.html">BGlib</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../_autosummary/BGlib.html">BGlib</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../notebooks/be/index.html">Band Excitation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../notebooks/gmode/index.html">General Mode</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">BGlib</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">BGlib.be.viz.qt_visualizers.io_funcs</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for BGlib.be.viz.qt_visualizers.io_funcs</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Apr 20, 2016</span>
+
+<span class="sd">@author: Chris Smith -- csmith55@utk.edu</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">h5py</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;../&#39;</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">scipy.io</span> <span class="kn">import</span> <span class="n">loadmat</span>
+
+
+<div class="viewcode-block" id="loadDataFunc">
+<a class="viewcode-back" href="../../../../../_autosummary/BGlib.be.viz.qt_visualizers.io_funcs.loadDataFunc.html#BGlib.be.viz.qt_visualizers.io_funcs.loadDataFunc">[docs]</a>
+<span class="k">def</span> <span class="nf">loadDataFunc</span><span class="p">(</span><span class="n">filePath</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function to load the N-D data from a .mat file</span>
+<span class="sd">    Output:  N-D numpy data array, Nx2 x-vector array</span>
+<span class="sd">            array indices are (Step, #rows, #cols, cycle#)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">loadmat</span><span class="p">(</span><span class="n">filePath</span><span class="p">)</span>
+    <span class="n">data_mat</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;loop_mat&#39;</span><span class="p">]</span>
+    <span class="n">data_mat</span> <span class="o">=</span> <span class="n">data_mat</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="p">:]</span>
+    <span class="n">data_mat</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">data_mat</span> <span class="o">&gt;</span> <span class="mf">1E-1</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Presumably, this will not be requried.</span>
+    <span class="n">data_mat</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">data_mat</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mf">1E-1</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Otherwise we will have to write smoothing/cleaning functions</span>
+    <span class="n">data_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">data_mat</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="n">xvec</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;VV&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">data_mat</span><span class="p">,</span> <span class="n">xvec</span></div>
+
+
+
+<div class="viewcode-block" id="readData">
+<a class="viewcode-back" href="../../../../../_autosummary/BGlib.be.viz.qt_visualizers.io_funcs.readData.html#BGlib.be.viz.qt_visualizers.io_funcs.readData">[docs]</a>
+<span class="k">def</span> <span class="nf">readData</span><span class="p">(</span><span class="n">h5_path</span><span class="p">,</span> <span class="n">dset_name</span><span class="o">=</span><span class="s1">&#39;SHO_Fit_Guess&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reads the hdf5 data file and calls appropriate reader based on data type</span>
+<span class="sd">    Input:</span>
+<span class="sd">        h5_path -- the absolute file path to the hdf5 file to be read in.</span>
+<span class="sd">        dset_name -- the name of the main dataset</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">        data_mat -- the transformed data read to be plotted</span>
+<span class="sd">        xvec -- numpy array containing the possible plot data of the slice viewer</span>
+<span class="sd">        xvec_labs -- numpy array of labels and units for the xvec array</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">h5_file</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">h5_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
+
+    <span class="n">exp_type</span> <span class="o">=</span> <span class="n">h5_file</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;data_type&#39;</span><span class="p">]</span>
+
+    <span class="n">h5_group</span> <span class="o">=</span> <span class="n">h5_file</span><span class="p">[</span><span class="s1">&#39;Measurement_000&#39;</span><span class="p">]</span>
+
+    <span class="n">data_type</span> <span class="o">=</span> <span class="n">h5_group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;VS_mode&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">data_type</span> <span class="o">==</span> <span class="s1">&#39;DC modulation mode&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">readDCData</span><span class="p">(</span><span class="n">h5_group</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">data_type</span> <span class="o">==</span> <span class="s1">&#39;AC modulation mode with time reversal&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">readACData</span><span class="p">(</span><span class="n">h5_group</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># return readDataGen(h5_group[&#39;SHO_Fit_Results&#39;])</span>
+
+
+<div class="viewcode-block" id="readDCData">
+<a class="viewcode-back" href="../../../../../_autosummary/BGlib.be.viz.qt_visualizers.io_funcs.readDCData.html#BGlib.be.viz.qt_visualizers.io_funcs.readDCData">[docs]</a>
+<span class="k">def</span> <span class="nf">readDCData</span><span class="p">(</span><span class="n">h5_group</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reads the data for DC modulation experiments</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">        h5_group -- hdf5 group holding the SHO_Fit Data for the chosen</span>
+<span class="sd">                    Measurement group</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">        data_guess -- the transformed data to be plotted</span>
+<span class="sd">        xvec -- numpy array containing the possible plot data of the slice viewer</span>
+<span class="sd">        xvec_labs -- numpy array of labels and units for the xvec array</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">h5_chan</span> <span class="o">=</span> <span class="n">h5_group</span><span class="p">[</span><span class="s1">&#39;Channel_000&#39;</span><span class="p">]</span>
+    <span class="n">h5_main</span> <span class="o">=</span> <span class="n">h5_chan</span><span class="p">[</span><span class="s1">&#39;Raw_Data&#39;</span><span class="p">]</span>
+    <span class="n">h5_file</span> <span class="o">=</span> <span class="n">h5_main</span><span class="o">.</span><span class="n">file</span>
+    <span class="n">h5_specv</span> <span class="o">=</span> <span class="n">h5_file</span><span class="p">[</span><span class="n">h5_main</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;Spectroscopic_Values&#39;</span><span class="p">]]</span>
+    <span class="n">h5_bins</span> <span class="o">=</span> <span class="n">h5_file</span><span class="p">[</span><span class="n">h5_main</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;Bin_Frequencies&#39;</span><span class="p">]]</span>
+
+    <span class="n">h5_shogroup</span> <span class="o">=</span> <span class="n">h5_chan</span><span class="p">[</span><span class="s1">&#39;Raw_Data-SHO_Fit_000&#39;</span><span class="p">]</span>
+    <span class="n">h5_guess</span> <span class="o">=</span> <span class="n">h5_shogroup</span><span class="p">[</span><span class="s1">&#39;Guess&#39;</span><span class="p">]</span>
+
+    <span class="n">h5_data_labels</span> <span class="o">=</span> <span class="n">h5_specv</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;labels&#39;</span><span class="p">]</span>
+    <span class="n">h5_sho_specv</span> <span class="o">=</span> <span class="n">h5_file</span><span class="p">[</span><span class="n">h5_guess</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;Spectroscopic_Values&#39;</span><span class="p">]]</span>
+    <span class="n">h5_indices</span> <span class="o">=</span> <span class="n">h5_file</span><span class="p">[</span><span class="n">h5_guess</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;Spectroscopic_Indices&#39;</span><span class="p">]]</span>
+    <span class="n">h5_pos</span> <span class="o">=</span> <span class="n">h5_file</span><span class="p">[</span><span class="n">h5_main</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;Position_Indices&#39;</span><span class="p">]]</span>
+
+    <span class="n">num_rows</span><span class="p">,</span> <span class="n">num_cols</span> <span class="o">=</span> <span class="n">__getPos</span><span class="p">(</span><span class="n">h5_pos</span><span class="p">)</span>
+    <span class="n">num_pos</span> <span class="o">=</span> <span class="n">num_rows</span> <span class="o">*</span> <span class="n">num_cols</span>
+
+    <span class="n">ndims</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">h5_pos</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="n">num_cycles</span> <span class="o">=</span> <span class="n">h5_group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;VS_number_of_cycles&#39;</span><span class="p">]</span>
+    <span class="n">num_steps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">h5_indices</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]))</span>
+    <span class="n">num_bins</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">h5_bins</span><span class="p">))</span>
+
+    <span class="n">data_xvec</span> <span class="o">=</span> <span class="n">h5_sho_specv</span><span class="p">[</span><span class="n">h5_sho_specv</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;DC_Offset&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">field_type</span> <span class="o">=</span> <span class="n">h5_group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;VS_measure_in_field_loops&#39;</span><span class="p">]</span>
+
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Separate data into cycles</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">data_guess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">h5_guess</span><span class="p">,</span> <span class="p">[</span><span class="n">num_pos</span><span class="p">,</span> <span class="n">num_cycles</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">data_guess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">data_guess</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="n">data_xvec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">data_xvec</span><span class="p">,</span> <span class="p">[</span><span class="n">num_cycles</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">data_main</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">h5_main</span><span class="p">,</span> <span class="p">[</span><span class="n">num_pos</span><span class="p">,</span> <span class="n">num_cycles</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">data_main</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">data_main</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+
+    <span class="n">pt_xvec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">data_xvec</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="p">[</span><span class="n">num_cycles</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">field_type</span> <span class="o">==</span> <span class="s1">&#39;in and out-of-field&#39;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Seperate out in-field and out-of-field values</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">data_guess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">data_guess</span><span class="p">[:,</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">:],</span> <span class="n">data_guess</span><span class="p">[:,</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">:]])</span>
+        <span class="n">data_guess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">data_guess</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">num_cycles</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_rows</span><span class="p">,</span> <span class="n">num_cols</span><span class="p">))</span>
+        <span class="n">data_xvec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">data_xvec</span><span class="p">[:,</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">2</span><span class="p">)],</span> <span class="n">data_xvec</span><span class="p">[:,</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">2</span><span class="p">)]])</span>
+        <span class="n">pt_xvec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">pt_xvec</span><span class="p">[:,</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">2</span><span class="p">)],</span> <span class="n">pt_xvec</span><span class="p">[:,</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">2</span><span class="p">)]])</span>
+
+        <span class="n">data_main</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">data_main</span><span class="p">,</span> <span class="p">(</span><span class="n">num_cycles</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_bins</span><span class="p">,</span> <span class="n">num_rows</span><span class="p">,</span> <span class="n">num_cols</span><span class="p">))</span>
+        <span class="n">data_main</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">data_main</span><span class="p">[:,</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">:,</span> <span class="p">:,</span> <span class="p">:],</span> <span class="n">data_main</span><span class="p">[:,</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">:,</span> <span class="p">:,</span> <span class="p">:]])</span>
+
+        <span class="n">data_parts</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;In-field&#39;</span><span class="p">,</span> <span class="s1">&#39;Out-of-field&#39;</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">field_type</span> <span class="o">==</span> <span class="s1">&#39;in-field&#39;</span><span class="p">:</span>
+        <span class="n">data_guess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">data_guess</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_cycles</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_rows</span><span class="p">,</span> <span class="n">num_cols</span><span class="p">))</span>
+        <span class="n">data_xvec</span> <span class="o">=</span> <span class="n">data_xvec</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_cycles</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">pt_xvec</span> <span class="o">=</span> <span class="n">pt_xvec</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_cycles</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">data_main</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">data_main</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_cycles</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_bins</span><span class="p">,</span> <span class="n">num_rows</span><span class="p">,</span> <span class="n">num_cols</span><span class="p">))</span>
+
+        <span class="n">data_parts</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;In-field&#39;</span><span class="p">]</span>
+
+    <span class="k">elif</span> <span class="n">field_type</span> <span class="o">==</span> <span class="s1">&#39;out-of-field&#39;</span><span class="p">:</span>
+        <span class="n">data_guess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">data_guess</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_cycles</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_rows</span><span class="p">,</span> <span class="n">num_cols</span><span class="p">))</span>
+        <span class="n">data_xvec</span> <span class="o">=</span> <span class="n">data_xvec</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_cycles</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">pt_xvec</span> <span class="o">=</span> <span class="n">pt_xvec</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_cycles</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">data_main</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">data_main</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_cycles</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_bins</span><span class="p">,</span> <span class="n">num_rows</span><span class="p">,</span> <span class="n">num_cols</span><span class="p">))</span>
+
+        <span class="n">data_parts</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Out-of-field&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unknown field type in data.  Cannot parse&#39;</span><span class="p">)</span>
+
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Repeat steps for reading guess on the results if present</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">h5_results</span> <span class="o">=</span> <span class="n">h5_shogroup</span><span class="p">[</span><span class="s1">&#39;Fit&#39;</span><span class="p">]</span>
+        <span class="n">data_results</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">h5_results</span><span class="p">,</span> <span class="p">[</span><span class="n">num_pos</span><span class="p">,</span> <span class="n">num_cycles</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">data_results</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">data_results</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">field_type</span> <span class="o">==</span> <span class="s1">&#39;in and out-of-field&#39;</span><span class="p">:</span>
+            <span class="n">data_results</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">data_results</span><span class="p">[:,</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">:],</span>
+                                     <span class="n">data_results</span><span class="p">[:,</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">:]])</span>
+            <span class="n">data_results</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">data_results</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">num_cycles</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_rows</span><span class="p">,</span> <span class="n">num_cols</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">field_type</span> <span class="o">==</span> <span class="s1">&#39;in-field&#39;</span><span class="p">:</span>
+            <span class="n">data_results</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">data_results</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_cycles</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_rows</span><span class="p">,</span> <span class="n">num_cols</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">field_type</span> <span class="o">==</span> <span class="s1">&#39;out-of-field&#39;</span><span class="p">:</span>
+            <span class="n">data_results</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">data_results</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_cycles</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_rows</span><span class="p">,</span> <span class="n">num_cols</span><span class="p">))</span>
+
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">data_results</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">xvec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">data_xvec</span><span class="p">,</span> <span class="n">pt_xvec</span><span class="p">])</span>
+    <span class="n">xvec_labs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="s1">&#39;Voltage&#39;</span><span class="p">,</span> <span class="s1">&#39;V&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;UDVS Step&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">]])</span>
+    <span class="n">data_labs</span> <span class="o">=</span> <span class="n">h5_data_labels</span>
+    <span class="n">data_units</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">data_labs</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">label</span> <span class="o">==</span> <span class="s1">&#39;Amplitude&#39;</span><span class="p">:</span>
+            <span class="n">data_units</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;V&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">label</span> <span class="o">==</span> <span class="s1">&#39;Frequency&#39;</span><span class="p">:</span>
+            <span class="n">data_units</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;Hz&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">label</span> <span class="o">==</span> <span class="s1">&#39;Quality Factor&#39;</span><span class="p">:</span>
+            <span class="n">data_units</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">label</span> <span class="o">==</span> <span class="s1">&#39;Phase&#39;</span><span class="p">:</span>
+            <span class="n">data_units</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;rad&#39;</span><span class="p">)</span>
+
+
+            <span class="c1">#     xaxis = {&#39;XData&#39;:data_xvec,</span>
+            <span class="c1">#              &#39;XData Name&#39;:&#39;Voltage&#39;,</span>
+            <span class="c1">#              &#39;XData Unit&#39;:&#39;V&#39;,</span>
+            <span class="c1">#              &#39;XStep&#39;:pt_xvec,</span>
+            <span class="c1">#              &#39;XStep Name&#39;:&#39;UDVS Step&#39;,</span>
+            <span class="c1">#              &#39;XStep Unit&#39;:&#39;&#39;}</span>
+
+            <span class="c1">#     yaxis = dict([(data_labs[i],data_units[i]) for i in xrange(4)])</span>
+            <span class="c1">#     elements = {&#39;Field&#39;:data_parts,</span>
+            <span class="c1">#                 &#39;Parameters&#39;:yaxis,</span>
+            <span class="c1">#                 &#39;Cycles&#39;:num_cycles,</span>
+            <span class="c1">#                 &#39;Steps&#39;:num_steps,</span>
+            <span class="c1">#                 &#39;X positions&#39;:num_rows,</span>
+            <span class="c1">#                 &#39;Y positions&#39;:num_cols}</span>
+            <span class="c1">#</span>
+            <span class="c1">#     data_pack = {&#39;Guess&#39;:data_guess,</span>
+            <span class="c1">#                  &#39;Fit&#39;:data_results,</span>
+            <span class="c1">#                  &#39;Raw&#39;:data_main,</span>
+            <span class="c1">#                  &#39;Data Elements&#39;:elements,</span>
+            <span class="c1">#                  &#39;X-axis&#39;:xaxis,</span>
+            <span class="c1">#                  &#39;Y-axis&#39;:yaxis,</span>
+            <span class="c1">#                  &#39;Num Cycles&#39;:num_cycles,</span>
+            <span class="c1">#                  &#39;Groups&#39;:data_parts,</span>
+            <span class="c1">#                  &#39;Dims&#39;:ndims,</span>
+            <span class="c1">#                  &#39;Bins&#39;:h5_bins.value}</span>
+
+    <span class="k">return</span> <span class="n">data_guess</span><span class="p">,</span> <span class="n">data_results</span><span class="p">,</span> <span class="n">xvec</span><span class="p">,</span> <span class="n">xvec_labs</span><span class="p">,</span> <span class="n">data_parts</span><span class="p">,</span> <span class="n">ndims</span><span class="p">,</span> <span class="n">data_main</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">h5_bins</span><span class="o">.</span><span class="n">value</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="readACData">
+<a class="viewcode-back" href="../../../../../_autosummary/BGlib.be.viz.qt_visualizers.io_funcs.readACData.html#BGlib.be.viz.qt_visualizers.io_funcs.readACData">[docs]</a>
+<span class="k">def</span> <span class="nf">readACData</span><span class="p">(</span><span class="n">h5_group</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reads the data for AC modulation experiments</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">        h5_group -- hdf5 group holding the SHO_Fit Data for the chosen</span>
+<span class="sd">                    Measurement group</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">        data_guess -- the transformed data to be plotted</span>
+<span class="sd">        xvec -- numpy array containing the possible plot data of the slice viewer</span>
+<span class="sd">        xvec_labs -- numpy array of labels and units for the xvec array</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">h5_chan</span> <span class="o">=</span> <span class="n">h5_group</span><span class="p">[</span><span class="s1">&#39;Channel_000&#39;</span><span class="p">]</span>
+    <span class="n">h5_main</span> <span class="o">=</span> <span class="n">h5_chan</span><span class="p">[</span><span class="s1">&#39;Raw_Data&#39;</span><span class="p">]</span>
+    <span class="n">h5_specv</span> <span class="o">=</span> <span class="n">h5_chan</span><span class="p">[</span><span class="s1">&#39;Spectroscopic_Values&#39;</span><span class="p">]</span>
+    <span class="n">h5_bins</span> <span class="o">=</span> <span class="n">h5_chan</span><span class="p">[</span><span class="s1">&#39;Bin_Frequencies&#39;</span><span class="p">]</span>
+
+    <span class="n">h5_shogroup</span> <span class="o">=</span> <span class="n">h5_chan</span><span class="p">[</span><span class="s1">&#39;Raw_Data-SHO_Fit_000&#39;</span><span class="p">]</span>
+    <span class="n">h5_guess</span> <span class="o">=</span> <span class="n">h5_shogroup</span><span class="p">[</span><span class="s1">&#39;Guess&#39;</span><span class="p">]</span>
+
+    <span class="n">h5_data_labels</span> <span class="o">=</span> <span class="n">h5_specv</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;labels&#39;</span><span class="p">]</span>
+    <span class="n">h5_sho_specv</span> <span class="o">=</span> <span class="n">h5_shogroup</span><span class="p">[</span><span class="s1">&#39;Spectroscopic_Values&#39;</span><span class="p">]</span>
+    <span class="n">h5_indices</span> <span class="o">=</span> <span class="n">h5_shogroup</span><span class="p">[</span><span class="s1">&#39;Spectroscopic_Indices&#39;</span><span class="p">]</span>
+    <span class="n">h5_pos</span> <span class="o">=</span> <span class="n">h5_chan</span><span class="p">[</span><span class="s1">&#39;Position_Indices&#39;</span><span class="p">]</span>
+
+    <span class="n">num_rows</span><span class="p">,</span> <span class="n">num_cols</span> <span class="o">=</span> <span class="n">__getPos</span><span class="p">(</span><span class="n">h5_pos</span><span class="p">)</span>
+    <span class="n">num_pos</span> <span class="o">=</span> <span class="n">num_rows</span> <span class="o">*</span> <span class="n">num_cols</span>
+
+    <span class="n">ndims</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">h5_pos</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="n">num_cycles</span> <span class="o">=</span> <span class="n">h5_group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;VS_number_of_cycles&#39;</span><span class="p">]</span>
+    <span class="n">num_steps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">h5_indices</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]))</span>
+    <span class="n">num_bins</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">h5_bins</span><span class="p">))</span>
+
+    <span class="n">data_xvec</span> <span class="o">=</span> <span class="n">h5_sho_specv</span><span class="p">[</span><span class="n">h5_sho_specv</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;AC_Amplitude&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">direction</span> <span class="o">=</span> <span class="n">h5_specv</span><span class="p">[</span><span class="n">h5_specv</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;Direction&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">direction</span> <span class="o">=</span> <span class="n">h5_sho_specv</span><span class="p">[</span><span class="n">h5_sho_specv</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;Direction&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Separate data into cycles</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">data_guess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">h5_guess</span><span class="p">,</span> <span class="p">[</span><span class="n">num_pos</span><span class="p">,</span> <span class="n">num_cycles</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">data_guess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">data_guess</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="n">data_xvec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">data_xvec</span><span class="p">,</span> <span class="p">[</span><span class="n">num_cycles</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">data_main</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">h5_main</span><span class="p">,</span> <span class="p">[</span><span class="n">num_pos</span><span class="p">,</span> <span class="n">num_cycles</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">data_main</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">data_main</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+
+    <span class="n">pt_xvec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">data_xvec</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="p">[</span><span class="n">num_cycles</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Seperate out forward and reverse values</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">for_dir</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">direction</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">rev_dir</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">direction</span> <span class="o">==</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">data_guess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">data_guess</span><span class="p">[:,</span> <span class="n">for_dir</span><span class="p">,</span> <span class="p">:],</span> <span class="n">data_guess</span><span class="p">[:,</span> <span class="n">rev_dir</span><span class="p">,</span> <span class="p">:]])</span>
+    <span class="n">data_guess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">data_guess</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">num_cycles</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_rows</span><span class="p">,</span> <span class="n">num_cols</span><span class="p">))</span>
+
+    <span class="n">data_main</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">data_main</span><span class="p">,</span> <span class="p">(</span><span class="n">num_cycles</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_bins</span><span class="p">,</span> <span class="n">num_rows</span><span class="p">,</span> <span class="n">num_cols</span><span class="p">))</span>
+    <span class="n">data_main</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">data_main</span><span class="p">[:,</span> <span class="n">for_dir</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="p">:],</span> <span class="n">data_main</span><span class="p">[:,</span> <span class="n">rev_dir</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="p">:]])</span>
+
+    <span class="n">data_xvec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">data_xvec</span><span class="p">[:,</span> <span class="n">for_dir</span><span class="p">],</span> <span class="n">data_xvec</span><span class="p">[:,</span> <span class="n">rev_dir</span><span class="p">]])</span>
+    <span class="n">pt_xvec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">pt_xvec</span><span class="p">[:,</span> <span class="n">for_dir</span><span class="p">],</span> <span class="n">pt_xvec</span><span class="p">[:,</span> <span class="n">rev_dir</span><span class="p">]])</span>
+    <span class="n">data_parts</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Forward&#39;</span><span class="p">,</span> <span class="s1">&#39;Reverse&#39;</span><span class="p">]</span>
+
+    <span class="c1">#     &#39;&#39;&#39;</span>
+    <span class="c1">#     Get the mean and standard deviation of each variable</span>
+    <span class="c1">#     Then use these to set upper and lower bounds</span>
+    <span class="c1">#     &#39;&#39;&#39;</span>
+    <span class="c1">#     for var in xrange(data_guess.shape[0]):</span>
+    <span class="c1">#         for cycle in xrange(data_guess.shape[1]):</span>
+    <span class="c1">#             mean_data, std_data = getGoodLims(data_guess[var,cycle,:,:])</span>
+    <span class="c1">#             max_data = mean_data+3*std_data</span>
+    <span class="c1">#             min_data = mean_data-3*std_data</span>
+    <span class="c1">#             np.clip(data_guess[var,cycle,:,:],min_data,max_data,data_guess[var,cycle,:,:])</span>
+
+    <span class="n">xvec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">data_xvec</span><span class="p">,</span> <span class="n">pt_xvec</span><span class="p">])</span>
+    <span class="n">xvec_labs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="s1">&#39;AC Current&#39;</span><span class="p">,</span> <span class="s1">&#39;A&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;UDVS Step&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">]])</span>
+
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Repeat steps for reading guess on the results if present</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">h5_results</span> <span class="o">=</span> <span class="n">h5_shogroup</span><span class="p">[</span><span class="s1">&#39;Fit&#39;</span><span class="p">]</span>
+        <span class="n">data_results</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">h5_results</span><span class="p">,</span> <span class="p">[</span><span class="n">num_pos</span><span class="p">,</span> <span class="n">num_cycles</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">data_results</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">data_results</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">data_results</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">data_results</span><span class="p">[:,</span> <span class="n">for_dir</span><span class="p">,</span> <span class="p">:],</span> <span class="n">data_results</span><span class="p">[:,</span> <span class="n">rev_dir</span><span class="p">,</span> <span class="p">:]])</span>
+        <span class="n">data_results</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">data_results</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">num_cycles</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_rows</span><span class="p">,</span> <span class="n">num_cols</span><span class="p">))</span>
+
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">data_results</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span>
+
+    <span class="n">data_labs</span> <span class="o">=</span> <span class="n">h5_data_labels</span>
+    <span class="n">data_units</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">data_labs</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">label</span> <span class="o">==</span> <span class="s1">&#39;Amplitude&#39;</span><span class="p">:</span>
+            <span class="n">data_units</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;V&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">label</span> <span class="o">==</span> <span class="s1">&#39;Frequency&#39;</span><span class="p">:</span>
+            <span class="n">data_units</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;Hz&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">label</span> <span class="o">==</span> <span class="s1">&#39;Quality Factor&#39;</span><span class="p">:</span>
+            <span class="n">data_units</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">label</span> <span class="o">==</span> <span class="s1">&#39;Phase&#39;</span><span class="p">:</span>
+            <span class="n">data_units</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;rad&#39;</span><span class="p">)</span>
+
+
+            <span class="c1">#     xaxis = {&#39;XData&#39;:data_xvec,</span>
+            <span class="c1">#              &#39;XData Name&#39;:&#39;Voltage&#39;,</span>
+            <span class="c1">#              &#39;XData Unit&#39;:&#39;V&#39;,</span>
+            <span class="c1">#              &#39;XStep&#39;:pt_xvec,</span>
+            <span class="c1">#              &#39;XStep Name&#39;:&#39;UDVS Step&#39;,</span>
+            <span class="c1">#              &#39;XStep Unit&#39;:&#39;&#39;}</span>
+
+            <span class="c1">#     yaxis = dict([(data_labs[i],data_units[i]) for i in xrange(4)])</span>
+            <span class="c1">#     elements = {&#39;Field&#39;:data_parts,</span>
+            <span class="c1">#                 &#39;Parameters&#39;:yaxis,</span>
+            <span class="c1">#                 &#39;Cycles&#39;:num_cycles,</span>
+            <span class="c1">#                 &#39;Steps&#39;:num_steps,</span>
+            <span class="c1">#                 &#39;X positions&#39;:num_rows,</span>
+            <span class="c1">#                 &#39;Y positions&#39;:num_cols}</span>
+            <span class="c1">#</span>
+            <span class="c1">#     data_pack = {&#39;Guess&#39;:data_guess,</span>
+            <span class="c1">#                  &#39;Fit&#39;:data_results,</span>
+            <span class="c1">#                  &#39;Raw&#39;:data_main,</span>
+            <span class="c1">#                  &#39;Data Elements&#39;:elements,</span>
+            <span class="c1">#                  &#39;X-axis&#39;:xaxis,</span>
+            <span class="c1">#                  &#39;Y-axis&#39;:yaxis,</span>
+            <span class="c1">#                  &#39;Num Cycles&#39;:num_cycles,</span>
+            <span class="c1">#                  &#39;Groups&#39;:data_parts,</span>
+            <span class="c1">#                  &#39;Dims&#39;:ndims,</span>
+            <span class="c1">#                  &#39;Bins&#39;:h5_bins.value}</span>
+
+    <span class="k">return</span> <span class="n">data_guess</span><span class="p">,</span> <span class="n">data_results</span><span class="p">,</span> <span class="n">xvec</span><span class="p">,</span> <span class="n">xvec_labs</span><span class="p">,</span> <span class="n">data_parts</span><span class="p">,</span> <span class="n">ndims</span><span class="p">,</span> <span class="n">data_main</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">h5_bins</span><span class="o">.</span><span class="n">value</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="getSpectralData">
+<a class="viewcode-back" href="../../../../../_autosummary/BGlib.be.viz.qt_visualizers.io_funcs.getSpectralData.html#BGlib.be.viz.qt_visualizers.io_funcs.getSpectralData">[docs]</a>
+<span class="k">def</span> <span class="nf">getSpectralData</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="n">data_mat</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function accepts a tuple (x,y) and extracts the spectra</span>
+<span class="sd">    from matrix (data) at that point, and returns an Nx2 vector</span>
+<span class="sd">    </span>
+<span class="sd">    Inputs:</span>
+<span class="sd">        point -- (x,y) position to be retrieved from data_mat</span>
+<span class="sd">        data_mat -- matrix to retrieve data from</span>
+<span class="sd">        </span>
+<span class="sd">    Outputs:</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">spec_ydata</span> <span class="o">=</span> <span class="n">data_mat</span><span class="p">[:,</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">])),</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">point</span><span class="p">[</span><span class="mi">1</span><span class="p">]))]</span>
+    <span class="k">return</span> <span class="n">spec_ydata</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">__getPos</span><span class="p">(</span><span class="n">h5_pos</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the number of rows and columns in the dataset</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">num_rows</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">h5_pos</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]))</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">num_cols</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">h5_pos</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]))</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="n">num_cols</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">num_rows</span><span class="p">,</span> <span class="n">num_cols</span>
+
+
+<span class="k">def</span> <span class="nf">__findDataset</span><span class="p">(</span><span class="n">h5_file</span><span class="p">,</span> <span class="n">ds_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Uses visit() to find all datasets with the desired name</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Finding all instances of&#39;</span><span class="p">,</span> <span class="n">ds_name</span><span class="p">)</span>
+    <span class="n">ds</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="nf">__findName</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">ds_name</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+            <span class="n">ds</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">name</span><span class="p">,</span> <span class="n">obj</span><span class="p">])</span>
+        <span class="k">return</span>
+
+    <span class="n">h5_file</span><span class="o">.</span><span class="n">visititems</span><span class="p">(</span><span class="n">__findName</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ds</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Pycroscopy contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

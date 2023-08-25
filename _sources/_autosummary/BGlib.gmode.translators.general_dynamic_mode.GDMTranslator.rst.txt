@@ -1,0 +1,26 @@
+BGlib.gmode.translators.general\_dynamic\_mode.GDMTranslator
+============================================================
+
+.. currentmodule:: BGlib.gmode.translators.general_dynamic_mode
+
+.. autoclass:: GDMTranslator
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~GDMTranslator.is_valid_file
+      ~GDMTranslator.translate
+   
+   
+
+   
+   
+   

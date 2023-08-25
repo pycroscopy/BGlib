@@ -1,0 +1,33 @@
+BGlib.gmode.proc
+================
+
+.. automodule:: BGlib.gmode.proc
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. autosummary::
+   :toctree:
+      :template: custom-module-template.rst
+   :recursive:
+
+   BGlib.gmode.proc.fft
+   BGlib.gmode.proc.gmode_utils
+   BGlib.gmode.proc.hist
+   BGlib.gmode.proc.signal_filter
+

@@ -1,0 +1,6 @@
+BGlib.be.translators.df\_utils.histogram.build\_histogram
+=========================================================
+
+.. currentmodule:: BGlib.be.translators.df_utils.histogram
+
+.. autofunction:: build_histogram

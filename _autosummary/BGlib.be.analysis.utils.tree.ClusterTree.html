@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BGlib.be.analysis.utils.tree.ClusterTree &mdash; BGlib 0.0.4 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/documentation_options.js?v=8c5712d9"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            BGlib
+          </a>
+              <div class="version">
+                0.0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">BGlib</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">BGlib</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="BGlib.html">BGlib</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/be/index.html">Band Excitation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/gmode/index.html">General Mode</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BGlib</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">BGlib.be.analysis.utils.tree.ClusterTree</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_autosummary/BGlib.be.analysis.utils.tree.ClusterTree.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="bglib-be-analysis-utils-tree-clustertree">
+<h1>BGlib.be.analysis.utils.tree.ClusterTree<a class="headerlink" href="#bglib-be-analysis-utils-tree-clustertree" title="Link to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="BGlib.be.analysis.utils.tree.ClusterTree">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">BGlib.be.analysis.utils.tree.</span></span><span class="sig-name descname"><span class="pre">ClusterTree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">linkage_pairing</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distances</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">centroids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/BGlib/be/analysis/utils/tree.html#ClusterTree"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BGlib.be.analysis.utils.tree.ClusterTree" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Creates a tree representation from the provided linkage pairing. Useful for clustering</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>linkage_pairing</strong> (<em>2D unsigned int numpy array</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>) – Linkage pairing that describes a tree structure. The matrix should result in a single tree apex.</p></li>
+<li><p><strong>labels</strong> (<em>1D unsigned int numpy array</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>) – Labels assigned to each of the positions in the main dataset. Eg. Labels from clustering</p></li>
+<li><p><strong>distances</strong> (<em>(</em><em>Optional</em><em>) </em><em>1D numpy float array</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>) – Distances between clusters</p></li>
+<li><p><strong>centroids</strong> (<em>(</em><em>Optional</em><em>) </em><em>2D numpy array</em>) – Mean responses for each of the clusters. These will be propagated up</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#BGlib.be.analysis.utils.tree.ClusterTree.centroids" title="BGlib.be.analysis.utils.tree.ClusterTree.centroids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">centroids</span></code></a></p></td>
+<td><p>this list maintains pointers to the nodes pertaining to that cluster id for quick look-ups By default this lookup table just contains the number indices of these clusters.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#BGlib.be.analysis.utils.tree.ClusterTree.labels" title="BGlib.be.analysis.utils.tree.ClusterTree.labels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">labels</span></code></a></p></td>
+<td><p>the labels for the leaf nodes need to be calculated manually from the provided labels Populate the lowest level nodes / leaves first:</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="BGlib.be.analysis.utils.tree.ClusterTree.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/BGlib/be/analysis/utils/tree.html#ClusterTree.__str__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BGlib.be.analysis.utils.tree.ClusterTree.__str__" title="Link to this definition">¶</a></dt>
+<dd><p>Overrides the to string representation. Prints the names of the node and its children.
+Not very useful for large trees</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>String representation of the tree structure</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="BGlib.be.analysis.utils.tree.ClusterTree.centroids">
+<span class="sig-name descname"><span class="pre">centroids</span></span><a class="headerlink" href="#BGlib.be.analysis.utils.tree.ClusterTree.centroids" title="Link to this definition">¶</a></dt>
+<dd><p>this list maintains pointers to the nodes pertaining to that cluster id for quick look-ups
+By default this lookup table just contains the number indices of these clusters.
+They will be replaced with node objects as and when the objects are created</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="BGlib.be.analysis.utils.tree.ClusterTree.labels">
+<span class="sig-name descname"><span class="pre">labels</span></span><a class="headerlink" href="#BGlib.be.analysis.utils.tree.ClusterTree.labels" title="Link to this definition">¶</a></dt>
+<dd><p>the labels for the leaf nodes need to be calculated manually from the provided labels
+Populate the lowest level nodes / leaves first:</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Pycroscopy contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

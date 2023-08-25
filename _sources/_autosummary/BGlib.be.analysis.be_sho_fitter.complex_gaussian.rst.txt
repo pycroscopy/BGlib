@@ -1,0 +1,6 @@
+BGlib.be.analysis.be\_sho\_fitter.complex\_gaussian
+===================================================
+
+.. currentmodule:: BGlib.be.analysis.be_sho_fitter
+
+.. autofunction:: complex_gaussian

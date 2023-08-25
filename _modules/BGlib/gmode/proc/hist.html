@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BGlib.gmode.proc.hist &mdash; BGlib 0.0.4 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/documentation_options.js?v=8c5712d9"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../../../../about.html" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            BGlib
+          </a>
+              <div class="version">
+                0.0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">BGlib</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../about.html">BGlib</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../_autosummary/BGlib.html">BGlib</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../notebooks/be/index.html">Band Excitation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../notebooks/gmode/index.html">General Mode</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">BGlib</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">BGlib.gmode.proc.hist</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for BGlib.gmode.proc.hist</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Utilities for building 2D histograms of spectroscopic data</span>
+
+<span class="sd">Created on Mar 1, 2016</span>
+
+<span class="sd">@author: Chris Smith -- cmsith55@utk.edu</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">absolute_import</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="o">.</span><span class="n">major</span> <span class="o">==</span> <span class="mi">3</span> <span class="ow">and</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="o">.</span><span class="n">minor</span> <span class="o">&gt;=</span> <span class="mi">6</span><span class="p">:</span>
+    <span class="n">disable_histogram</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">disable_histogram</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="kn">from</span> <span class="nn">numpy_groupies</span> <span class="kn">import</span> <span class="n">aggregate_np</span>
+
+
+<div class="viewcode-block" id="build_histogram">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.gmode.proc.hist.build_histogram.html#BGlib.gmode.proc.hist.build_histogram">[docs]</a>
+<span class="k">def</span> <span class="nf">build_histogram</span><span class="p">(</span><span class="n">x_hist</span><span class="p">,</span> <span class="n">data_mat</span><span class="p">,</span> <span class="n">N_x_bins</span><span class="p">,</span> <span class="n">N_y_bins</span><span class="p">,</span> <span class="n">weighting_vec</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">min_resp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_resp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates histogram for a single block of pixels</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x_hist : 1D numpy array</span>
+<span class="sd">        bins for x-axis of 2d histogram</span>
+<span class="sd">    data_mat : numpy array</span>
+<span class="sd">        data to be binned for y-axis of 2d histogram</span>
+<span class="sd">    weighting_vec : 1D numpy array or float</span>
+<span class="sd">        weights. If setting all to one value, can be a scalar</span>
+<span class="sd">    N_x_bins : integer</span>
+<span class="sd">        number of bins in the x-direction</span>
+<span class="sd">    N_y_bins : integer</span>
+<span class="sd">        number of bins in the y-direction</span>
+<span class="sd">    min_resp : float</span>
+<span class="sd">        minimum value for y binning</span>
+<span class="sd">    max_resp : float</span>
+<span class="sd">        maximum value for y binning</span>
+<span class="sd">    func : function</span>
+<span class="sd">        function to be used to bin data_vec.  All functions should take as input data_vec.</span>
+<span class="sd">        Arguments should be passed properly to func.  This has not been heavily tested.</span>
+<span class="sd">    debug : bool, optional</span>
+<span class="sd">        If True, extra debugging statements are printed.  Default False</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pixel_hist : 2D numpy array</span>
+<span class="sd">        contains the histogram of the input data</span>
+
+<span class="sd">    Apply func to input data, convert to 1D array, and normalize</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">func</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">y_hist</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">data_mat</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">y_hist</span> <span class="o">=</span> <span class="n">data_mat</span>
+
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Get the min_resp and max_resp from y_hist if they are none</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">min_resp</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">min_resp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">y_hist</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">max_resp</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">max_resp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">y_hist</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;min_resp&#39;</span><span class="p">,</span> <span class="n">min_resp</span><span class="p">,</span> <span class="s1">&#39;max_resp&#39;</span><span class="p">,</span> <span class="n">max_resp</span><span class="p">)</span>
+
+    <span class="n">y_hist</span> <span class="o">=</span> <span class="n">__scale_and_discretize</span><span class="p">(</span><span class="n">y_hist</span><span class="p">,</span> <span class="n">N_y_bins</span><span class="p">,</span> <span class="n">max_resp</span><span class="p">,</span> <span class="n">min_resp</span><span class="p">,</span> <span class="n">debug</span><span class="p">)</span>
+
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Combine x_hist and y_hist into one matrix</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">x_hist</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">y_hist</span><span class="p">))</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">group_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="n">x_hist</span><span class="o">.</span><span class="n">size</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+        <span class="n">group_idx</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">x_hist</span>
+        <span class="n">group_idx</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">y_hist</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span>
+
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Aggregate matrix for histogram of current chunk</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">group_idx</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">weighting_vec</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">N_x_bins</span><span class="p">,</span> <span class="n">N_y_bins</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">disable_histogram</span><span class="p">:</span>
+            <span class="n">pixel_hist</span> <span class="o">=</span> <span class="n">aggregate_np</span><span class="p">(</span><span class="n">group_idx</span><span class="p">,</span> <span class="n">weighting_vec</span><span class="p">,</span> <span class="n">func</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">N_x_bins</span><span class="p">,</span> <span class="n">N_y_bins</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pixel_hist</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span>
+
+    <span class="k">return</span> <span class="n">pixel_hist</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">__scale_and_discretize</span><span class="p">(</span><span class="n">y_hist</span><span class="p">,</span> <span class="n">N_y_bins</span><span class="p">,</span> <span class="n">max_resp</span><span class="p">,</span> <span class="n">min_resp</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Normalizes and discretizes the `y_hist` array</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    y_hist : numpy.ndarray</span>
+<span class="sd">    N_y_bins : int</span>
+<span class="sd">    max_resp : float</span>
+<span class="sd">    min_resp : float</span>
+<span class="sd">    debug : bool</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    y_hist numpy.ndarray</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">y_hist</span> <span class="o">=</span> <span class="n">y_hist</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">y_hist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">y_hist</span><span class="p">,</span> <span class="n">min_resp</span><span class="p">,</span> <span class="n">max_resp</span><span class="p">)</span>
+    <span class="n">y_hist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">y_hist</span><span class="p">,</span> <span class="o">-</span><span class="n">min_resp</span><span class="p">)</span>
+    <span class="n">y_hist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">y_hist</span><span class="p">,</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">max_resp</span> <span class="o">-</span> <span class="n">min_resp</span><span class="p">))</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Discretize y_hist</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">y_hist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rint</span><span class="p">(</span><span class="n">y_hist</span> <span class="o">*</span> <span class="p">(</span><span class="n">N_y_bins</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;ymin&#39;</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">y_hist</span><span class="p">),</span> <span class="s1">&#39;ymax&#39;</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">y_hist</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">y_hist</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Pycroscopy contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

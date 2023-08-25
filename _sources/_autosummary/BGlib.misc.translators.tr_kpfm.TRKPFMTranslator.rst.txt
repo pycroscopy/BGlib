@@ -1,0 +1,27 @@
+BGlib.misc.translators.tr\_kpfm.TRKPFMTranslator
+================================================
+
+.. currentmodule:: BGlib.misc.translators.tr_kpfm
+
+.. autoclass:: TRKPFMTranslator
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~TRKPFMTranslator.is_valid_file
+      ~TRKPFMTranslator.read_file
+      ~TRKPFMTranslator.translate
+   
+   
+
+   
+   
+   

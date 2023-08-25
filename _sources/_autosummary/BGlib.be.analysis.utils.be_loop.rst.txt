@@ -1,0 +1,39 @@
+BGlib.be.analysis.utils.be\_loop
+================================
+
+.. automodule:: BGlib.be.analysis.utils.be_loop
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      calc_switching_coef_vec
+      calculate_loop_centroid
+      fit_loop
+      generate_guess
+      get_rotation_matrix
+      get_switching_coefs
+      loop_fit_function
+      loop_fit_jacobian
+      projectLoop
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

@@ -1,0 +1,6 @@
+BGlib.be.translators.df\_utils.beps\_gen\_utils.combine\_in\_out\_field\_loops
+==============================================================================
+
+.. currentmodule:: BGlib.be.translators.df_utils.beps_gen_utils
+
+.. autofunction:: combine_in_out_field_loops

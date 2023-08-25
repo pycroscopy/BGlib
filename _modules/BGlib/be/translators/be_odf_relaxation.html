@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BGlib.be.translators.be_odf_relaxation &mdash; BGlib 0.0.4 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/documentation_options.js?v=8c5712d9"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../../../../about.html" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            BGlib
+          </a>
+              <div class="version">
+                0.0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">BGlib</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../about.html">BGlib</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../_autosummary/BGlib.html">BGlib</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../notebooks/be/index.html">Band Excitation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../notebooks/gmode/index.html">General Mode</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">BGlib</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">BGlib.be.translators.be_odf_relaxation</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for BGlib.be.translators.be_odf_relaxation</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Thursday May 26 11:23:00 2016</span>
+
+<span class="sd">@author:  Rama Vasudevan, Suhas Somnath, Chris Smith</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">unicode_literals</span>
+
+<span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">path</span><span class="p">,</span> <span class="n">remove</span>  <span class="c1"># File Path formatting</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>  <span class="c1"># For array operations</span>
+<span class="kn">from</span> <span class="nn">scipy.io.matlab</span> <span class="kn">import</span> <span class="n">loadmat</span>  <span class="c1"># To load parameters stored in Matlab .mat file</span>
+<span class="kn">import</span> <span class="nn">h5py</span>
+<span class="kn">from</span> <span class="nn">sidpy.sid</span> <span class="kn">import</span> <span class="n">Translator</span>
+<span class="kn">from</span> <span class="nn">sidpy.hdf.hdf_utils</span> <span class="kn">import</span> <span class="n">write_simple_attrs</span>
+<span class="kn">from</span> <span class="nn">pyUSID.io.anc_build_utils</span> <span class="kn">import</span> <span class="n">INDICES_DTYPE</span><span class="p">,</span> <span class="n">Dimension</span>
+<span class="kn">from</span> <span class="nn">pyUSID.io.hdf_utils</span> <span class="kn">import</span> <span class="n">create_indexed_group</span><span class="p">,</span> <span class="n">write_main_dataset</span>
+
+<span class="kn">from</span> <span class="nn">.df_utils.be_utils</span> <span class="kn">import</span> <span class="n">trimUDVS</span><span class="p">,</span> <span class="n">getSpectroscopicParmLabel</span><span class="p">,</span> \
+    <span class="n">generatePlotGroups</span><span class="p">,</span> <span class="n">createSpecVals</span><span class="p">,</span> <span class="n">maxReadPixels</span><span class="p">,</span> <span class="n">nf32</span>
+
+
+<div class="viewcode-block" id="BEodfRelaxationTranslator">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.translators.be_odf_relaxation.BEodfRelaxationTranslator.html#BGlib.be.translators.be_odf_relaxation.BEodfRelaxationTranslator">[docs]</a>
+<span class="k">class</span> <span class="nc">BEodfRelaxationTranslator</span><span class="p">(</span><span class="n">Translator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Translates old Relaxation data into the new H5 format. This is for the files generated from</span>
+<span class="sd">    the old BEPSDAQ program utilizing two cards simultaneously.</span>
+<span class="sd">    At present, this version of the translator only works for Out of field measurements</span>
+<span class="sd">    It will not work for in-field. This should be fixed at a later date.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_mem_mb</span><span class="o">=</span><span class="mi">1024</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">BEodfRelaxationTranslator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">max_mem_mb</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">FFT_BE_wave</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_file</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ds_main</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mean_resp</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_resp</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_resp</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="BEodfRelaxationTranslator.translate">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.translators.be_odf_relaxation.BEodfRelaxationTranslator.html#BGlib.be.translators.be_odf_relaxation.BEodfRelaxationTranslator.translate">[docs]</a>
+    <span class="k">def</span> <span class="nf">translate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_path</span><span class="p">,</span> <span class="n">show_plots</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">save_plots</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">do_histogram</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Basic method that translates .dat data file(s) to a single .h5 file</span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            file_path -- Absolute file path for one of the data files. </span>
+<span class="sd">            It is assumed that this file is of the OLD data format. </span>
+<span class="sd">            </span>
+<span class="sd">        Outputs:</span>
+<span class="sd">            Nothing</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">file_path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+        <span class="p">(</span><span class="n">folder_path</span><span class="p">,</span> <span class="n">basename</span><span class="p">)</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+        <span class="p">(</span><span class="n">basename</span><span class="p">,</span> <span class="n">path_dict</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_file_path</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+
+        <span class="n">h5_path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder_path</span><span class="p">,</span> <span class="n">basename</span> <span class="o">+</span> <span class="s1">&#39;.h5&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">h5_path</span><span class="p">):</span>
+            <span class="n">remove</span><span class="p">(</span><span class="n">h5_path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_file</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">h5_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+
+        <span class="n">isBEPS</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">parm_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__getParmsFromOldMat</span><span class="p">(</span><span class="n">path_dict</span><span class="p">[</span><span class="s1">&#39;old_mat_parms&#39;</span><span class="p">])</span>
+
+        <span class="n">ignored_plt_grps</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;in-field&#39;</span><span class="p">]</span>  <span class="c1"># Here we assume that there is no in-field.</span>
+        <span class="c1"># If in-field data is captured then the translator would have to be modified.</span>
+
+        <span class="c1"># Technically, we could do away with this if statement, as isBEPS is always true for this translation</span>
+        <span class="k">if</span> <span class="n">isBEPS</span><span class="p">:</span>
+            <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;data_type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;BEPSData&#39;</span>
+
+            <span class="n">std_expt</span> <span class="o">=</span> <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;VS_mode&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;load user defined VS Wave from file&#39;</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">std_expt</span><span class="p">:</span>
+                <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;This translator does not handle user defined voltage spectroscopy&#39;</span><span class="p">)</span>
+                <span class="k">return</span>
+
+            <span class="n">spec_label</span> <span class="o">=</span> <span class="n">getSpectroscopicParmLabel</span><span class="p">(</span><span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;VS_mode&#39;</span><span class="p">])</span>
+
+            <span class="c1"># Check file sizes:</span>
+        <span class="k">if</span> <span class="s1">&#39;read_real&#39;</span> <span class="ow">in</span> <span class="n">path_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">real_size</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">path_dict</span><span class="p">[</span><span class="s1">&#39;read_real&#39;</span><span class="p">])</span>
+            <span class="n">imag_size</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">path_dict</span><span class="p">[</span><span class="s1">&#39;read_imag&#39;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">real_size</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">path_dict</span><span class="p">[</span><span class="s1">&#39;write_real&#39;</span><span class="p">])</span>
+            <span class="n">imag_size</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">path_dict</span><span class="p">[</span><span class="s1">&#39;write_imag&#39;</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">real_size</span> <span class="o">!=</span> <span class="n">imag_size</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Real and imaginary file sizes DON&#39;T match!. Ending&quot;</span><span class="p">)</span>
+
+        <span class="n">num_rows</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;grid_num_rows&#39;</span><span class="p">])</span>
+        <span class="n">num_cols</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;grid_num_cols&#39;</span><span class="p">])</span>
+        <span class="n">num_pix</span> <span class="o">=</span> <span class="n">num_rows</span> <span class="o">*</span> <span class="n">num_cols</span>
+        <span class="n">tot_bins</span> <span class="o">=</span> <span class="n">real_size</span> <span class="o">/</span> <span class="p">(</span><span class="n">num_pix</span> <span class="o">*</span> <span class="mi">4</span><span class="p">)</span>  <span class="c1"># Finding bins by simple division of entire datasize</span>
+
+        <span class="c1"># Check for case where only a single pixel is missing.</span>
+        <span class="n">check_bins</span> <span class="o">=</span> <span class="n">real_size</span> <span class="o">/</span> <span class="p">((</span><span class="n">num_pix</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">4</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">tot_bins</span> <span class="o">%</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">check_bins</span> <span class="o">%</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Aborting! Some parameter appears to have changed in-between&#39;</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">tot_bins</span> <span class="o">%</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1">#             Everything&#39;s ok</span>
+            <span class="k">pass</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">check_bins</span> <span class="o">%</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">tot_bins</span> <span class="o">=</span> <span class="n">check_bins</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Warning:  A pixel seems to be missing from the data.  File will be padded with zeros.&#39;</span><span class="p">)</span>
+
+        <span class="n">tot_bins</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">tot_bins</span><span class="p">)</span>
+        <span class="p">(</span><span class="n">bin_inds</span><span class="p">,</span> <span class="n">bin_freqs</span><span class="p">,</span> <span class="n">bin_FFT</span><span class="p">,</span> <span class="n">ex_wfm</span><span class="p">,</span> <span class="n">dc_amp_vec</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__readOldMatBEvecs</span><span class="p">(</span><span class="n">path_dict</span><span class="p">[</span><span class="s1">&#39;old_mat_parms&#39;</span><span class="p">])</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Because this is the old data format and there is a discrepancy in the number of bins (they seem to be 2 less </span>
+<span class="sd">        than the actual number), we need to re-calculate it based on the available data. This is done below.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">band_width</span> <span class="o">=</span> <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;BE_band_width_[Hz]&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mf">0.5</span> <span class="o">-</span> <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;BE_band_edge_trim&#39;</span><span class="p">])</span>
+        <span class="n">st_f</span> <span class="o">=</span> <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;BE_center_frequency_[Hz]&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">band_width</span>
+        <span class="n">en_f</span> <span class="o">=</span> <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;BE_center_frequency_[Hz]&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">band_width</span>
+        <span class="n">bin_freqs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">st_f</span><span class="p">,</span> <span class="n">en_f</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">bin_inds</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+        <span class="c1"># Forcing standardized datatypes:</span>
+        <span class="n">bin_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="n">bin_inds</span><span class="p">)</span>
+        <span class="n">bin_freqs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="n">bin_freqs</span><span class="p">)</span>
+        <span class="n">bin_FFT</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">complex64</span><span class="p">(</span><span class="n">bin_FFT</span><span class="p">)</span>
+        <span class="n">ex_wfm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="n">ex_wfm</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">FFT_BE_wave</span> <span class="o">=</span> <span class="n">bin_FFT</span>
+
+        <span class="p">(</span><span class="n">UDVS_labs</span><span class="p">,</span> <span class="n">UDVS_units</span><span class="p">,</span> <span class="n">UDVS_mat</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__buildUDVSTable</span><span class="p">(</span><span class="n">parm_dict</span><span class="p">)</span>
+
+        <span class="c1"># Remove the unused plot group columns before proceeding:</span>
+        <span class="p">(</span><span class="n">UDVS_mat</span><span class="p">,</span> <span class="n">UDVS_labs</span><span class="p">,</span> <span class="n">UDVS_units</span><span class="p">)</span> <span class="o">=</span> <span class="n">trimUDVS</span><span class="p">(</span><span class="n">UDVS_mat</span><span class="p">,</span> <span class="n">UDVS_labs</span><span class="p">,</span> <span class="n">UDVS_units</span><span class="p">,</span> <span class="n">ignored_plt_grps</span><span class="p">)</span>
+
+        <span class="n">spec_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">tot_bins</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">INDICES_DTYPE</span><span class="p">)</span>
+
+        <span class="c1"># Will assume that all excitation waveforms have same number of bins</span>
+        <span class="c1"># Here, the denominator is 2 because only out of field measruements. For IF + OF, should be 1</span>
+        <span class="n">num_actual_udvs_steps</span> <span class="o">=</span> <span class="n">UDVS_mat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="n">bins_per_step</span> <span class="o">=</span> <span class="n">tot_bins</span> <span class="o">/</span> <span class="n">num_actual_udvs_steps</span>
+
+        <span class="c1"># Some more checks</span>
+        <span class="k">if</span> <span class="n">bins_per_step</span> <span class="o">%</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Non integer number of bins per step!&#39;</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">bins_per_step</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bins_per_step</span><span class="p">)</span>
+
+        <span class="n">num_actual_udvs_steps</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_actual_udvs_steps</span><span class="p">)</span>
+
+        <span class="n">stind</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">step_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">UDVS_mat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="k">if</span> <span class="n">UDVS_mat</span><span class="p">[</span><span class="n">step_index</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">1E-3</span><span class="p">:</span>  <span class="c1"># invalid AC amplitude</span>
+                <span class="k">continue</span>  <span class="c1"># skip</span>
+            <span class="n">spec_inds</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">stind</span><span class="p">:</span><span class="n">stind</span> <span class="o">+</span> <span class="n">bins_per_step</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">bins_per_step</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">INDICES_DTYPE</span><span class="p">)</span>  <span class="c1"># Bin step</span>
+            <span class="n">spec_inds</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">stind</span><span class="p">:</span><span class="n">stind</span> <span class="o">+</span> <span class="n">bins_per_step</span><span class="p">]</span> <span class="o">=</span> <span class="n">step_index</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">bins_per_step</span><span class="p">,</span>
+                                                                             <span class="n">dtype</span><span class="o">=</span><span class="n">INDICES_DTYPE</span><span class="p">)</span>  <span class="c1"># UDVS step</span>
+            <span class="n">stind</span> <span class="o">+=</span> <span class="n">bins_per_step</span>
+        <span class="k">del</span> <span class="n">stind</span><span class="p">,</span> <span class="n">step_index</span>
+
+        <span class="c1"># Some very basic information that can help the processing / analysis crew</span>
+        <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;num_bins&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tot_bins</span>
+        <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;num_pix&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">num_pix</span>
+        <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;num_udvs_steps&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">num_actual_udvs_steps</span>
+
+        <span class="n">global_parms</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">global_parms</span><span class="p">[</span><span class="s1">&#39;grid_size_x&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;grid_num_cols&#39;</span><span class="p">]</span>
+        <span class="n">global_parms</span><span class="p">[</span><span class="s1">&#39;grid_size_y&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;grid_num_rows&#39;</span><span class="p">]</span>
+        <span class="n">global_parms</span><span class="p">[</span><span class="s1">&#39;experiment_date&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;File_date_and_time&#39;</span><span class="p">]</span>
+
+        <span class="c1"># assuming that the experiment was completed:</span>
+        <span class="n">global_parms</span><span class="p">[</span><span class="s1">&#39;current_position_x&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;grid_num_cols&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">global_parms</span><span class="p">[</span><span class="s1">&#39;current_position_y&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;grid_num_rows&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">global_parms</span><span class="p">[</span><span class="s1">&#39;data_type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;data_type&#39;</span><span class="p">]</span>  <span class="c1"># self.__class__.__name__</span>
+        <span class="n">global_parms</span><span class="p">[</span><span class="s1">&#39;translator&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;ODF&#39;</span>
+        <span class="n">write_simple_attrs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_file</span><span class="p">,</span> <span class="n">global_parms</span><span class="p">)</span>
+
+        <span class="c1"># Create Measurement and Channel groups</span>
+        <span class="n">meas_grp</span> <span class="o">=</span> <span class="n">create_indexed_group</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_file</span><span class="p">,</span> <span class="s1">&#39;Measurement&#39;</span><span class="p">)</span>
+        <span class="n">write_simple_attrs</span><span class="p">(</span><span class="n">meas_grp</span><span class="p">,</span> <span class="n">parm_dict</span><span class="p">)</span>
+
+        <span class="n">chan_grp</span> <span class="o">=</span> <span class="n">create_indexed_group</span><span class="p">(</span><span class="n">meas_grp</span><span class="p">,</span> <span class="s1">&#39;Channel&#39;</span><span class="p">)</span>
+        <span class="n">chan_grp</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;Channel_Input&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;IO_Analog_Input_1&#39;</span><span class="p">]</span>
+
+        <span class="c1"># Create Auxilliary Datasets</span>
+        <span class="n">h5_ex_wfm</span> <span class="o">=</span> <span class="n">chan_grp</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;Excitation_Waveform&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">ex_wfm</span><span class="p">)</span>
+
+        <span class="n">udvs_slices</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">col_ind</span><span class="p">,</span> <span class="n">col_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">UDVS_labs</span><span class="p">):</span>
+            <span class="n">udvs_slices</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="nb">slice</span><span class="p">(</span><span class="n">col_ind</span><span class="p">,</span> <span class="n">col_ind</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">h5_UDVS</span> <span class="o">=</span> <span class="n">chan_grp</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;UDVS&#39;</span><span class="p">,</span>
+                                          <span class="n">data</span><span class="o">=</span><span class="n">UDVS_mat</span><span class="p">,</span>
+                                          <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">write_simple_attrs</span><span class="p">(</span><span class="n">h5_UDVS</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;labels&#39;</span><span class="p">:</span> <span class="n">UDVS_labs</span><span class="p">,</span> <span class="s1">&#39;units&#39;</span><span class="p">:</span> <span class="n">UDVS_units</span><span class="p">})</span>
+
+        <span class="n">h5_bin_steps</span> <span class="o">=</span> <span class="n">chan_grp</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;Bin_Steps&#39;</span><span class="p">,</span>
+                                               <span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">bins_per_step</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">),</span>
+                                               <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">)</span>
+
+        <span class="c1"># Need to add the Bin Waveform type - infer from UDVS</span>
+        <span class="n">exec_bin_vec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">signal_type</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">bin_inds</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+        <span class="n">h5_wfm_typ</span> <span class="o">=</span> <span class="n">chan_grp</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;Bin_Wfm_Type&#39;</span><span class="p">,</span>
+                                             <span class="n">data</span><span class="o">=</span><span class="n">exec_bin_vec</span><span class="p">,</span>
+                                             <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+
+        <span class="n">h5_bin_inds</span> <span class="o">=</span> <span class="n">chan_grp</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;Bin_Indices&#39;</span><span class="p">,</span>
+                                              <span class="n">data</span><span class="o">=</span><span class="n">bin_inds</span><span class="p">,</span>
+                                              <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">)</span>
+        <span class="n">h5_bin_freq</span> <span class="o">=</span> <span class="n">chan_grp</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;Bin_Frequencies&#39;</span><span class="p">,</span>
+                                              <span class="n">data</span><span class="o">=</span><span class="n">bin_freqs</span><span class="p">,</span>
+                                              <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">h5_bin_FFT</span> <span class="o">=</span> <span class="n">chan_grp</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;Bin_FFT&#39;</span><span class="p">,</span>
+                                             <span class="n">data</span><span class="o">=</span><span class="n">bin_FFT</span><span class="p">,</span>
+                                             <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex64</span><span class="p">)</span>
+        <span class="c1"># Noise floor should be of shape: (udvs_steps x 3 x positions)</span>
+        <span class="n">h5_noise_floor</span> <span class="o">=</span> <span class="n">chan_grp</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;Noise_Floor&#39;</span><span class="p">,</span>
+                                                 <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">num_pix</span><span class="p">,</span> <span class="n">num_actual_udvs_steps</span><span class="p">),</span>
+                                                 <span class="n">dtype</span><span class="o">=</span><span class="n">nf32</span><span class="p">,</span>
+                                                 <span class="n">chunks</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_actual_udvs_steps</span><span class="p">))</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">        ONLY ALLOCATING SPACE FOR MAIN DATA HERE!</span>
+<span class="sd">        Chunk by each UDVS step - this makes it easy / quick to:</span>
+<span class="sd">            1. read data for a single UDVS step from all pixels</span>
+<span class="sd">            2. read an entire / multiple pixels at a time</span>
+<span class="sd">        The only problem is that a typical UDVS step containing 50 steps occupies only 400 bytes.</span>
+<span class="sd">        This is smaller than the recommended chunk sizes of 10,000 - 999,999 bytes</span>
+<span class="sd">        meaning that the metadata would be very substantial.</span>
+<span class="sd">        This assumption is fine since we almost do not handle any user defined cases</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        New Method for chunking the Main_Data dataset.  Chunking is now done in N-by-N squares of UDVS steps by pixels.</span>
+<span class="sd">        N is determined dinamically based on the dimensions of the dataset.  Currently it is set such that individual</span>
+<span class="sd">        chunks are less than 10kB in size.</span>
+<span class="sd">        </span>
+<span class="sd">        Chris Smith -- csmith55@utk.edu</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pos_dims</span> <span class="o">=</span> <span class="p">[</span><span class="n">Dimension</span><span class="p">(</span><span class="s1">&#39;X&#39;</span><span class="p">,</span> <span class="s1">&#39;nm&#39;</span><span class="p">,</span> <span class="n">num_cols</span><span class="p">),</span> <span class="n">Dimension</span><span class="p">(</span><span class="s1">&#39;Y&#39;</span><span class="p">,</span> <span class="s1">&#39;nm&#39;</span><span class="p">,</span> <span class="n">num_rows</span><span class="p">)]</span>
+
+        <span class="c1"># Create Spectroscopic Values and Spectroscopic Values Labels datasets</span>
+        <span class="n">spec_vals</span><span class="p">,</span> <span class="n">spec_inds</span><span class="p">,</span> <span class="n">spec_vals_labs</span><span class="p">,</span> <span class="n">spec_vals_units</span><span class="p">,</span> <span class="n">spec_vals_names</span> <span class="o">=</span> <span class="n">createSpecVals</span><span class="p">(</span><span class="n">UDVS_mat</span><span class="p">,</span> <span class="n">spec_inds</span><span class="p">,</span>
+                                                                                                <span class="n">bin_freqs</span><span class="p">,</span>
+                                                                                                <span class="n">exec_bin_vec</span><span class="p">,</span>
+                                                                                                <span class="n">parm_dict</span><span class="p">,</span> <span class="n">UDVS_labs</span><span class="p">,</span>
+                                                                                                <span class="n">UDVS_units</span><span class="p">)</span>
+
+        <span class="n">spec_dims</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">row_ind</span><span class="p">,</span> <span class="n">row_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">spec_vals_labs</span><span class="p">):</span>
+            <span class="n">spec_dims</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Dimension</span><span class="p">(</span><span class="n">row_name</span><span class="p">,</span>
+                                            <span class="n">spec_vals_units</span><span class="p">[</span><span class="n">row_ind</span><span class="p">],</span>
+                                            <span class="n">spec_vals</span><span class="p">[</span><span class="n">row_ind</span><span class="p">]))</span>
+
+        <span class="n">pixel_chunking</span> <span class="o">=</span> <span class="n">maxReadPixels</span><span class="p">(</span><span class="mi">10240</span><span class="p">,</span> <span class="n">num_pix</span> <span class="o">*</span> <span class="n">num_actual_udvs_steps</span><span class="p">,</span>
+                                       <span class="n">bins_per_step</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;complex64&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">itemsize</span><span class="p">)</span>
+        <span class="n">chunking</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">pixel_chunking</span><span class="p">))</span>
+        <span class="n">chunking</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">chunking</span><span class="p">)</span>
+        <span class="n">chunking</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">num_actual_udvs_steps</span><span class="p">,</span> <span class="n">num_pix</span><span class="p">,</span> <span class="n">chunking</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span> <span class="o">=</span> <span class="n">write_main_dataset</span><span class="p">(</span><span class="n">chan_grp</span><span class="p">,</span> <span class="p">(</span><span class="n">num_pix</span><span class="p">,</span> <span class="n">tot_bins</span><span class="p">),</span> <span class="s1">&#39;Raw_Data&#39;</span><span class="p">,</span>
+                                          <span class="s1">&#39;Piezoresponse&#39;</span><span class="p">,</span> <span class="s1">&#39;V&#39;</span><span class="p">,</span>
+                                          <span class="n">pos_dims</span><span class="p">,</span> <span class="n">spec_dims</span><span class="p">,</span>
+                                          <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex64</span><span class="p">,</span>
+                                          <span class="n">chunks</span><span class="o">=</span><span class="p">(</span><span class="n">chunking</span><span class="p">,</span> <span class="n">chunking</span> <span class="o">*</span> <span class="n">bins_per_step</span><span class="p">),</span>
+                                          <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;gzip&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">mean_resp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ds_main</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex64</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_resp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ds_main</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_resp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ds_main</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+        <span class="c1"># Now read the raw data files:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_read_data</span><span class="p">(</span><span class="n">path_dict</span><span class="p">[</span><span class="s1">&#39;read_real&#39;</span><span class="p">],</span> <span class="n">path_dict</span><span class="p">[</span><span class="s1">&#39;read_imag&#39;</span><span class="p">],</span> <span class="n">parm_dict</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_file</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+        <span class="n">generatePlotGroups</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ds_main</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_resp</span><span class="p">,</span> <span class="n">folder_path</span><span class="p">,</span> <span class="n">basename</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_resp</span><span class="p">,</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">min_resp</span><span class="p">,</span> <span class="n">max_mem_mb</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_ram</span><span class="p">,</span> <span class="n">spec_label</span><span class="o">=</span><span class="n">spec_label</span><span class="p">,</span> <span class="n">show_plots</span><span class="o">=</span><span class="n">show_plots</span><span class="p">,</span>
+                           <span class="n">save_plots</span><span class="o">=</span><span class="n">save_plots</span><span class="p">,</span> <span class="n">do_histogram</span><span class="o">=</span><span class="n">do_histogram</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">h5_path</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_read_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">real_path</span><span class="p">,</span> <span class="n">imag_path</span><span class="p">,</span> <span class="n">parm_dict</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reads the imaginary and real data files one pixel at a time andwrites to the H5 dataset.</span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            real_path -- file path of the .dat file containing the real component of the data</span>
+<span class="sd">            imag_path -- file path of the .dat file containing the imaginary component of the data</span>
+<span class="sd">            parm_dict--dictionary of parameters for the experiment            </span>
+<span class="sd">            </span>
+<span class="sd">        Outputs: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;---- reading data one pixel at a time----------&#39;</span><span class="p">)</span>
+
+        <span class="n">num_pix</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;grid_num_rows&#39;</span><span class="p">])</span> <span class="o">*</span> <span class="nb">int</span><span class="p">(</span><span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;grid_num_cols&#39;</span><span class="p">])</span>
+        <span class="c1"># print &#39;Number of rows is: &#39;, parm_dict[&#39;grid_num_rows&#39;]</span>
+        <span class="c1"># print &#39;Number of cols is: &#39;, parm_dict[&#39;grid_num_cols&#39;]</span>
+        <span class="c1"># print &#39;Rows * cols is:&#39;, int(parm_dict[&#39;grid_num_rows&#39;])*int(parm_dict[&#39;grid_num_cols&#39;])</span>
+
+        <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">real_path</span><span class="p">)</span> <span class="o">!=</span> <span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">imag_path</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Sizes of real and imaginary files NOT matching!!!!&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="mf">1.0</span> <span class="o">*</span> <span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">real_path</span><span class="p">)</span> <span class="o">%</span> <span class="n">num_pix</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Incomplete dataset!!!&#39;</span><span class="p">)</span>
+
+        <span class="n">bytes_per_pix</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">real_path</span><span class="p">)</span> <span class="o">/</span> <span class="n">num_pix</span>
+        <span class="n">f_real</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">real_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span>
+        <span class="n">f_imag</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">imag_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">pix_ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_pix</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Reading pixel #</span><span class="si">{}</span><span class="s1">, file position </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pix_ind</span><span class="p">,</span> <span class="nb">hex</span><span class="p">(</span><span class="n">pix_ind</span> <span class="o">*</span> <span class="n">bytes_per_pix</span><span class="p">)))</span>
+            <span class="n">pix_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">f_real</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">bytes_per_pix</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;f&#39;</span><span class="p">)</span> <span class="o">+</span> \
+                <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">f_imag</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">bytes_per_pix</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;f&#39;</span><span class="p">)</span>
+
+            <span class="c1"># Make chronologically correct</span>
+            <span class="n">pix_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">pix_vec</span><span class="p">,</span> <span class="p">(</span><span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;BE_bins_per_read&#39;</span><span class="p">],</span>
+                                           <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;VS_steps_per_full_cycle&#39;</span><span class="p">],</span> <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;BE_repeats&#39;</span><span class="p">]))</span>
+            <span class="n">pix_mat_temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">pix_mat</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+            <span class="n">pix_vec2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">pix_mat_temp</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="c1"># Calculate the mean, min, max</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_resp</span><span class="p">[</span><span class="n">pix_ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">pix_vec2</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">min_resp</span><span class="p">[</span><span class="n">pix_ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">pix_vec2</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mean_resp</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">pix_ind</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="n">pix_vec2</span> <span class="o">+</span> <span class="n">pix_ind</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_resp</span><span class="p">)</span>
+
+            <span class="c1"># Write to file now</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ds_main</span><span class="p">[</span><span class="n">pix_ind</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">complex64</span><span class="p">(</span><span class="n">pix_vec2</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">h5_file</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+        <span class="n">f_real</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">f_imag</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Finished writing data to .h5&#39;</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">__readOldMatBEvecs</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns information about the excitation BE waveform present in the .mat file</span>
+<span class="sd">    </span>
+<span class="sd">    Inputs:</span>
+<span class="sd">        filepath -- Absolute filepath of the .mat parameter file</span>
+<span class="sd">    </span>
+<span class="sd">    Outputs:</span>
+<span class="sd">        Tuple -- (bin_inds, bin_w, bin_FFT, BE_wave, dc_amp_vec_full)\n</span>
+<span class="sd">        bin_inds -- Bin indices\n</span>
+<span class="sd">        bin_w -- Excitation bin Frequencies\n</span>
+<span class="sd">        bin_FFT -- FFT of the BE waveform for the excited bins\n</span>
+<span class="sd">        BE_wave -- Band Excitation waveform\n</span>
+<span class="sd">        dc_amp_vec_full -- spectroscopic waveform. </span>
+<span class="sd">        This information will be necessary for fixing the UDVS for AC modulation for example</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">matread</span> <span class="o">=</span> <span class="n">loadmat</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">squeeze_me</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">BE_wave</span> <span class="o">=</span> <span class="n">matread</span><span class="p">[</span><span class="s1">&#39;BE_wave_1&#39;</span><span class="p">]</span>
+        <span class="n">bin_inds</span> <span class="o">=</span> <span class="n">matread</span><span class="p">[</span><span class="s1">&#39;bin_ind_s&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>  <span class="c1"># Python base 0. note also _s, for this case</span>
+        <span class="n">bin_w</span> <span class="o">=</span> <span class="n">matread</span><span class="p">[</span><span class="s1">&#39;bin_w&#39;</span><span class="p">]</span>
+        <span class="n">dc_amp_vec_full</span> <span class="o">=</span> <span class="n">matread</span><span class="p">[</span><span class="s1">&#39;dc_amp_vec_full&#39;</span><span class="p">]</span>
+        <span class="n">FFT_full</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fftshift</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="n">BE_wave</span><span class="p">))</span>
+        <span class="n">bin_FFT</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(</span><span class="n">FFT_full</span><span class="p">[</span><span class="n">bin_inds</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">bin_inds</span><span class="p">,</span> <span class="n">bin_w</span><span class="p">,</span> <span class="n">bin_FFT</span><span class="p">,</span> <span class="n">BE_wave</span><span class="p">,</span> <span class="n">dc_amp_vec_full</span>
+
+    <span class="k">def</span> <span class="nf">_parse_file_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_filepath</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the basename and a dictionary containing the absolute file paths for the</span>
+<span class="sd">        real and imaginary data files, text and mat parameter files in a dictionary</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data_filepath : str</span>
+<span class="sd">            Absolute path of the real / imaginary data file (.dat)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        basename : str</span>
+<span class="sd">        path_dict : dict</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">(</span><span class="n">folder_path</span><span class="p">,</span> <span class="n">basename</span><span class="p">)</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">data_filepath</span><span class="p">)</span>
+        <span class="p">(</span><span class="n">super_folder</span><span class="p">,</span> <span class="n">basename</span><span class="p">)</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">folder_path</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">basename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;_c&#39;</span><span class="p">):</span>
+            <span class="c1"># Old old data format where the folder ended with a _d for some reason</span>
+            <span class="n">base_name</span> <span class="o">=</span> <span class="n">basename</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A single pair of real and imaginary files are / were generated for:</span>
+<span class="sd">            BE-Line and BEPS (compiled version only generated out-of-field or &#39;read&#39;)</span>
+<span class="sd">        Two pairs of real and imaginary files were generated for later BEPS datasets</span>
+<span class="sd">            These have &#39;read&#39; and &#39;write&#39; prefixes to denote out or in field respectively</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">path_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+        <span class="n">real_path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder_path</span><span class="p">,</span> <span class="n">base_name</span> <span class="o">+</span> <span class="s1">&#39;_sub_real.dat&#39;</span><span class="p">)</span>
+        <span class="n">imag_path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder_path</span><span class="p">,</span> <span class="n">base_name</span> <span class="o">+</span> <span class="s1">&#39;_sub_imag.dat&#39;</span><span class="p">)</span>
+
+        <span class="n">path_dict</span><span class="p">[</span><span class="s1">&#39;read_real&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">real_path</span>
+        <span class="n">path_dict</span><span class="p">[</span><span class="s1">&#39;read_imag&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">imag_path</span>
+        <span class="n">path_dict</span><span class="p">[</span><span class="s1">&#39;old_mat_parms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_filepath</span>
+
+        <span class="k">return</span> <span class="n">basename</span><span class="p">,</span> <span class="n">path_dict</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">__getParmsFromOldMat</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Formats parameters found in the old parameters .mat file into a dictionary</span>
+<span class="sd">        as though the dataset had a parms.txt describing it</span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            file_path -- absolute filepath of the .mat file containing the parameters</span>
+<span class="sd">            </span>
+<span class="sd">        Outputs -- dictionary containing parameters</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">parm_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">matread</span> <span class="o">=</span> <span class="n">loadmat</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">squeeze_me</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;IO_rate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">matread</span><span class="p">[</span><span class="s1">&#39;AO_rate&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="mf">1E+6</span><span class="p">))</span> <span class="o">+</span> <span class="s1">&#39; MHz&#39;</span>
+
+        <span class="n">position_vec</span> <span class="o">=</span> <span class="n">matread</span><span class="p">[</span><span class="s1">&#39;position_vec&#39;</span><span class="p">]</span>
+        <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;grid_current_row&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">position_vec</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;grid_current_col&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">position_vec</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;grid_num_rows&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">position_vec</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;grid_num_cols&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">position_vec</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">position_vec</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">position_vec</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">or</span> <span class="n">position_vec</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">!=</span> <span class="n">position_vec</span><span class="p">[</span><span class="mi">3</span><span class="p">]:</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;WARNING: Incomplete dataset. Translation not guaranteed!&#39;</span><span class="p">)</span>
+            <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;grid_num_rows&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">position_vec</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>  <span class="c1"># set to number of present cols and rows</span>
+            <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;grid_num_cols&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">position_vec</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">BE_parm_vec_1</span> <span class="o">=</span> <span class="n">matread</span><span class="p">[</span><span class="s1">&#39;BE_parm_vec_1&#39;</span><span class="p">]</span>
+        <span class="c1"># Not required for translation but necessary to have</span>
+        <span class="k">if</span> <span class="n">BE_parm_vec_1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;BE_phase_content&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;chirp-sinc hybrid&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;BE_phase_content&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Unknown&#39;</span>
+        <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;BE_center_frequency_[Hz]&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">BE_parm_vec_1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;BE_band_width_[Hz]&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">BE_parm_vec_1</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;BE_amplitude_[V]&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">BE_parm_vec_1</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+        <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;BE_band_edge_trim&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">BE_parm_vec_1</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span>  <span class="c1"># 150 most likely</span>
+        <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;BE_phase_variation&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">BE_parm_vec_1</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>  <span class="c1"># 0.01 most likely</span>
+        <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;BE_repeats&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="nb">int</span><span class="p">(</span><span class="n">BE_parm_vec_1</span><span class="p">[</span><span class="mi">8</span><span class="p">])</span>
+        <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;File_date_and_time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># For now ignoring.</span>
+        <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;BE_bins_per_read&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">matread</span><span class="p">[</span><span class="s1">&#39;bins_per_band_s&#39;</span><span class="p">]</span>
+        <span class="n">assembly_parm_vec</span> <span class="o">=</span> <span class="n">matread</span><span class="p">[</span><span class="s1">&#39;assembly_parm_vec&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">assembly_parm_vec</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;VS_measure_in_field_loops&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;out-of-field&#39;</span>
+        <span class="k">elif</span> <span class="n">assembly_parm_vec</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;VS_measure_in_field_loops&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;in and out-of-field&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;VS_measure_in_field_loops&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;in-field&#39;</span>
+
+        <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;IO_Analog_Input_1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;+/- 10V, FFT&#39;</span>
+        <span class="k">if</span> <span class="n">assembly_parm_vec</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;IO_Analog_Input_2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;off&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;IO_Analog_Input_2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;+/- 10V, FFT&#39;</span>
+
+        <span class="c1"># num_driving_bands = assembly_parm_vec[0] # 0 = 1, 1 = 2 bands</span>
+        <span class="c1"># band_combination_order = assembly_parm_vec[1] # 0 parallel 1 series</span>
+
+        <span class="n">VS_parms</span> <span class="o">=</span> <span class="n">matread</span><span class="p">[</span><span class="s1">&#39;SS_parm_vec&#39;</span><span class="p">]</span>
+        <span class="n">dc_amp_vec_full</span> <span class="o">=</span> <span class="n">matread</span><span class="p">[</span><span class="s1">&#39;dc_amp_vec_full&#39;</span><span class="p">]</span>
+
+        <span class="n">VS_start_V</span> <span class="o">=</span> <span class="n">VS_parms</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+        <span class="n">VS_start_loop_amp</span> <span class="o">=</span> <span class="n">VS_parms</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+        <span class="n">VS_final_loop_amp</span> <span class="o">=</span> <span class="n">VS_parms</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span>
+        <span class="c1"># VS_read_write_ratio = VS_parms[8] #1 &lt;- SS_read_write_ratio</span>
+
+        <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;VS_set_pulse_amplitude_[V]&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">VS_parms</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span>  <span class="c1"># 0 &lt;- SS_set_pulse_amp</span>
+        <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;VS_read_voltage_[V]&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">VS_parms</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+        <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;VS_steps_per_full_cycle&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dc_amp_vec_full</span><span class="p">)</span>  <span class="c1"># VS_parms[7]</span>
+        <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;VS_cycle_fraction&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;full&#39;</span>
+        <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;VS_cycle_phase_shift&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;VS_number_of_cycles&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">VS_parms</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;FORC_num_of_FORC_cycles&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;FORC_V_high1_[V]&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;FORC_V_high2_[V]&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;FORC_V_low1_[V]&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;FORC_V_low2_[V]&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="n">VS_parms</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;VS_mode&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;DC modulation mode&#39;</span>
+            <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;VS_amplitude_[V]&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">dc_amp_vec_full</span><span class="p">)</span> <span class="o">-</span>
+                                                   <span class="nb">min</span><span class="p">(</span><span class="n">dc_amp_vec_full</span><span class="p">))</span>  <span class="c1"># SS_max_offset_amplitude</span>
+            <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;VS_offset_[V]&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">dc_amp_vec_full</span><span class="p">)</span> <span class="o">+</span> <span class="nb">min</span><span class="p">(</span><span class="n">dc_amp_vec_full</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">VS_parms</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># FORC</span>
+            <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;VS_mode&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;DC modulation mode&#39;</span>
+            <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;VS_amplitude_[V]&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># VS_parms[1] # SS_max_offset_amplitude</span>
+            <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;VS_offset_[V]&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;VS_number_of_cycles&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;FORC_num_of_FORC_cycles&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">VS_parms</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;FORC_V_high1_[V]&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">VS_start_V</span>
+            <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;FORC_V_high2_[V]&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">VS_start_V</span>
+            <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;FORC_V_low1_[V]&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">VS_start_V</span> <span class="o">-</span> <span class="n">VS_start_loop_amp</span>
+            <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;FORC_V_low2_[V]&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">VS_start_V</span> <span class="o">-</span> <span class="n">VS_final_loop_amp</span>
+        <span class="k">elif</span> <span class="n">VS_parms</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="c1"># AC mode </span>
+            <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;VS_mode&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;AC modulation mode with time reversal&#39;</span>
+            <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;VS_amplitude_[V]&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">VS_final_loop_amp</span>
+            <span class="n">parm_dict</span><span class="p">[</span>
+                <span class="s1">&#39;VS_offset_[V]&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># this is not correct. Fix manually when it comes to UDVS generation?</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;VS_mode&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Custom&#39;</span>
+
+        <span class="k">return</span> <span class="n">parm_dict</span>
+
+    <span class="k">def</span> <span class="nf">__buildUDVSTable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parm_dict</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates the UDVS table using the parameters</span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            parm_dict -- Dictionary of parameters present in the text files</span>
+<span class="sd">        </span>
+<span class="sd">        Outputs:</span>
+<span class="sd">            tuple (labels, table)</span>
+<span class="sd">            labels -- List of strings - Labels for columns in the UDVS table</span>
+<span class="sd">            table -- UDVS data table</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">translateVal</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">strvals</span><span class="p">,</span> <span class="n">numvals</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Internal function - Interprets the provided value using the provided lookup table</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">strvals</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">numvals</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">None</span>
+            <span class="k">for</span> <span class="n">strval</span><span class="p">,</span> <span class="n">fltval</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">strvals</span><span class="p">,</span> <span class="n">numvals</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">target</span> <span class="o">==</span> <span class="n">strval</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">fltval</span>
+            <span class="k">return</span> <span class="kc">None</span>  <span class="c1"># not found in list</span>
+
+        <span class="c1"># Extract values from parm text file</span>
+        <span class="n">BE_signal_type</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="c1"># This is necessary when normalzing the AI by the AO</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">harmonic</span> <span class="o">=</span> <span class="n">BE_signal_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">signal_type</span> <span class="o">=</span> <span class="n">BE_signal_type</span>
+
+        <span class="n">BE_amp</span> <span class="o">=</span> <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;BE_amplitude_[V]&#39;</span><span class="p">]</span>
+
+        <span class="n">VS_amp</span> <span class="o">=</span> <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;VS_amplitude_[V]&#39;</span><span class="p">]</span>
+        <span class="n">VS_offset</span> <span class="o">=</span> <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;VS_offset_[V]&#39;</span><span class="p">]</span>
+        <span class="n">VS_steps</span> <span class="o">=</span> <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;VS_steps_per_full_cycle&#39;</span><span class="p">]</span>
+        <span class="n">VS_cycles</span> <span class="o">=</span> <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;VS_number_of_cycles&#39;</span><span class="p">]</span>
+        <span class="n">VS_fraction</span> <span class="o">=</span> <span class="n">translateVal</span><span class="p">(</span><span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;VS_cycle_fraction&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;full&#39;</span><span class="p">,</span> <span class="s1">&#39;1/2&#39;</span><span class="p">,</span> <span class="s1">&#39;1/4&#39;</span><span class="p">,</span> <span class="s1">&#39;3/4&#39;</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">])</span>
+        <span class="n">VS_shift</span> <span class="o">=</span> <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;VS_cycle_phase_shift&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">VS_shift</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">VS_shift</span> <span class="o">=</span> <span class="n">translateVal</span><span class="p">(</span><span class="n">VS_shift</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;1/4&#39;</span><span class="p">,</span> <span class="s1">&#39;1/2&#39;</span><span class="p">,</span> <span class="s1">&#39;3/4&#39;</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">])</span>
+        <span class="n">VS_in_out_cond</span> <span class="o">=</span> <span class="n">translateVal</span><span class="p">(</span><span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;VS_measure_in_field_loops&#39;</span><span class="p">],</span>
+                                      <span class="p">[</span><span class="s1">&#39;out-of-field&#39;</span><span class="p">,</span> <span class="s1">&#39;in-field&#39;</span><span class="p">,</span> <span class="s1">&#39;in and out-of-field&#39;</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+        <span class="n">VS_ACDC_cond</span> <span class="o">=</span> <span class="n">translateVal</span><span class="p">(</span><span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;VS_mode&#39;</span><span class="p">],</span>
+                                    <span class="p">[</span><span class="s1">&#39;DC modulation mode&#39;</span><span class="p">,</span> <span class="s1">&#39;AC modulation mode with time reversal&#39;</span><span class="p">,</span>
+                                     <span class="s1">&#39;load user defined VS Wave from file&#39;</span><span class="p">,</span> <span class="s1">&#39;current mode&#39;</span><span class="p">],</span>
+                                    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">expt_type</span> <span class="o">=</span> <span class="n">VS_ACDC_cond</span>
+        <span class="n">FORC_cycles</span> <span class="o">=</span> <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;FORC_num_of_FORC_cycles&#39;</span><span class="p">]</span>
+        <span class="n">FORC_A1</span> <span class="o">=</span> <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;FORC_V_high1_[V]&#39;</span><span class="p">]</span>
+        <span class="n">FORC_A2</span> <span class="o">=</span> <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;FORC_V_high2_[V]&#39;</span><span class="p">]</span>
+        <span class="n">FORC_B1</span> <span class="o">=</span> <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;FORC_V_low1_[V]&#39;</span><span class="p">]</span>
+        <span class="n">FORC_B2</span> <span class="o">=</span> <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;FORC_V_low2_[V]&#39;</span><span class="p">]</span>
+
+        <span class="c1"># % build vector of voltage spectroscopy values</span>
+
+        <span class="k">if</span> <span class="n">VS_ACDC_cond</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">VS_ACDC_cond</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>  <span class="c1"># DC voltage spectroscopy or current mode</span>
+            <span class="n">VS_amp_vec_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">VS_steps</span> <span class="o">/</span> <span class="mi">4</span><span class="p">),</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">VS_steps</span> <span class="o">/</span> <span class="mi">4</span><span class="p">))</span>
+            <span class="n">VS_amp_vec_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flipud</span><span class="p">(</span><span class="n">VS_amp_vec_1</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">VS_amp_vec_3</span> <span class="o">=</span> <span class="o">-</span><span class="n">VS_amp_vec_1</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="n">VS_amp_vec_4</span> <span class="o">=</span> <span class="n">VS_amp_vec_1</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">VS_amp_vec</span> <span class="o">=</span> <span class="n">VS_amp</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">VS_amp_vec_1</span><span class="p">,</span> <span class="n">VS_amp_vec_2</span><span class="p">,</span> <span class="n">VS_amp_vec_3</span><span class="p">,</span> <span class="n">VS_amp_vec_4</span><span class="p">)))</span>
+            <span class="n">VS_amp_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">VS_amp_vec</span><span class="p">,</span>
+                                 <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">VS_steps</span> <span class="o">/</span> <span class="n">VS_fraction</span> <span class="o">*</span> <span class="n">VS_shift</span><span class="p">)))</span>  <span class="c1"># apply phase shift to VS wave</span>
+            <span class="n">VS_amp_vec</span> <span class="o">=</span> <span class="n">VS_amp_vec</span><span class="p">[:</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">VS_steps</span> <span class="o">*</span> <span class="n">VS_fraction</span><span class="p">))]</span>  <span class="c1"># cut VS waveform</span>
+            <span class="n">VS_amp_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">VS_amp_vec</span><span class="p">,</span> <span class="n">VS_cycles</span><span class="p">)</span>  <span class="c1"># repeat VS waveform</span>
+            <span class="n">VS_amp_vec</span> <span class="o">=</span> <span class="n">VS_amp_vec</span> <span class="o">+</span> <span class="n">VS_offset</span>
+
+        <span class="k">if</span> <span class="n">FORC_cycles</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">VS_amp_vec</span> <span class="o">=</span> <span class="n">VS_amp_vec</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">VS_amp_vec</span><span class="p">))</span>
+            <span class="n">FORC_cycle_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">FORC_cycles</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">FORC_cycles</span> <span class="o">/</span> <span class="p">(</span><span class="n">FORC_cycles</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="n">FORC_A_vec</span> <span class="o">=</span> <span class="n">FORC_cycle_vec</span> <span class="o">*</span> <span class="p">(</span><span class="n">FORC_A2</span> <span class="o">-</span> <span class="n">FORC_A1</span><span class="p">)</span> <span class="o">/</span> <span class="n">FORC_cycles</span> <span class="o">+</span> <span class="n">FORC_A1</span>
+            <span class="n">FORC_B_vec</span> <span class="o">=</span> <span class="n">FORC_cycle_vec</span> <span class="o">*</span> <span class="p">(</span><span class="n">FORC_B2</span> <span class="o">-</span> <span class="n">FORC_B1</span><span class="p">)</span> <span class="o">/</span> <span class="n">FORC_cycles</span> <span class="o">+</span> <span class="n">FORC_B1</span>
+            <span class="n">FORC_amp_vec</span> <span class="o">=</span> <span class="p">(</span><span class="n">FORC_A_vec</span> <span class="o">-</span> <span class="n">FORC_B_vec</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+            <span class="n">FORC_off_vec</span> <span class="o">=</span> <span class="p">(</span><span class="n">FORC_A_vec</span> <span class="o">+</span> <span class="n">FORC_B_vec</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+
+            <span class="n">VS_amp_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">VS_amp_vec</span><span class="p">,</span> <span class="p">[</span><span class="n">FORC_cycles</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+            <span class="n">FORC_amp_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">FORC_amp_vec</span><span class="p">,</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">VS_amp_vec</span><span class="p">),</span> <span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+            <span class="n">FORC_off_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">FORC_off_vec</span><span class="p">,</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">VS_amp_vec</span><span class="p">),</span> <span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+            <span class="n">VS_amp_mat</span> <span class="o">=</span> <span class="n">VS_amp_mat</span> <span class="o">*</span> <span class="n">FORC_amp_mat</span> <span class="o">+</span> <span class="n">FORC_off_mat</span>
+            <span class="n">VS_amp_vec</span> <span class="o">=</span> <span class="n">VS_amp_mat</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">FORC_cycles</span> <span class="o">*</span> <span class="n">VS_cycles</span> <span class="o">*</span> <span class="n">VS_fraction</span> <span class="o">*</span> <span class="n">VS_steps</span><span class="p">))</span>
+
+        <span class="n">BE_repeats</span> <span class="o">=</span> <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;BE_repeats&#39;</span><span class="p">]</span>
+        <span class="n">total_steps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">VS_amp_vec</span><span class="p">)</span> <span class="o">*</span> <span class="n">BE_repeats</span>  <span class="c1"># Needed for relaxation datasets</span>
+
+        <span class="c1"># % Build UDVS table:</span>
+        <span class="k">if</span> <span class="n">VS_ACDC_cond</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">VS_ACDC_cond</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>  <span class="c1"># relaxation measurements</span>
+
+            <span class="n">num_VS_steps</span> <span class="o">=</span> <span class="n">total_steps</span> <span class="o">*</span> <span class="mi">2</span>  <span class="c1"># To account for IF and OOF</span>
+
+            <span class="n">UD_VS_table_label</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;step_num&#39;</span><span class="p">,</span> <span class="s1">&#39;dc_offset&#39;</span><span class="p">,</span> <span class="s1">&#39;ac_amp&#39;</span><span class="p">,</span> <span class="s1">&#39;wave_type&#39;</span><span class="p">,</span> <span class="s1">&#39;wave_mod&#39;</span><span class="p">,</span> <span class="s1">&#39;in-field&#39;</span><span class="p">,</span> <span class="s1">&#39;out-of-field&#39;</span><span class="p">]</span>
+            <span class="n">UD_VS_table</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">num_VS_steps</span><span class="p">,</span> <span class="mi">7</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+            <span class="n">UD_VS_table_unit</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;V&#39;</span><span class="p">,</span> <span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;V&#39;</span><span class="p">,</span> <span class="s1">&#39;V&#39;</span><span class="p">]</span>
+
+            <span class="n">UD_VS_table</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_VS_steps</span><span class="p">)</span>  <span class="c1"># Python base 0</span>
+            <span class="k">for</span> <span class="n">step_num</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">VS_steps</span><span class="p">):</span>
+                <span class="n">step_values</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">step_num</span><span class="p">)</span> <span class="o">*</span> <span class="nb">int</span><span class="p">(</span><span class="n">BE_repeats</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span>
+                                         <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">step_num</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="nb">int</span><span class="p">(</span><span class="n">BE_repeats</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">))</span>
+                <span class="n">UD_VS_table</span><span class="p">[</span><span class="n">step_values</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">VS_amp_vec</span><span class="p">[</span><span class="n">step_num</span><span class="p">]</span>
+
+            <span class="n">BE_IF_switch</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_VS_steps</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))))</span>
+            <span class="n">BE_OF_switch</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_VS_steps</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))))</span>
+
+            <span class="k">if</span> <span class="n">VS_in_out_cond</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># out of field only</span>
+                <span class="n">UD_VS_table</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">BE_amp</span> <span class="o">*</span> <span class="n">BE_OF_switch</span>
+            <span class="k">elif</span> <span class="n">VS_in_out_cond</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># in field only</span>
+                <span class="n">UD_VS_table</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">BE_amp</span> <span class="o">*</span> <span class="n">BE_IF_switch</span>
+            <span class="k">elif</span> <span class="n">VS_in_out_cond</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>  <span class="c1"># both in and out of field</span>
+                <span class="n">UD_VS_table</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">BE_amp</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">num_VS_steps</span><span class="p">)</span>
+
+            <span class="n">UD_VS_table</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">num_VS_steps</span><span class="p">)</span>  <span class="c1"># wave type</span>
+            <span class="n">UD_VS_table</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">num_VS_steps</span><span class="p">)</span> <span class="o">*</span> <span class="n">BE_signal_type</span>  <span class="c1"># wave mod</span>
+
+            <span class="n">UD_VS_table</span><span class="p">[:,</span> <span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;NaN&#39;</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">num_VS_steps</span><span class="p">)</span>
+            <span class="n">UD_VS_table</span><span class="p">[:,</span> <span class="mi">6</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;NaN&#39;</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">num_VS_steps</span><span class="p">)</span>
+
+            <span class="n">UD_VS_table</span><span class="p">[</span><span class="n">BE_IF_switch</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="n">UD_VS_table</span><span class="p">[</span><span class="n">BE_IF_switch</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="n">UD_VS_table</span><span class="p">[</span><span class="n">BE_OF_switch</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">]</span> <span class="o">=</span> <span class="n">UD_VS_table</span><span class="p">[</span><span class="n">BE_IF_switch</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">UD_VS_table_label</span><span class="p">,</span> <span class="n">UD_VS_table_unit</span><span class="p">,</span> <span class="n">UD_VS_table</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Pycroscopy contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

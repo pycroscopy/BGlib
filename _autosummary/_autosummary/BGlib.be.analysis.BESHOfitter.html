@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BGlib.be.analysis.BESHOfitter &mdash; BGlib 0.0.4 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/documentation_options.js?v=8c5712d9"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            BGlib
+          </a>
+              <div class="version">
+                0.0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">BGlib</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">BGlib</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../BGlib.html">BGlib</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../notebooks/be/index.html">Band Excitation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../notebooks/gmode/index.html">General Mode</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BGlib</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">BGlib.be.analysis.BESHOfitter</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/_autosummary/_autosummary/BGlib.be.analysis.BESHOfitter.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="bglib-be-analysis-beshofitter">
+<h1>BGlib.be.analysis.BESHOfitter<a class="headerlink" href="#bglib-be-analysis-beshofitter" title="Link to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="BGlib.be.analysis.BESHOfitter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">BGlib.be.analysis.</span></span><span class="sig-name descname"><span class="pre">BESHOfitter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h5_main</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/BGlib/be/analysis/be_sho_fitter.html#BESHOfitter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BGlib.be.analysis.BESHOfitter" title="Link to this definition">¶</a></dt>
+<dd><p>Creates an instance of the BESHOFitter class</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>h5_main</strong> (<em>pyUSID.io.USIDataset</em>) – Main dataset containing band excitation measurement</p></li>
+<li><p><strong>h5_target_group</strong> (<a class="reference external" href="https://docs.h5py.org/en/latest/high/group.html#h5py.Group" title="(in h5py v3.9)"><em>h5py.Group</em></a><em>, </em><em>optional. Default = None</em>) – Location where to look for existing results and to place newly
+computed results. Use this kwarg if the results need to be written
+to a different HDF5 file. By default, this value is set to the
+parent group containing <cite>h5_main</cite></p></li>
+<li><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>, </em><em>optional</em>) – Keyword arguments such as “verbose” and “cores” that will be
+passed onto <code class="xref py py-class docutils literal notranslate"><span class="pre">Process</span></code></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="BGlib.be.analysis.BESHOfitter.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h5_main</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/BGlib/be/analysis/be_sho_fitter.html#BESHOfitter.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BGlib.be.analysis.BESHOfitter.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Creates an instance of the BESHOFitter class</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>h5_main</strong> (<em>pyUSID.io.USIDataset</em>) – Main dataset containing band excitation measurement</p></li>
+<li><p><strong>h5_target_group</strong> (<a class="reference external" href="https://docs.h5py.org/en/latest/high/group.html#h5py.Group" title="(in h5py v3.9)"><em>h5py.Group</em></a><em>, </em><em>optional. Default = None</em>) – Location where to look for existing results and to place newly
+computed results. Use this kwarg if the results need to be written
+to a different HDF5 file. By default, this value is set to the
+parent group containing <cite>h5_main</cite></p></li>
+<li><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>, </em><em>optional</em>) – Keyword arguments such as “verbose” and “cores” that will be
+passed onto <code class="xref py py-class docutils literal notranslate"><span class="pre">Process</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/BGlib.be.analysis.BESHOfitter.html#BGlib.be.analysis.BESHOfitter.__init__" title="BGlib.be.analysis.BESHOfitter.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(h5_main, **kwargs)</p></td>
+<td><p>Creates an instance of the BESHOFitter class</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute</span></code>([override])</p></td>
+<td><p>Creates placeholders for the results, applies the <code class="xref py py-meth docutils literal notranslate"><span class="pre">_unit_computation()</span></code> to chunks of the dataset</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">do_fit</span></code>(*args[, override])</p></td>
+<td><p>Computes the Fit</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">do_guess</span></code>(*args[, override])</p></td>
+<td><p>Computes the Guess</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_up_fit</span></code>([fit_func, h5_partial_fit, h5_guess])</p></td>
+<td><p>Need this because during the set up, we won't know which strategy is being used.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_up_guess</span></code>([guess_func, h5_partial_guess])</p></td>
+<td><p>Need this because during the set up, we won't know which strategy is being used.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">test</span></code>(**kwargs)</p></td>
+<td><p>Tests the process on a subset (for example a pixel) of the whole data.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">use_partial_computation</span></code>([h5_partial_group])</p></td>
+<td><p>Extracts the necessary parameters from the provided h5 group to resume computation</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">parms_dict</span></code></p></td>
+<td><p>The name of the HDF5 dataset that should be present to signify which positions have already been computed This is NOT a fully private variable so that multiple processes can be run within a single group - Eg Fitter In the case of Fitter - this name can be changed from 'completed_guesses' to 'completed_fits' check_for_duplicates will be called by the Child class where they have the opportunity to change this variable before checking for duplicates</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Pycroscopy contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

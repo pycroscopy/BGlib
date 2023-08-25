@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BGlib.be.analysis.utils.be_sho &mdash; BGlib 0.0.4 documentation</title>
+      <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../_static/documentation_options.js?v=8c5712d9"></script>
+        <script src="../../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../../../../../about.html" />
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            BGlib
+          </a>
+              <div class="version">
+                0.0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">BGlib</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../about.html">BGlib</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../_autosummary/BGlib.html">BGlib</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../notebooks/be/index.html">Band Excitation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../notebooks/gmode/index.html">General Mode</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">BGlib</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">BGlib.be.analysis.utils.be_sho</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for BGlib.be.analysis.utils.be_sho</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Mon Sep 28 11:35:57 2015</span>
+
+<span class="sd">@author: Stephen Jesse, Anton Ievlev, Chris R. Smith</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">unicode_literals</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">exp</span><span class="p">,</span> <span class="nb">abs</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">,</span> <span class="nb">sum</span><span class="p">,</span> <span class="n">real</span><span class="p">,</span> <span class="n">imag</span><span class="p">,</span> <span class="n">arctan2</span><span class="p">,</span> <span class="n">append</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">minimize</span>
+
+<div class="viewcode-block" id="SHOfunc">
+<a class="viewcode-back" href="../../../../../_autosummary/BGlib.be.analysis.utils.be_sho.SHOfunc.html#BGlib.be.analysis.utils.be_sho.SHOfunc">[docs]</a>
+<span class="k">def</span> <span class="nf">SHOfunc</span><span class="p">(</span><span class="n">parms</span><span class="p">,</span> <span class="n">w_vec</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates the SHO response over the given frequency band</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    -----------</span>
+<span class="sd">    parms : list or tuple</span>
+<span class="sd">        SHO parae=(A,w0,Q,phi)</span>
+<span class="sd">    w_vec : 1D numpy array</span>
+<span class="sd">        Vector of frequency values</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">parms</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">parms</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span> <span class="o">*</span> <span class="n">parms</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> \
+        <span class="p">(</span><span class="n">w_vec</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">w_vec</span> <span class="o">*</span> <span class="n">parms</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">parms</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">parms</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="SHOfit">
+<a class="viewcode-back" href="../../../../../_autosummary/BGlib.be.analysis.utils.be_sho.SHOfit.html#BGlib.be.analysis.utils.be_sho.SHOfit">[docs]</a>
+<span class="k">def</span> <span class="nf">SHOfit</span><span class="p">(</span><span class="n">parms</span><span class="p">,</span> <span class="n">w_vec</span><span class="p">,</span> <span class="n">resp_vec</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Cost function minimization of SHO fitting</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    -----------</span>
+<span class="sd">    parms : list or tuple</span>
+<span class="sd">        SHO parameters=(A,w0,Q,phi)</span>
+<span class="sd">    w_vec : 1D numpy array</span>
+<span class="sd">        Vector of frequency values</span>
+<span class="sd">    resp_vec : 1D complex numpy array or list</span>
+<span class="sd">        Cantilever response vector as a function of frequency</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Cost function to minimize.</span>
+    <span class="n">cost</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">SHOfunc</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">w_vec</span><span class="p">))</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">resp_vec</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">popt</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">cost</span><span class="p">,</span> <span class="n">parms</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;TNC&#39;</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;disp&#39;</span><span class="p">:</span><span class="kc">False</span><span class="p">})</span>
+
+    <span class="k">return</span> <span class="n">popt</span><span class="o">.</span><span class="n">x</span></div>
+
+
+<div class="viewcode-block" id="SHOestimateGuess">
+<a class="viewcode-back" href="../../../../../_autosummary/BGlib.be.analysis.utils.be_sho.SHOestimateGuess.html#BGlib.be.analysis.utils.be_sho.SHOestimateGuess">[docs]</a>
+<span class="k">def</span> <span class="nf">SHOestimateGuess</span><span class="p">(</span><span class="n">resp_vec</span><span class="p">,</span> <span class="n">w_vec</span><span class="p">,</span> <span class="n">num_points</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates good initial guesses for fitting</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ------------</span>
+<span class="sd">    w_vec : 1D numpy array or list</span>
+<span class="sd">        Vector of BE frequencies</span>
+<span class="sd">    resp_vec : 1D complex numpy array or list</span>
+<span class="sd">        BE response vector as a function of frequency</span>
+<span class="sd">    num_points : (Optional) unsigned int</span>
+<span class="sd">        Quality factor of the SHO peak</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    ---------</span>
+<span class="sd">    retval : tuple</span>
+<span class="sd">        SHO fit parameters arranged as amplitude, frequency, quality factor, phase</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">ii</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">resp_vec</span><span class="p">))[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">a_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+    <span class="n">e_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+
+    <span class="k">for</span> <span class="n">c1</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_points</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">c2</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">c1</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">num_points</span><span class="p">):</span>
+            <span class="n">w1</span> <span class="o">=</span> <span class="n">w_vec</span><span class="p">[</span><span class="n">ii</span><span class="p">[</span><span class="n">c1</span><span class="p">]]</span>
+            <span class="n">w2</span> <span class="o">=</span> <span class="n">w_vec</span><span class="p">[</span><span class="n">ii</span><span class="p">[</span><span class="n">c2</span><span class="p">]]</span>
+            <span class="n">X1</span> <span class="o">=</span> <span class="n">real</span><span class="p">(</span><span class="n">resp_vec</span><span class="p">[</span><span class="n">ii</span><span class="p">[</span><span class="n">c1</span><span class="p">]])</span>
+            <span class="n">X2</span> <span class="o">=</span> <span class="n">real</span><span class="p">(</span><span class="n">resp_vec</span><span class="p">[</span><span class="n">ii</span><span class="p">[</span><span class="n">c2</span><span class="p">]])</span>
+            <span class="n">Y1</span> <span class="o">=</span> <span class="n">imag</span><span class="p">(</span><span class="n">resp_vec</span><span class="p">[</span><span class="n">ii</span><span class="p">[</span><span class="n">c1</span><span class="p">]])</span>
+            <span class="n">Y2</span> <span class="o">=</span> <span class="n">imag</span><span class="p">(</span><span class="n">resp_vec</span><span class="p">[</span><span class="n">ii</span><span class="p">[</span><span class="n">c2</span><span class="p">]])</span>
+
+            <span class="n">denom</span> <span class="o">=</span> <span class="p">(</span><span class="n">w1</span> <span class="o">*</span> <span class="p">(</span><span class="n">X1</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">X1</span> <span class="o">*</span> <span class="n">X2</span> <span class="o">+</span> <span class="n">Y1</span> <span class="o">*</span> <span class="p">(</span><span class="n">Y1</span> <span class="o">-</span> <span class="n">Y2</span><span class="p">))</span> <span class="o">+</span> <span class="n">w2</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="n">X1</span> <span class="o">*</span> <span class="n">X2</span> <span class="o">+</span> <span class="n">X2</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">Y1</span> <span class="o">*</span> <span class="n">Y2</span> <span class="o">+</span> <span class="n">Y2</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">denom</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="p">((</span><span class="n">w1</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">w2</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">w1</span> <span class="o">*</span> <span class="n">X2</span> <span class="o">*</span> <span class="p">(</span><span class="n">X1</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">Y1</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">w2</span> <span class="o">*</span> <span class="n">X1</span> <span class="o">*</span> <span class="p">(</span><span class="n">X2</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">Y2</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)))</span> <span class="o">/</span> <span class="n">denom</span>
+                <span class="n">b</span> <span class="o">=</span> <span class="p">((</span><span class="n">w1</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">w2</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">w1</span> <span class="o">*</span> <span class="n">Y2</span> <span class="o">*</span> <span class="p">(</span><span class="n">X1</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">Y1</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">w2</span> <span class="o">*</span> <span class="n">Y1</span> <span class="o">*</span> <span class="p">(</span><span class="n">X2</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">Y2</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)))</span> <span class="o">/</span> <span class="n">denom</span>
+                <span class="n">c</span> <span class="o">=</span> <span class="p">((</span><span class="n">w1</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">w2</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">X2</span> <span class="o">*</span> <span class="n">Y1</span> <span class="o">-</span> <span class="n">X1</span> <span class="o">*</span> <span class="n">Y2</span><span class="p">))</span> <span class="o">/</span> <span class="n">denom</span>
+                <span class="n">d</span> <span class="o">=</span> <span class="p">(</span><span class="n">w1</span> <span class="o">**</span> <span class="mi">3</span> <span class="o">*</span> <span class="p">(</span><span class="n">X1</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">Y1</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span>
+                     <span class="n">w1</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">w2</span> <span class="o">*</span> <span class="p">(</span><span class="n">X1</span> <span class="o">*</span> <span class="n">X2</span> <span class="o">+</span> <span class="n">Y1</span> <span class="o">*</span> <span class="n">Y2</span><span class="p">)</span> <span class="o">-</span>
+                     <span class="n">w1</span> <span class="o">*</span> <span class="n">w2</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">X1</span> <span class="o">*</span> <span class="n">X2</span> <span class="o">+</span> <span class="n">Y1</span> <span class="o">*</span> <span class="n">Y2</span><span class="p">)</span> <span class="o">+</span>
+                     <span class="n">w2</span> <span class="o">**</span> <span class="mi">3</span> <span class="o">*</span> <span class="p">(</span><span class="n">X2</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">Y2</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span> <span class="o">/</span> <span class="n">denom</span>
+
+                <span class="k">if</span> <span class="n">d</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">a_mat</span> <span class="o">=</span> <span class="n">append</span><span class="p">(</span><span class="n">a_mat</span><span class="p">,</span> <span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">])</span>
+
+                    <span class="n">A_fit</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">b</span><span class="p">)</span> <span class="o">/</span> <span class="n">d</span>
+                    <span class="n">w0_fit</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+                    <span class="n">Q_fit</span> <span class="o">=</span> <span class="o">-</span><span class="n">sqrt</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">/</span> <span class="n">c</span>
+                    <span class="n">phi_fit</span> <span class="o">=</span> <span class="n">arctan2</span><span class="p">(</span><span class="o">-</span><span class="n">b</span><span class="p">,</span> <span class="o">-</span><span class="n">a</span><span class="p">)</span>
+
+                    <span class="n">H_fit</span> <span class="o">=</span> <span class="n">A_fit</span> <span class="o">*</span> <span class="n">w0_fit</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">phi_fit</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span>
+                        <span class="n">w_vec</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">w_vec</span> <span class="o">*</span> <span class="n">w0_fit</span> <span class="o">/</span> <span class="n">Q_fit</span> <span class="o">-</span> <span class="n">w0_fit</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+
+                    <span class="n">e_vec</span> <span class="o">=</span> <span class="n">append</span><span class="p">(</span><span class="n">e_vec</span><span class="p">,</span>
+                                   <span class="nb">sum</span><span class="p">((</span><span class="n">real</span><span class="p">(</span><span class="n">H_fit</span><span class="p">)</span> <span class="o">-</span> <span class="n">real</span><span class="p">(</span><span class="n">resp_vec</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span>
+                                   <span class="nb">sum</span><span class="p">((</span><span class="n">imag</span><span class="p">(</span><span class="n">H_fit</span><span class="p">)</span> <span class="o">-</span> <span class="n">imag</span><span class="p">(</span><span class="n">resp_vec</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">a_mat</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">a_mat</span> <span class="o">=</span> <span class="n">a_mat</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+
+        <span class="n">weight_vec</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">e_vec</span><span class="p">)</span> <span class="o">**</span> <span class="mi">4</span>
+        <span class="n">w_sum</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">weight_vec</span><span class="p">)</span>
+
+        <span class="n">a_w</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">weight_vec</span> <span class="o">*</span> <span class="n">a_mat</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="n">w_sum</span>
+        <span class="n">b_w</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">weight_vec</span> <span class="o">*</span> <span class="n">a_mat</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="n">w_sum</span>
+        <span class="n">c_w</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">weight_vec</span> <span class="o">*</span> <span class="n">a_mat</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="n">w_sum</span>
+        <span class="n">d_w</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">weight_vec</span> <span class="o">*</span> <span class="n">a_mat</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">])</span> <span class="o">/</span> <span class="n">w_sum</span>
+
+        <span class="n">A_fit</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">a_w</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">b_w</span><span class="p">)</span> <span class="o">/</span> <span class="n">d_w</span>
+        <span class="n">w0_fit</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">d_w</span><span class="p">)</span>
+        <span class="n">Q_fit</span> <span class="o">=</span> <span class="o">-</span><span class="n">sqrt</span><span class="p">(</span><span class="n">d_w</span><span class="p">)</span> <span class="o">/</span> <span class="n">c_w</span>
+        <span class="n">phi_fit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="o">-</span><span class="n">b_w</span><span class="p">,</span> <span class="o">-</span><span class="n">a_w</span><span class="p">)</span>
+
+        <span class="n">H_fit</span> <span class="o">=</span> <span class="n">A_fit</span> <span class="o">*</span> <span class="n">w0_fit</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">phi_fit</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">w_vec</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">w_vec</span> <span class="o">*</span> <span class="n">w0_fit</span> <span class="o">/</span> <span class="n">Q_fit</span> <span class="o">-</span> <span class="n">w0_fit</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">resp_vec</span><span class="p">))</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">resp_vec</span> <span class="o">-</span> <span class="n">H_fit</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mf">1.2</span> <span class="ow">or</span> <span class="n">w0_fit</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">w_vec</span><span class="p">)</span> <span class="ow">or</span> <span class="n">w0_fit</span> <span class="o">&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span>
+                <span class="n">w_vec</span><span class="p">):</span>
+            <span class="n">p0</span> <span class="o">=</span> <span class="n">SHOfastGuess</span><span class="p">(</span><span class="n">w_vec</span><span class="p">,</span> <span class="n">resp_vec</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">p0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">A_fit</span><span class="p">,</span> <span class="n">w0_fit</span><span class="p">,</span> <span class="n">Q_fit</span><span class="p">,</span> <span class="n">phi_fit</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">p0</span> <span class="o">=</span> <span class="n">SHOfastGuess</span><span class="p">(</span><span class="n">w_vec</span><span class="p">,</span> <span class="n">resp_vec</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">p0</span></div>
+
+
+
+<div class="viewcode-block" id="SHOfastGuess">
+<a class="viewcode-back" href="../../../../../_autosummary/BGlib.be.analysis.utils.be_sho.SHOfastGuess.html#BGlib.be.analysis.utils.be_sho.SHOfastGuess">[docs]</a>
+<span class="k">def</span> <span class="nf">SHOfastGuess</span><span class="p">(</span><span class="n">w_vec</span><span class="p">,</span> <span class="n">resp_vec</span><span class="p">,</span> <span class="n">qual_factor</span><span class="o">=</span><span class="mi">200</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Default SHO guess from the maximum value of the response</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ------------</span>
+<span class="sd">    w_vec : 1D numpy array or list</span>
+<span class="sd">        Vector of BE frequencies</span>
+<span class="sd">    resp_vec : 1D complex numpy array or list</span>
+<span class="sd">        BE response vector as a function of frequency</span>
+<span class="sd">    qual_factor : float</span>
+<span class="sd">        Quality factor of the SHO peak</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    retval : 1D numpy array</span>
+<span class="sd">        SHO fit parameters arranged as [amplitude, frequency, quality factor, phase]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">amp_vec</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">resp_vec</span><span class="p">)</span>
+    <span class="n">i_max</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">resp_vec</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">amp_vec</span><span class="p">)</span> <span class="o">/</span> <span class="n">qual_factor</span><span class="p">,</span> <span class="n">w_vec</span><span class="p">[</span><span class="n">i_max</span><span class="p">],</span> <span class="n">qual_factor</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">resp_vec</span><span class="p">[</span><span class="n">i_max</span><span class="p">])])</span></div>
+
+
+
+<div class="viewcode-block" id="SHOlowerBound">
+<a class="viewcode-back" href="../../../../../_autosummary/BGlib.be.analysis.utils.be_sho.SHOlowerBound.html#BGlib.be.analysis.utils.be_sho.SHOlowerBound">[docs]</a>
+<span class="k">def</span> <span class="nf">SHOlowerBound</span><span class="p">(</span><span class="n">w_vec</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Provides the lower bound for the SHO fitting function</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    w_vec : 1D numpy array or list</span>
+<span class="sd">        Vector of BE frequencies</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    retval : tuple</span>
+<span class="sd">        SHO fit parameters arranged as amplitude, frequency, quality factor, phase</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">w_vec</span><span class="p">),</span> <span class="o">-</span><span class="mf">1e5</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span></div>
+
+
+
+<div class="viewcode-block" id="SHOupperBound">
+<a class="viewcode-back" href="../../../../../_autosummary/BGlib.be.analysis.utils.be_sho.SHOupperBound.html#BGlib.be.analysis.utils.be_sho.SHOupperBound">[docs]</a>
+<span class="k">def</span> <span class="nf">SHOupperBound</span><span class="p">(</span><span class="n">w_vec</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Provides the upper bound for the SHO fitting function</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    w_vec: 1D numpy array or list</span>
+<span class="sd">        Vector of BE frequencies</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    retval : tuple</span>
+<span class="sd">        SHO fit parameters arranged as amplitude, frequency, quality factor, phase</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="mf">1e5</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">w_vec</span><span class="p">),</span> <span class="mf">1e5</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Pycroscopy contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

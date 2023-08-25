@@ -1,0 +1,24 @@
+BGlib.be.analysis.utils.tree.Node
+=================================
+
+.. currentmodule:: BGlib.be.analysis.utils.tree
+
+.. autoclass:: Node
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+   
+   
+
+   
+   
+   

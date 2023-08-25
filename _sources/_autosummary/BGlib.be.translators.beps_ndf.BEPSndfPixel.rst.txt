@@ -1,0 +1,25 @@
+BGlib.be.translators.beps\_ndf.BEPSndfPixel
+===========================================
+
+.. currentmodule:: BGlib.be.translators.beps_ndf
+
+.. autoclass:: BEPSndfPixel
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~BEPSndfPixel.is_different_from
+   
+   
+
+   
+   
+   

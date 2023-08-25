@@ -1,0 +1,6 @@
+BGlib.be.translators.df\_utils.be\_utils.flat\_parm\_dict\_to\_nested
+=====================================================================
+
+.. currentmodule:: BGlib.be.translators.df_utils.be_utils
+
+.. autofunction:: flat_parm_dict_to_nested

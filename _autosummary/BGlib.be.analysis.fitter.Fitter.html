@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BGlib.be.analysis.fitter.Fitter &mdash; BGlib 0.0.4 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/documentation_options.js?v=8c5712d9"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            BGlib
+          </a>
+              <div class="version">
+                0.0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">BGlib</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">BGlib</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="BGlib.html">BGlib</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/be/index.html">Band Excitation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/gmode/index.html">General Mode</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BGlib</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">BGlib.be.analysis.fitter.Fitter</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_autosummary/BGlib.be.analysis.fitter.Fitter.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="bglib-be-analysis-fitter-fitter">
+<h1>BGlib.be.analysis.fitter.Fitter<a class="headerlink" href="#bglib-be-analysis-fitter-fitter" title="Link to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="BGlib.be.analysis.fitter.Fitter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">BGlib.be.analysis.fitter.</span></span><span class="sig-name descname"><span class="pre">Fitter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h5_main</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proc_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variables</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/BGlib/be/analysis/fitter.html#Fitter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BGlib.be.analysis.fitter.Fitter" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Process</span></code></p>
+<p>Creates a new instance of the abstract Fitter class</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>h5_main</strong> (<a class="reference external" href="https://docs.h5py.org/en/latest/high/dataset.html#h5py.Dataset" title="(in h5py v3.9)"><em>h5py.Dataset</em></a><em> or </em><em>pyUSID.io.USIDataset object</em>) – Main datasets whose one or dimensions will be reduced</p></li>
+<li><p><strong>proc_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em> or </em><em>unicode</em>) – Name of the child process</p></li>
+<li><p><strong>variables</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a><em>, </em><em>optional</em>) – List of spectroscopic dimension names that will be reduced</p></li>
+<li><p><strong>h5_target_group</strong> (<a class="reference external" href="https://docs.h5py.org/en/latest/high/group.html#h5py.Group" title="(in h5py v3.9)"><em>h5py.Group</em></a><em>, </em><em>optional. Default = None</em>) – Location where to look for existing results and to place newly
+computed results. Use this kwarg if the results need to be written
+to a different HDF5 file. By default, this value is set to the
+parent group containing <cite>h5_main</cite></p></li>
+<li><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>) – Keyword arguments that will be passed on to
+pyUSID.processing.process.Process</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#BGlib.be.analysis.fitter.Fitter.compute" title="BGlib.be.analysis.fitter.Fitter.compute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute</span></code></a></p></td>
+<td><p>Creates placeholders for the results, applies the <code class="xref py py-meth docutils literal notranslate"><span class="pre">_unit_computation()</span></code> to chunks of the dataset</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#BGlib.be.analysis.fitter.Fitter.do_fit" title="BGlib.be.analysis.fitter.Fitter.do_fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">do_fit</span></code></a></p></td>
+<td><p>Computes the Fit</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#BGlib.be.analysis.fitter.Fitter.do_guess" title="BGlib.be.analysis.fitter.Fitter.do_guess"><code class="xref py py-obj docutils literal notranslate"><span class="pre">do_guess</span></code></a></p></td>
+<td><p>Computes the Guess</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#BGlib.be.analysis.fitter.Fitter.set_up_fit" title="BGlib.be.analysis.fitter.Fitter.set_up_fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_up_fit</span></code></a></p></td>
+<td><p>Performs necessary book-keeping before do_fit can be called</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#BGlib.be.analysis.fitter.Fitter.set_up_guess" title="BGlib.be.analysis.fitter.Fitter.set_up_guess"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_up_guess</span></code></a></p></td>
+<td><p>Performs necessary book-keeping before do_guess can be called</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#BGlib.be.analysis.fitter.Fitter.test" title="BGlib.be.analysis.fitter.Fitter.test"><code class="xref py py-obj docutils literal notranslate"><span class="pre">test</span></code></a></p></td>
+<td><p>Tests the process on a subset (for example a pixel) of the whole data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#BGlib.be.analysis.fitter.Fitter.use_partial_computation" title="BGlib.be.analysis.fitter.Fitter.use_partial_computation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">use_partial_computation</span></code></a></p></td>
+<td><p>Extracts the necessary parameters from the provided h5 group to resume computation</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#BGlib.be.analysis.fitter.Fitter.parms_dict" title="BGlib.be.analysis.fitter.Fitter.parms_dict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parms_dict</span></code></a></p></td>
+<td><p>The name of the HDF5 dataset that should be present to signify which positions have already been computed This is NOT a fully private variable so that multiple processes can be run within a single group - Eg Fitter In the case of Fitter - this name can be changed from 'completed_guesses' to 'completed_fits' check_for_duplicates will be called by the Child class where they have the opportunity to change this variable before checking for duplicates</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="BGlib.be.analysis.fitter.Fitter.compute">
+<span class="sig-name descname"><span class="pre">compute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">override</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BGlib.be.analysis.fitter.Fitter.compute" title="Link to this definition">¶</a></dt>
+<dd><p>Creates placeholders for the results, applies the <code class="xref py py-meth docutils literal notranslate"><span class="pre">_unit_computation()</span></code>
+to chunks of the dataset</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>override</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional. default = False</em>) – By default, compute will simply return duplicate results to avoid recomputing or resume computation on a
+group with partial results. Set to True to force fresh computation.</p></li>
+<li><p><strong>args</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>) – arguments to the mapped function in the correct order</p></li>
+<li><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>) – keyword arguments to the mapped function</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>h5_results_grp</strong> – Group containing all the results</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.h5py.org/en/latest/high/group.html#h5py.Group" title="(in h5py v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">h5py.Group</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BGlib.be.analysis.fitter.Fitter.do_fit">
+<span class="sig-name descname"><span class="pre">do_fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">override</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/BGlib/be/analysis/fitter.html#Fitter.do_fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BGlib.be.analysis.fitter.Fitter.do_fit" title="Link to this definition">¶</a></dt>
+<dd><p>Computes the Fit</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>args</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a><em>, </em><em>optional</em>) – List of arguments</p></li>
+<li><p><strong>override</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, computes a fresh guess even if existing Fit was found
+Else, returns existing Fit dataset. Default = False</p></li>
+<li><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>, </em><em>optional</em>) – Keyword arguments</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>HDF5 dataset with the Fit computed</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>USIDataset</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BGlib.be.analysis.fitter.Fitter.do_guess">
+<span class="sig-name descname"><span class="pre">do_guess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">override</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/BGlib/be/analysis/fitter.html#Fitter.do_guess"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BGlib.be.analysis.fitter.Fitter.do_guess" title="Link to this definition">¶</a></dt>
+<dd><p>Computes the Guess</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>args</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a><em>, </em><em>optional</em>) – List of arguments</p></li>
+<li><p><strong>override</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, computes a fresh guess even if existing Guess was found
+Else, returns existing Guess dataset. Default = False</p></li>
+<li><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>, </em><em>optional</em>) – Keyword arguments</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>HDF5 dataset with the Guesses computed</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>USIDataset</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="BGlib.be.analysis.fitter.Fitter.parms_dict">
+<span class="sig-name descname"><span class="pre">parms_dict</span></span><a class="headerlink" href="#BGlib.be.analysis.fitter.Fitter.parms_dict" title="Link to this definition">¶</a></dt>
+<dd><p>The name of the HDF5 dataset that should be present to signify which positions have already been computed
+This is NOT a fully private variable so that multiple processes can be run within a single group - Eg Fitter
+In the case of Fitter - this name can be changed from ‘completed_guesses’ to ‘completed_fits’
+check_for_duplicates will be called by the Child class where they have the opportunity to change this
+variable before checking for duplicates</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BGlib.be.analysis.fitter.Fitter.set_up_fit">
+<span class="sig-name descname"><span class="pre">set_up_fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h5_partial_fit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h5_guess</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/BGlib/be/analysis/fitter.html#Fitter.set_up_fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BGlib.be.analysis.fitter.Fitter.set_up_fit" title="Link to this definition">¶</a></dt>
+<dd><p>Performs necessary book-keeping before do_fit can be called</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>h5_partial_fit</strong> (<a class="reference external" href="https://docs.h5py.org/en/latest/high/dataset.html#h5py.Dataset" title="(in h5py v3.9)"><em>h5py.Dataset</em></a><em> or </em><em>pyUSID.io.USIDataset</em><em>, </em><em>optional</em>) – HDF5 dataset containing partial Fit. Not implemented</p></li>
+<li><p><strong>h5_guess</strong> (<a class="reference external" href="https://docs.h5py.org/en/latest/high/dataset.html#h5py.Dataset" title="(in h5py v3.9)"><em>h5py.Dataset</em></a><em> or </em><em>pyUSID.io.USIDataset</em><em>, </em><em>optional</em>) – HDF5 dataset containing completed Guess. Not implemented</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BGlib.be.analysis.fitter.Fitter.set_up_guess">
+<span class="sig-name descname"><span class="pre">set_up_guess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h5_partial_guess</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/BGlib/be/analysis/fitter.html#Fitter.set_up_guess"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BGlib.be.analysis.fitter.Fitter.set_up_guess" title="Link to this definition">¶</a></dt>
+<dd><p>Performs necessary book-keeping before do_guess can be called</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>h5_partial_guess</strong> (<a class="reference external" href="https://docs.h5py.org/en/latest/high/dataset.html#h5py.Dataset" title="(in h5py v3.9)"><em>h5py.Dataset</em></a><em> or </em><em>pyUSID.io.USIDataset</em><em>, </em><em>optional</em>) – HDF5 dataset containing partial Guess. Not implemented</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BGlib.be.analysis.fitter.Fitter.test">
+<span class="sig-name descname"><span class="pre">test</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BGlib.be.analysis.fitter.Fitter.test" title="Link to this definition">¶</a></dt>
+<dd><p>Tests the process on a subset (for example a pixel) of the whole data. The class can be re-instantiated with
+improved parameters and tested repeatedly until the user is content, at which point the user can call
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">compute()</span></code> on the whole dataset.</p>
+<p class="rubric">Notes</p>
+<p>This is not a function that is expected to be called in MPI</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dict</strong> (<em>kwargs -</em>) – keyword arguments to test the process</p></li>
+<li><p><strong>optional</strong> – keyword arguments to test the process</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BGlib.be.analysis.fitter.Fitter.use_partial_computation">
+<span class="sig-name descname"><span class="pre">use_partial_computation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h5_partial_group</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BGlib.be.analysis.fitter.Fitter.use_partial_computation" title="Link to this definition">¶</a></dt>
+<dd><p>Extracts the necessary parameters from the provided h5 group to resume computation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>h5_partial_group</strong> (<a class="reference external" href="https://docs.h5py.org/en/latest/high/group.html#h5py.Group" title="(in h5py v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">h5py.Group</span></code></a>) – Group containing partially computed results</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Pycroscopy contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

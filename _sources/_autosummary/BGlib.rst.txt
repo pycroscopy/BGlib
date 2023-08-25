@@ -1,0 +1,32 @@
+﻿BGlib
+=====
+
+.. automodule:: BGlib
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. autosummary::
+   :toctree:
+      :template: custom-module-template.rst
+   :recursive:
+
+   BGlib.be
+   BGlib.gmode
+   BGlib.misc
+

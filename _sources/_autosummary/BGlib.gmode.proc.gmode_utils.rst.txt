@@ -1,0 +1,33 @@
+BGlib.gmode.proc.gmode\_utils
+=============================
+
+.. automodule:: BGlib.gmode.proc.gmode_utils
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      decompress_response
+      reshape_from_lines_to_pixels
+      test_filter
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

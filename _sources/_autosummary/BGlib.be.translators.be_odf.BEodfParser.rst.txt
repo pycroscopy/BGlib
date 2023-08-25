@@ -1,0 +1,28 @@
+BGlib.be.translators.be\_odf.BEodfParser
+========================================
+
+.. currentmodule:: BGlib.be.translators.be_odf
+
+.. autoclass:: BEodfParser
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~BEodfParser.read_all_data
+      ~BEodfParser.read_pixel
+      ~BEodfParser.reset
+      ~BEodfParser.seek_to_pixel
+   
+   
+
+   
+   
+   

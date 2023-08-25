@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BGlib.be.translators.labview_h5_patcher &mdash; BGlib 0.0.4 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/documentation_options.js?v=8c5712d9"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../../../../about.html" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            BGlib
+          </a>
+              <div class="version">
+                0.0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">BGlib</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../about.html">BGlib</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../_autosummary/BGlib.html">BGlib</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../notebooks/be/index.html">Band Excitation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../notebooks/gmode/index.html">General Mode</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">BGlib</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">BGlib.be.translators.labview_h5_patcher</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for BGlib.be.translators.labview_h5_patcher</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Tue Nov  3 15:24:12 2015</span>
+
+<span class="sd">@author: Chris R. Smith</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">unicode_literals</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">h5py</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">sidpy.sid</span> <span class="kn">import</span> <span class="n">Translator</span>
+<span class="kn">from</span> <span class="nn">sidpy.hdf.hdf_utils</span> <span class="kn">import</span> <span class="n">get_attr</span><span class="p">,</span> <span class="n">write_simple_attrs</span>
+
+<span class="kn">from</span> <span class="nn">pyUSID.io.hdf_utils</span> <span class="kn">import</span> <span class="n">link_as_main</span><span class="p">,</span> <span class="n">find_results_groups</span><span class="p">,</span> \
+    <span class="n">check_and_link_ancillary</span><span class="p">,</span> <span class="n">find_dataset</span>
+<span class="kn">from</span> <span class="nn">pyUSID.io.anc_build_utils</span> <span class="kn">import</span> <span class="n">create_spec_inds_from_vals</span>
+
+<span class="kn">from</span> <span class="nn">.df_utils.be_utils</span> <span class="kn">import</span> <span class="n">remove_non_exist_spec_dim_labs</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="o">.</span><span class="n">major</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+    <span class="n">unicode</span> <span class="o">=</span> <span class="nb">str</span>
+
+
+<div class="viewcode-block" id="LabViewH5Patcher">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.translators.labview_h5_patcher.LabViewH5Patcher.html#BGlib.be.translators.labview_h5_patcher.LabViewH5Patcher">[docs]</a>
+<span class="k">class</span> <span class="nc">LabViewH5Patcher</span><span class="p">(</span><span class="n">Translator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Patches the hdf5 files from the LabView V3 data aquisition software to meet the</span>
+<span class="sd">    standards of the Pycroscopy data format.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">LabViewH5Patcher</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_parse_file_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_path</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">_read_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+<div class="viewcode-block" id="LabViewH5Patcher.is_valid_file">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.translators.labview_h5_patcher.LabViewH5Patcher.html#BGlib.be.translators.labview_h5_patcher.LabViewH5Patcher.is_valid_file">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">is_valid_file</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks whether the provided file can be read by this translator</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        file_path : str</span>
+<span class="sd">            Path to raw data file</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        obj : str</span>
+<span class="sd">            Path to file that will be accepted by the translate() function if</span>
+<span class="sd">            this translator is indeed capable of translating the provided file.</span>
+<span class="sd">            Otherwise, None will be returned</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">unicode</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;file_path should be a string object&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+        <span class="n">extension</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">file_path</span><span class="p">)[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="k">if</span> <span class="n">extension</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;h5&#39;</span><span class="p">,</span> <span class="s1">&#39;hdf5&#39;</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">h5_f</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s1">&#39;r+&#39;</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="c1"># TODO: Make this check as lot stronger. Currently brittle</span>
+        <span class="k">if</span> <span class="s1">&#39;DAQ_software_version_name&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">h5_f</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">find_dataset</span><span class="p">(</span><span class="n">h5_f</span><span class="p">,</span> <span class="s1">&#39;Raw_Data&#39;</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">file_path</span></div>
+
+
+<div class="viewcode-block" id="LabViewH5Patcher.translate">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.translators.labview_h5_patcher.LabViewH5Patcher.html#BGlib.be.translators.labview_h5_patcher.LabViewH5Patcher.translate">[docs]</a>
+    <span class="k">def</span> <span class="nf">translate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h5_path</span><span class="p">,</span> <span class="n">force_patch</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add the needed references and attributes to the h5 file that are not created by the</span>
+<span class="sd">        LabView data aquisition program.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        h5_path : str</span>
+<span class="sd">            path to the h5 file</span>
+<span class="sd">        force_patch : bool, optional</span>
+<span class="sd">            Should the check to see if the file has already been patched be ignored.</span>
+<span class="sd">            Default False.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        h5_file : str</span>
+<span class="sd">            path to the patched dataset</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#TODO: Need a way to choose which channels to apply the patcher to, </span>
+        <span class="c1">#fails for multi-channel files where not all files are capable of being main datasets</span>
+        <span class="c1"># Open the file and check if a patch is needed</span>
+        <span class="n">h5_file</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">h5_path</span><span class="p">),</span> <span class="s1">&#39;r+&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">h5_file</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;translator&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force_patch</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;File is already Pycroscopy ready.&#39;</span><span class="p">)</span>
+            <span class="n">h5_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">h5_path</span>
+
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Get the list of all Raw_Data Datasets</span>
+<span class="sd">        Loop over the list and update the needed attributes</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">raw_list</span> <span class="o">=</span> <span class="n">find_dataset</span><span class="p">(</span><span class="n">h5_file</span><span class="p">,</span> <span class="s1">&#39;Raw_Data&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">h5_raw</span> <span class="ow">in</span> <span class="n">raw_list</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;quantity&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">h5_raw</span><span class="o">.</span><span class="n">attrs</span><span class="p">:</span>
+                <span class="n">h5_raw</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;quantity&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;quantity&#39;</span>
+            <span class="k">if</span> <span class="s1">&#39;units&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">h5_raw</span><span class="o">.</span><span class="n">attrs</span><span class="p">:</span>
+                <span class="n">h5_raw</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;a.u.&#39;</span>
+
+            <span class="c1"># Grab the channel and measurement group of the data to check some needed attributes</span>
+            <span class="n">h5_chan</span> <span class="o">=</span> <span class="n">h5_raw</span><span class="o">.</span><span class="n">parent</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">c_type</span> <span class="o">=</span> <span class="n">get_attr</span><span class="p">(</span><span class="n">h5_chan</span><span class="p">,</span> <span class="s1">&#39;channel_type&#39;</span><span class="p">)</span>
+
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="n">warn_str</span> <span class="o">=</span> <span class="s2">&quot;&#39;channel_type&#39; was not found as an attribute of </span><span class="si">{}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">h5_chan</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="n">warn_str</span> <span class="o">+=</span> <span class="s2">&quot;If this is BEPS or BELine data from the LabView aquisition software, &quot;</span> <span class="o">+</span> \
+                            <span class="s2">&quot;please run the following piece of code.  Afterwards, run this function again.</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> \
+                            <span class="s2">&quot;CODE: &quot;</span> \
+                            <span class="s2">&quot;hdf.file[&#39;</span><span class="si">{}</span><span class="s2">&#39;].attrs[&#39;channel_type&#39;] = &#39;BE&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">h5_chan</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="n">warn</span><span class="p">(</span><span class="n">warn_str</span><span class="p">)</span>
+                <span class="n">h5_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                <span class="k">return</span> <span class="n">h5_path</span>
+
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">raise</span>
+
+            <span class="k">if</span> <span class="n">c_type</span> <span class="o">!=</span> <span class="s1">&#39;BE&#39;</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">h5_meas</span> <span class="o">=</span> <span class="n">h5_chan</span><span class="o">.</span><span class="n">parent</span>
+            <span class="n">h5_meas</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;num_UDVS_steps&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">h5_meas</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;num_steps&#39;</span><span class="p">]</span>
+
+            <span class="c1"># Get the object handles for the Indices and Values datasets</span>
+            <span class="n">h5_pos_inds</span> <span class="o">=</span> <span class="n">h5_chan</span><span class="p">[</span><span class="s1">&#39;Position_Indices&#39;</span><span class="p">]</span>
+            <span class="n">h5_pos_vals</span> <span class="o">=</span> <span class="n">h5_chan</span><span class="p">[</span><span class="s1">&#39;Position_Values&#39;</span><span class="p">]</span>
+            <span class="n">h5_spec_inds</span> <span class="o">=</span> <span class="n">h5_chan</span><span class="p">[</span><span class="s1">&#39;Spectroscopic_Indices&#39;</span><span class="p">]</span>
+            <span class="n">h5_spec_vals</span> <span class="o">=</span> <span class="n">h5_chan</span><span class="p">[</span><span class="s1">&#39;Spectroscopic_Values&#39;</span><span class="p">]</span>
+
+            <span class="c1"># Make sure we have correct spectroscopic indices for the given values</span>
+            <span class="n">ds_spec_inds</span> <span class="o">=</span> <span class="n">create_spec_inds_from_vals</span><span class="p">(</span><span class="n">h5_spec_vals</span><span class="p">[()])</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">ds_spec_inds</span><span class="p">,</span> <span class="n">h5_spec_inds</span><span class="p">[()]):</span>
+                <span class="n">h5_spec_inds</span><span class="p">[:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">ds_spec_inds</span><span class="p">[:,</span> <span class="p">:]</span>
+                <span class="n">h5_file</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+            <span class="c1"># Get the labels and units for the Spectroscopic datasets</span>
+            <span class="n">h5_spec_labels</span> <span class="o">=</span> <span class="n">h5_spec_inds</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;labels&#39;</span><span class="p">]</span>
+            <span class="n">inds_and_vals</span> <span class="o">=</span> <span class="p">[</span><span class="n">h5_pos_inds</span><span class="p">,</span> <span class="n">h5_pos_vals</span><span class="p">,</span> <span class="n">h5_spec_inds</span><span class="p">,</span> <span class="n">h5_spec_vals</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">dset</span> <span class="ow">in</span> <span class="n">inds_and_vals</span><span class="p">:</span>
+                <span class="n">spec_labels</span> <span class="o">=</span> <span class="n">dset</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;labels&#39;</span><span class="p">]</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">spec_units</span> <span class="o">=</span> <span class="n">dset</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;units&#39;</span><span class="p">]</span>
+
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">spec_units</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">spec_labels</span><span class="p">):</span>
+                        <span class="k">raise</span> <span class="ne">KeyError</span>
+
+                <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                    <span class="n">dset</span><span class="p">[</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">spec_labels</span><span class="p">]</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="k">raise</span>
+
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;&quot;</span>
+<span class="sd">            In early versions, too many spectroscopic dimension labels and </span>
+<span class="sd">            units were listed compared to the number of rows. Remove here:</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">remove_non_exist_spec_dim_labs</span><span class="p">(</span><span class="n">h5_spec_inds</span><span class="p">,</span> <span class="n">h5_spec_vals</span><span class="p">,</span>
+                                           <span class="n">h5_meas</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Add back some standard metadata to be consistent with older</span>
+<span class="sd">            BE data</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">missing_metadata</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+            <span class="k">if</span> <span class="s1">&#39;File_file_name&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">h5_meas</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">missing_metadata</span><span class="p">[</span><span class="s1">&#39;File_file_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">h5_raw</span><span class="o">.</span><span class="n">file</span><span class="o">.</span><span class="n">filename</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.h5&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s1">&#39;File_date_and_time&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">h5_meas</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">date_str</span> <span class="o">=</span> <span class="n">get_attr</span><span class="p">(</span><span class="n">h5_raw</span><span class="o">.</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;date_string&#39;</span><span class="p">)</span>
+                    <span class="n">time_str</span> <span class="o">=</span> <span class="n">get_attr</span><span class="p">(</span><span class="n">h5_raw</span><span class="o">.</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;time_string&#39;</span><span class="p">)</span>
+                    <span class="n">full_str</span> <span class="o">=</span> <span class="n">date_str</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">time_str</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+<span class="w">                    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">                    convert:</span>
+<span class="sd">                        date_string : 2018-12-05</span>
+<span class="sd">                        time_string : 3:41:45 PM</span>
+<span class="sd">                    to: </span>
+<span class="sd">                        File_date_and_time: 19-Jun-2009 18:44:56</span>
+<span class="sd">                    &quot;&quot;&quot;</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">dt_obj</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">full_str</span><span class="p">,</span>
+                                                            <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %I:%M:%S %p&quot;</span><span class="p">)</span>
+                        <span class="n">missing_metadata</span><span class="p">[</span><span class="s1">&#39;File_date_and_time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dt_obj</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">-%b-%Y %H:%M:%S&#39;</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                        <span class="k">pass</span>
+                <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                    <span class="k">pass</span>
+            <span class="c1"># Now write to measurement group:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">missing_metadata</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">write_simple_attrs</span><span class="p">(</span><span class="n">h5_meas</span><span class="p">,</span> <span class="n">missing_metadata</span><span class="p">)</span>
+
+            <span class="c1"># Link the references to the Indices and Values datasets to the Raw_Data</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">h5_raw</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                  <span class="n">h5_pos_vals</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">h5_spec_vals</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">h5_spec_inds</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">h5_pos_inds</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+
+            <span class="n">link_as_main</span><span class="p">(</span><span class="n">h5_raw</span><span class="p">,</span> <span class="n">h5_pos_inds</span><span class="p">,</span> <span class="n">h5_pos_vals</span><span class="p">,</span> <span class="n">h5_spec_inds</span><span class="p">,</span> <span class="n">h5_spec_vals</span><span class="p">)</span>
+
+            <span class="c1"># Also link the Bin_Frequencies and Bin_Wfm_Type datasets</span>
+            <span class="n">h5_freqs</span> <span class="o">=</span> <span class="n">h5_chan</span><span class="p">[</span><span class="s1">&#39;Bin_Frequencies&#39;</span><span class="p">]</span>
+            <span class="n">aux_dset_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Bin_Frequencies&#39;</span><span class="p">]</span>
+            <span class="n">aux_dset_refs</span> <span class="o">=</span> <span class="p">[</span><span class="n">h5_freqs</span><span class="o">.</span><span class="n">ref</span><span class="p">]</span>
+            <span class="n">check_and_link_ancillary</span><span class="p">(</span><span class="n">h5_raw</span><span class="p">,</span> <span class="n">aux_dset_names</span><span class="p">,</span> <span class="n">anc_refs</span><span class="o">=</span><span class="n">aux_dset_refs</span><span class="p">)</span>
+
+<span class="w">            </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">            Get all SHO_Fit groups for the Raw_Data and loop over them</span>
+<span class="sd">            Get the Guess and Spectroscopic Datasets for each SHO_Fit group</span>
+<span class="sd">            &#39;&#39;&#39;</span>
+            <span class="n">sho_list</span> <span class="o">=</span> <span class="n">find_results_groups</span><span class="p">(</span><span class="n">h5_raw</span><span class="p">,</span> <span class="s1">&#39;SHO_Fit&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">h5_sho</span> <span class="ow">in</span> <span class="n">sho_list</span><span class="p">:</span>
+                <span class="n">h5_sho_guess</span> <span class="o">=</span> <span class="n">h5_sho</span><span class="p">[</span><span class="s1">&#39;Guess&#39;</span><span class="p">]</span>
+                <span class="n">h5_sho_spec_inds</span> <span class="o">=</span> <span class="n">h5_sho</span><span class="p">[</span><span class="s1">&#39;Spectroscopic_Indices&#39;</span><span class="p">]</span>
+                <span class="n">h5_sho_spec_vals</span> <span class="o">=</span> <span class="n">h5_sho</span><span class="p">[</span><span class="s1">&#39;Spectroscopic_Values&#39;</span><span class="p">]</span>
+
+                <span class="c1"># Make sure we have correct spectroscopic indices for the given values</span>
+                <span class="n">ds_sho_spec_inds</span> <span class="o">=</span> <span class="n">create_spec_inds_from_vals</span><span class="p">(</span><span class="n">h5_sho_spec_inds</span><span class="p">[()])</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">ds_sho_spec_inds</span><span class="p">,</span> <span class="n">h5_sho_spec_inds</span><span class="p">[()]):</span>
+                    <span class="n">h5_sho_spec_inds</span><span class="p">[:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">ds_sho_spec_inds</span><span class="p">[:,</span> <span class="p">:]</span>
+
+                <span class="c1"># Get the labels and units for the Spectroscopic datasets</span>
+                <span class="n">h5_sho_spec_labels</span> <span class="o">=</span> <span class="n">get_attr</span><span class="p">(</span><span class="n">h5_sho_spec_inds</span><span class="p">,</span> <span class="s1">&#39;labels&#39;</span><span class="p">)</span>
+                <span class="n">h5_sho_spec_units</span> <span class="o">=</span> <span class="n">get_attr</span><span class="p">(</span><span class="n">h5_sho_spec_vals</span><span class="p">,</span> <span class="s1">&#39;units&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">h5_sho_spec_inds</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">h5_sho_guess</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Warning! Found incorrect spectral dimension for dataset </span><span class="si">{}</span><span class="s1">. Attempting a fix.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">h5_sho_guess</span><span class="p">))</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">h5_sho_spec_inds</span> <span class="o">=</span> <span class="n">h5_sho_guess</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;h5_sho_spec_inds_fixed&quot;</span><span class="p">,</span>
+                                                                  <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span><span class="n">dtype</span> <span class="o">=</span> <span class="s1">&#39;uint32&#39;</span><span class="p">)</span>
+                        <span class="n">h5_sho_spec_inds</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;labels&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;labels&#39;</span>
+                        <span class="n">h5_sho_spec_inds</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;units&#39;</span>
+                    <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;It seems that the file has already been patched.&quot;</span>
+                              <span class="s2">&quot; Will use previously computed ancilliary datasets&quot;</span><span class="p">)</span>
+                        <span class="n">h5_sho_spec_inds</span> <span class="o">=</span> <span class="n">h5_sho_guess</span><span class="o">.</span><span class="n">parent</span><span class="p">[</span><span class="s1">&#39;h5_sho_spec_inds_fixed&#39;</span><span class="p">]</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">h5_sho_spec_vals</span> <span class="o">=</span> <span class="n">h5_sho_guess</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;h5_sho_spec_vals_fixed&quot;</span><span class="p">,</span>
+                                                              <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span> <span class="o">=</span> <span class="s1">&#39;uint32&#39;</span><span class="p">)</span>
+                        <span class="n">h5_sho_spec_vals</span><span class="p">[:]</span> <span class="o">=</span> <span class="mi">0</span>
+                        <span class="n">h5_sho_spec_vals</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;labels&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;labels&#39;</span>
+                        <span class="n">h5_sho_spec_vals</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;units&#39;</span>
+                    <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;It seems that the file has already been patched.&quot;</span>
+                              <span class="s2">&quot; Will use previously computed ancilliary datasets&quot;</span><span class="p">)</span>
+
+                        <span class="n">h5_sho_spec_vals</span> <span class="o">=</span> <span class="n">h5_sho_guess</span><span class="o">.</span><span class="n">parent</span><span class="p">[</span><span class="s1">&#39;h5_sho_spec_vals_fixed2&#39;</span><span class="p">]</span>
+
+                <span class="n">link_as_main</span><span class="p">(</span><span class="n">h5_sho_guess</span><span class="p">,</span> <span class="n">h5_pos_inds</span><span class="p">,</span> <span class="n">h5_pos_vals</span><span class="p">,</span> <span class="n">h5_sho_spec_inds</span><span class="p">,</span> <span class="n">h5_sho_spec_vals</span><span class="p">)</span>
+                <span class="n">sho_inds_and_vals</span> <span class="o">=</span> <span class="p">[</span><span class="n">h5_sho_spec_inds</span><span class="p">,</span> <span class="n">h5_sho_spec_vals</span><span class="p">]</span>
+
+                <span class="k">for</span> <span class="n">dset</span> <span class="ow">in</span> <span class="n">sho_inds_and_vals</span><span class="p">:</span>
+                    <span class="n">spec_labels</span> <span class="o">=</span> <span class="n">get_attr</span><span class="p">(</span><span class="n">dset</span><span class="p">,</span> <span class="s1">&#39;labels&#39;</span><span class="p">)</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">spec_units</span> <span class="o">=</span> <span class="n">get_attr</span><span class="p">(</span><span class="n">dset</span><span class="p">,</span> <span class="s1">&#39;units&#39;</span><span class="p">)</span>
+
+                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">spec_units</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">spec_labels</span><span class="p">):</span>
+                            <span class="k">raise</span> <span class="ne">KeyError</span>
+
+                    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                        <span class="n">spec_units</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">spec_labels</span><span class="p">]</span>
+                        <span class="n">dset</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">spec_units</span>
+
+                    <span class="k">except</span><span class="p">:</span>
+                        <span class="k">raise</span>
+
+            <span class="n">h5_file</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+        <span class="n">h5_file</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;translator&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;V3patcher&#39;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+
+        <span class="n">h5_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">h5_path</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Pycroscopy contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

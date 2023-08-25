@@ -1,0 +1,34 @@
+BGlib.gmode.analysis.utils.giv\_utils
+=====================================
+
+.. automodule:: BGlib.gmode.analysis.utils.giv_utils
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      bayesian_inference_on_period
+      do_bayesian_inference
+      plot_bayesian_results
+      plot_bayesian_spot_from_h5
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

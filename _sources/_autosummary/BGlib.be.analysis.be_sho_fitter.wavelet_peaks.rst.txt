@@ -1,0 +1,6 @@
+BGlib.be.analysis.be\_sho\_fitter.wavelet\_peaks
+================================================
+
+.. currentmodule:: BGlib.be.analysis.be_sho_fitter
+
+.. autofunction:: wavelet_peaks

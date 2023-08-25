@@ -1,0 +1,6 @@
+BGlib.gmode.proc.fft.are\_compatible\_filters
+=============================================
+
+.. currentmodule:: BGlib.gmode.proc.fft
+
+.. autofunction:: are_compatible_filters

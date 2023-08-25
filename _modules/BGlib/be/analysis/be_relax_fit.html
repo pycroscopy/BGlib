@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BGlib.be.analysis.be_relax_fit &mdash; BGlib 0.0.4 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/documentation_options.js?v=8c5712d9"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../../../../about.html" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            BGlib
+          </a>
+              <div class="version">
+                0.0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">BGlib</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../about.html">BGlib</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../_autosummary/BGlib.html">BGlib</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../notebooks/be/index.html">Band Excitation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../notebooks/gmode/index.html">General Mode</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">BGlib</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">BGlib.be.analysis.be_relax_fit</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for BGlib.be.analysis.be_relax_fit</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">curve_fit</span><span class="p">,</span> <span class="n">differential_evolution</span>
+<span class="kn">import</span> <span class="nn">pyUSID</span> <span class="k">as</span> <span class="nn">usid</span>
+
+<div class="viewcode-block" id="exp">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.analysis.be_relax_fit.exp.html#BGlib.be.analysis.be_relax_fit.exp">[docs]</a>
+<span class="k">def</span> <span class="nf">exp</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">a</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">x</span><span class="o">/</span><span class="n">k</span><span class="p">)))</span> <span class="o">+</span> <span class="n">c</span></div>
+
+
+<div class="viewcode-block" id="fit_exp_curve">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.analysis.be_relax_fit.fit_exp_curve.html#BGlib.be.analysis.be_relax_fit.fit_exp_curve">[docs]</a>
+<span class="k">def</span> <span class="nf">fit_exp_curve</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="n">popt</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">curve_fit</span><span class="p">(</span><span class="n">exp</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">maxfev</span><span class="o">=</span><span class="mi">25000</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">popt</span></div>
+
+
+<div class="viewcode-block" id="double_exp">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.analysis.be_relax_fit.double_exp.html#BGlib.be.analysis.be_relax_fit.double_exp">[docs]</a>
+<span class="k">def</span> <span class="nf">double_exp</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">a2</span><span class="p">,</span> <span class="n">k2</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">a</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">k</span><span class="o">*</span><span class="n">x</span><span class="p">))</span> <span class="o">+</span> <span class="p">(</span><span class="n">a2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">k2</span><span class="o">*</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">c</span> <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="fit_double_exp">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.analysis.be_relax_fit.fit_double_exp.html#BGlib.be.analysis.be_relax_fit.fit_double_exp">[docs]</a>
+<span class="k">def</span> <span class="nf">fit_double_exp</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Fit spectrum,y, to double exp using differential evolution</span>
+<span class="sd">    :param x: values for x-axis</span>
+<span class="sd">    :param y: values for y-axis</span>
+<span class="sd">    :return: best fit parameters for a double exp.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">time_ax</span> <span class="o">=</span> <span class="n">x</span>
+    <span class="n">spectrum</span> <span class="o">=</span> <span class="n">y</span>
+    <span class="k">def</span> <span class="nf">cost_func_double_exp</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span> <span class="n">k</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span> <span class="n">a2</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span> <span class="n">k2</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span> <span class="n">c</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+        <span class="n">double_exp_model</span> <span class="o">=</span> <span class="n">double_exp</span><span class="p">(</span><span class="n">time_ax</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">a2</span><span class="p">,</span> <span class="n">k2</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">spectrum</span> <span class="o">-</span> <span class="n">double_exp_model</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">popt</span> <span class="o">=</span> <span class="n">differential_evolution</span><span class="p">(</span><span class="n">cost_func_double_exp</span><span class="p">,</span>
+                                  <span class="n">bounds</span><span class="o">=</span><span class="p">([</span><span class="o">-</span><span class="mi">100</span><span class="p">,</span><span class="mi">100</span><span class="p">],[</span><span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">],[</span><span class="o">-</span><span class="mi">200</span><span class="p">,</span><span class="mi">200</span><span class="p">],[</span><span class="o">-</span><span class="mi">100</span><span class="p">,</span><span class="mi">100</span><span class="p">],[</span><span class="o">-</span><span class="mi">200</span><span class="p">,</span><span class="mi">200</span><span class="p">]))</span><span class="o">.</span><span class="n">x</span>
+    <span class="k">return</span> <span class="n">popt</span></div>
+
+
+<div class="viewcode-block" id="str_exp">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.analysis.be_relax_fit.str_exp.html#BGlib.be.analysis.be_relax_fit.str_exp">[docs]</a>
+<span class="k">def</span> <span class="nf">str_exp</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">a</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span> <span class="o">**</span> <span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="n">c</span></div>
+
+
+<div class="viewcode-block" id="fit_str_exp">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.analysis.be_relax_fit.fit_str_exp.html#BGlib.be.analysis.be_relax_fit.fit_str_exp">[docs]</a>
+<span class="k">def</span> <span class="nf">fit_str_exp</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
+    <span class="n">popt</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">curve_fit</span><span class="p">(</span><span class="n">str_exp</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">maxfev</span><span class="o">=</span><span class="mi">25000</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="p">([</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">],</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">popt</span></div>
+
+
+<div class="viewcode-block" id="sigmoid">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.analysis.be_relax_fit.sigmoid.html#BGlib.be.analysis.be_relax_fit.sigmoid">[docs]</a>
+<span class="k">def</span> <span class="nf">sigmoid</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">Q</span><span class="p">,</span> <span class="n">C</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">A</span> <span class="o">+</span> <span class="p">(</span><span class="n">K</span><span class="o">-</span><span class="n">A</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">C</span><span class="o">+</span><span class="n">Q</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">B</span><span class="o">*</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">v</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="fit_sigmoid">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.analysis.be_relax_fit.fit_sigmoid.html#BGlib.be.analysis.be_relax_fit.fit_sigmoid">[docs]</a>
+<span class="k">def</span> <span class="nf">fit_sigmoid</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="n">popt</span><span class="p">,</span> <span class="n">pcov</span> <span class="o">=</span> <span class="n">curve_fit</span><span class="p">(</span><span class="n">sigmoid</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">maxfev</span><span class="o">=</span><span class="mi">2500</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">popt</span></div>
+
+
+<div class="viewcode-block" id="BERelaxFit">
+<a class="viewcode-back" href="../../../../_autosummary/_autosummary/_autosummary/BGlib.be.analysis.BERelaxFit.html#BGlib.be.analysis.be_relax_fit.BERelaxFit">[docs]</a>
+<span class="k">class</span> <span class="nc">BERelaxFit</span><span class="p">(</span><span class="n">usid</span><span class="o">.</span><span class="n">Process</span><span class="p">):</span>
+<div class="viewcode-block" id="BERelaxFit.__init__">
+<a class="viewcode-back" href="../../../../_autosummary/_autosummary/_autosummary/BGlib.be.analysis.BERelaxFit.html#BGlib.be.analysis.be_relax_fit.BERelaxFit.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h5_main</span><span class="p">,</span> <span class="n">variables</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fit_method</span><span class="o">=</span><span class="s1">&#39;Exponential&#39;</span><span class="p">,</span> <span class="n">sens</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">phase_off</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                 <span class="n">starts_with</span><span class="o">=</span><span class="s1">&#39;write&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This instantiation reads and calculates parameters in the data file necessary for reading, writing, analyzing,</span>
+<span class="sd">        and visualizing the data. It writes these parameters to attributes to be referenced.</span>
+
+<span class="sd">        :param h5_main: h5py.Dataset object from pycroscopy.analysis.BESHOfitter</span>
+<span class="sd">        :param variables: list(string), Default [&#39;Frequency&#39;]</span>
+<span class="sd">        Lists of attributes that h5_main should possess so that it may be analyzed by Model.</span>
+<span class="sd">        :param fit_method: fit_method for berelaxfit fit, can be &#39;Exponential&#39;, &#39;Double_Exp&#39;, &#39;Str_Exp&#39; or &#39;Logistic&#39;</span>
+<span class="sd">        :param sens: tip sensitivity in pm/V. Default: 1, the data are not scaled</span>
+<span class="sd">        :param phase_off: to apply to phase data. Default: 0, the data are not offset.</span>
+<span class="sd">        :param starts_with: &#39;write&#39; or &#39;read&#39; , depending on whether the first step is a read or write step. Default:</span>
+<span class="sd">        &#39;write&#39;</span>
+
+<span class="sd">        **Currently, the BE software does not consistently encode whether spectra start with a read or write step</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">h5_main</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">h5_main</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">BERelaxFit</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">h5_main</span><span class="p">,</span> <span class="n">variables</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">starts_with</span> <span class="o">=</span> <span class="n">starts_with</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">raw_data</span> <span class="o">=</span> <span class="n">h5_main</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="p">[</span><span class="s1">&#39;Raw_Data&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">raw_amp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">raw_data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">raw_phase</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">raw_data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_main_usid</span> <span class="o">=</span> <span class="n">usid</span><span class="o">.</span><span class="n">USIDataset</span><span class="p">(</span><span class="n">h5_main</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">raw_amp_reshape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_amp</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_main_usid</span><span class="o">.</span><span class="n">pos_dim_sizes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                                    <span class="bp">self</span><span class="o">.</span><span class="n">h5_main_usid</span><span class="o">.</span><span class="n">pos_dim_sizes</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                                                    <span class="n">h5_main</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;num_steps&#39;</span><span class="p">],</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">raw_phase_reshape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_phase</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_main_usid</span><span class="o">.</span><span class="n">pos_dim_sizes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                                        <span class="bp">self</span><span class="o">.</span><span class="n">h5_main_usid</span><span class="o">.</span><span class="n">pos_dim_sizes</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                                                        <span class="n">h5_main</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;num_steps&#39;</span><span class="p">],</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_method</span> <span class="o">=</span> <span class="n">fit_method</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">no_read_steps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;VS_num_meas_per_read_step&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">no_write_steps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;VS_num_meas_per_write_step&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sensitivity</span> <span class="o">=</span> <span class="n">sens</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phase_offset</span> <span class="o">=</span> <span class="n">phase_off</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">no_time_steps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;num_steps&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_elapsed_per_step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;BE_pulse_duration_[s]&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_elapsed_per_spectrum</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">no_read_steps</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_elapsed_per_step</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">all_dc_offset_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="o">.</span><span class="n">h5_spec_vals</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="o">.</span><span class="n">h5_spec_inds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dc_offset_expand</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="o">.</span><span class="n">h5_spec_vals</span><span class="p">[</span><span class="mi">1</span><span class="p">,:]</span>
+        <span class="c1">#make list of indices of read/write steps</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">no_rs_spectra</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="o">.</span><span class="n">h5_spec_inds</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">))</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">read_inds_split</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write_inds_split</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">all_inds_split</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">no_time_steps</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">no_rs_spectra</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write_spectra</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">starts_with</span> <span class="o">==</span> <span class="s1">&#39;write&#39;</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">no_rs_spectra</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">read_inds_split</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_inds_split</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">no_write_steps</span><span class="p">:])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write_dc_offset_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_dc_offset_values</span><span class="p">[::</span><span class="mi">2</span><span class="p">]</span>
+
+                <span class="c1">#if there is only one RS spectrum</span>
+                <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">write_dc_offset_values</span><span class="p">)</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">write_dc_offset_values</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">write_dc_offset_values</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">starts_with</span> <span class="o">==</span> <span class="s1">&#39;read&#39;</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">no_rs_spectra</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">read_inds_split</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_inds_split</span><span class="p">[</span><span class="n">i</span><span class="p">][:</span><span class="o">-</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">no_write_steps</span><span class="p">)])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write_dc_offset_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="o">.</span><span class="n">h5_spec_vals</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span>
+                                                                        <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="o">.</span><span class="n">h5_spec_vals</span><span class="p">[</span>
+                                                                                        <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">no_read_steps</span><span class="p">)]</span>
+                <span class="c1"># if there is only one RS spectrum</span>
+                <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">write_dc_offset_values</span><span class="p">)</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">write_dc_offset_values</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">write_dc_offset_values</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">no_read_offset</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_dc_offset_values</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">no_rs_spectra</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write_inds_split</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">setxor1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_inds_split</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_inds_split</span><span class="p">),</span>
+                                                       <span class="bp">self</span><span class="o">.</span><span class="n">no_rs_spectra</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_map_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spectra</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Function that manipulates the data in a single pixel. This is used by self.test.</span>
+<span class="sd">        :param spectra: relaxation spectrum to fit</span>
+<span class="sd">        :return: array containing optimal fit values for the parameters</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_elapsed_per_spectrum</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">time_elapsed_per_step</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">spectra</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_method</span> <span class="o">==</span> <span class="s1">&#39;Exponential&#39;</span><span class="p">:</span>
+            <span class="n">scalar</span> <span class="o">=</span> <span class="mi">1000</span>
+            <span class="n">popt_init</span> <span class="o">=</span> <span class="n">fit_exp_curve</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">scalar</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+            <span class="n">a_init</span> <span class="o">=</span> <span class="n">popt_init</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+            <span class="n">tau_init</span> <span class="o">=</span> <span class="n">popt_init</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">scalar</span><span class="p">;</span>
+            <span class="n">c_init</span> <span class="o">=</span> <span class="n">popt_init</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">popt</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">curve_fit</span><span class="p">(</span><span class="n">exp</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">maxfev</span><span class="o">=</span><span class="mi">2500</span><span class="p">,</span> <span class="n">p0</span><span class="o">=</span><span class="p">[</span><span class="n">a_init</span><span class="p">,</span> <span class="n">tau_init</span><span class="p">,</span> <span class="n">c_init</span><span class="p">])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_method</span> <span class="o">==</span> <span class="s1">&#39;Double_Exp&#39;</span><span class="p">:</span>
+            <span class="n">popt</span> <span class="o">=</span> <span class="n">fit_double_exp</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_method</span> <span class="o">==</span> <span class="s1">&#39;Str_Exp&#39;</span><span class="p">:</span>
+            <span class="n">popt</span> <span class="o">=</span> <span class="n">fit_str_exp</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_method</span> <span class="o">==</span> <span class="s1">&#39;Logistic&#39;</span><span class="p">:</span>
+            <span class="n">popt</span> <span class="o">=</span> <span class="n">fit_sigmoid</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">popt</span>
+
+<div class="viewcode-block" id="BERelaxFit.test">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.analysis.be_relax_fit.BERelaxFit.html#BGlib.be.analysis.be_relax_fit.BERelaxFit.test">[docs]</a>
+    <span class="k">def</span> <span class="nf">test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pixel_ind</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function manipulates the data within one pixel as defined by _map_function.</span>
+<span class="sd">        :param pixel_ind: pixel index of the data we wish to test</span>
+<span class="sd">        :return: array from fit of data to self.fit_method</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">amplitude_to_reshape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="p">[</span><span class="s1">&#39;Amplitude [V]&#39;</span><span class="p">][</span><span class="n">pixel_ind</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">phase_to_reshape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="p">[</span><span class="s1">&#39;Phase [rad]&#39;</span><span class="p">][</span><span class="n">pixel_ind</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">mixed_signal</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">no_read_offset</span><span class="p">):</span>
+            <span class="n">mixed_signal</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">amplitude_to_reshape</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">read_inds_split</span><span class="p">[</span><span class="n">j</span><span class="p">]]</span> <span class="o">*</span>
+                                <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">phase_to_reshape</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">read_inds_split</span><span class="p">[</span><span class="n">j</span><span class="p">]]))</span>
+        <span class="n">spectra</span> <span class="o">=</span> <span class="n">mixed_signal</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_map_function</span><span class="p">(</span><span class="n">spectra</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_read_data_chunk</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reads and loads relaxation spectroscopy data files from V3 beta 2 acquisition software on Cypher into self.data</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">BERelaxFit</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_read_data_chunk</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start_pos</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="c1"># The above line makes the base Process class read X pixels from the data set into self.data</span>
+            <span class="n">amplitude_to_reshape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Amplitude [V]&#39;</span><span class="p">]</span>
+            <span class="n">phase_to_reshape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Phase [rad]&#39;</span><span class="p">]</span>
+            <span class="n">amplitude_reshaped</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">phase_reshaped</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">amplitude_write</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">phase_write</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">mixed_signal</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">mixed_signal_write</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">no_read_offset</span><span class="p">):</span>
+                    <span class="n">amplitude_reshaped</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">amplitude_to_reshape</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_inds_split</span><span class="p">[</span><span class="n">j</span><span class="p">]])</span>
+                    <span class="n">phase_reshaped</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">phase_to_reshape</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_inds_split</span><span class="p">[</span><span class="n">j</span><span class="p">]])</span>
+                    <span class="n">mixed_signal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">amp</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">sensitivity</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">phase</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">phase_offset</span><span class="p">)</span>
+                                             <span class="k">for</span> <span class="n">amp</span><span class="p">,</span> <span class="n">phase</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">amplitude_reshaped</span><span class="p">,</span> <span class="n">phase_reshaped</span><span class="p">)])</span>
+                    <span class="c1">#amplitude, phase, and mixed signal for write steps</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">starts_with</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">amplitude_write</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">amplitude_to_reshape</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">no_write_steps</span><span class="p">])</span>
+                        <span class="n">phase_write</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">phase_to_reshape</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">no_write_steps</span><span class="p">])</span>
+                        <span class="n">mixed_signal_write</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">amp</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">sensitivity</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">phase</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">phase_offset</span><span class="p">)</span>
+                                                 <span class="k">for</span> <span class="n">amp</span><span class="p">,</span> <span class="n">phase</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">amplitude_write</span><span class="p">,</span> <span class="n">phase_write</span><span class="p">)])</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">starts_with</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">amplitude_write</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">amplitude_to_reshape</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">no_read_steps</span><span class="p">:])</span>
+                        <span class="n">phase_write</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">phase_to_reshape</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">no_read_steps</span><span class="p">:])</span>
+                        <span class="n">mixed_signal_write</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">amp</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensitivity</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">phase</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">phase_offset</span><span class="p">)</span>
+                                                       <span class="k">for</span> <span class="n">amp</span><span class="p">,</span> <span class="n">phase</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">amplitude_write</span><span class="p">,</span> <span class="n">phase_write</span><span class="p">)])</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mixed_signal</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">phase</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">phase_reshaped</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">amplitude</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">amplitude_reshaped</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write_spectra</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mixed_signal_write</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">_create_results_datasets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates hdf5 datasets for to-be computed results, writes parameters to the datasets, and</span>
+<span class="sd">        links ancillary datasets.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_method</span> <span class="o">==</span> <span class="s1">&#39;Exponential&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">process_name</span> <span class="o">=</span> <span class="s1">&#39;Exp_Fit&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_method</span> <span class="o">==</span> <span class="s1">&#39;Double_Exp&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">process_name</span> <span class="o">=</span> <span class="s1">&#39;Double_Exp&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_method</span> <span class="o">==</span> <span class="s1">&#39;Str_Exp&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">process_name</span> <span class="o">=</span> <span class="s1">&#39;Str_Exp&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_method</span> <span class="o">==</span> <span class="s1">&#39;Logistic&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">process_name</span> <span class="o">=</span> <span class="s1">&#39;Logistic_Fit&#39;</span>
+        <span class="c1"># 1. make HDF5 group to hold results</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span> <span class="o">=</span> <span class="n">usid</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">create_results_group</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">process_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Results to be written to Group: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="p">))</span>
+        <span class="c1"># 2. write relevant meta data to group</span>
+        <span class="n">usid</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">write_simple_attrs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="p">,</span>
+                                          <span class="p">{</span><span class="s1">&#39;last_pixel&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;algorithm&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_method</span><span class="p">)})</span>
+        <span class="c1"># define all inputs to write_main_dataset</span>
+        <span class="c1"># results shape</span>
+        <span class="n">results_shape</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">no_read_offset</span><span class="p">)</span>
+        <span class="n">pos_dims</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">spec_dims</span> <span class="o">=</span> <span class="n">usid</span><span class="o">.</span><span class="n">write_utils</span><span class="o">.</span><span class="n">Dimension</span><span class="p">(</span><span class="s1">&#39;Bias&#39;</span><span class="p">,</span> <span class="s1">&#39;V&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">write_dc_offset_values</span><span class="p">)</span>
+
+        <span class="c1"># 3. make empty hdf5 group to store fit information:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_method</span> <span class="o">==</span> <span class="s1">&#39;Exponential&#39;</span><span class="p">:</span>
+            <span class="n">field_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Amplitude [pm]&#39;</span><span class="p">,</span> <span class="s1">&#39;Time_Constant [s]&#39;</span><span class="p">,</span> <span class="s1">&#39;Offset [pm]&#39;</span><span class="p">]</span>
+            <span class="n">results_dset_name</span> <span class="o">=</span> <span class="s1">&#39;Exponential_Fit&#39;</span>
+            <span class="n">results_quantity</span> <span class="o">=</span> <span class="s1">&#39;None&#39;</span>
+            <span class="n">results_units</span> <span class="o">=</span> <span class="s1">&#39;pm&#39;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_method</span> <span class="o">==</span> <span class="s1">&#39;Double_Exp&#39;</span><span class="p">:</span>
+            <span class="n">field_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Amplitude [pm]&#39;</span><span class="p">,</span> <span class="s1">&#39;Time_Constant [s]&#39;</span><span class="p">,</span>
+                           <span class="s1">&#39;Amplitude 2 [pm]&#39;</span><span class="p">,</span> <span class="s1">&#39;Time_Constant 2 [s]&#39;</span><span class="p">,</span> <span class="s1">&#39;Offset [pm]&#39;</span><span class="p">]</span>
+            <span class="n">results_dset_name</span> <span class="o">=</span> <span class="s1">&#39;Double_Exp_Fit&#39;</span>
+            <span class="n">results_quantity</span> <span class="o">=</span> <span class="s1">&#39;None&#39;</span>
+            <span class="n">results_units</span> <span class="o">=</span> <span class="s1">&#39;pm&#39;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_method</span> <span class="o">==</span> <span class="s1">&#39;Str_Exp&#39;</span><span class="p">:</span>
+            <span class="n">field_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Amplitude [pm]&#39;</span><span class="p">,</span> <span class="s1">&#39;Beta&#39;</span><span class="p">,</span> <span class="s1">&#39;Offset [pm]&#39;</span><span class="p">]</span>
+            <span class="n">results_dset_name</span> <span class="o">=</span> <span class="s1">&#39;Str_Exp_Fit&#39;</span>
+            <span class="n">results_quantity</span> <span class="o">=</span> <span class="s1">&#39;None&#39;</span>
+            <span class="n">results_units</span> <span class="o">=</span> <span class="s1">&#39;pm&#39;</span>
+
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_method</span> <span class="o">==</span> <span class="s1">&#39;Logistic&#39;</span><span class="p">:</span>
+            <span class="n">field_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;K&#39;</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">,</span> <span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="s1">&#39;Q&#39;</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">]</span>
+            <span class="n">results_dset_name</span> <span class="o">=</span> <span class="s1">&#39;Logistic_Fit&#39;</span>
+            <span class="n">results_quantity</span> <span class="o">=</span> <span class="s1">&#39;None&#39;</span>
+            <span class="n">results_units</span> <span class="o">=</span> <span class="s1">&#39;pm&#39;</span>
+
+        <span class="n">berelaxfit32</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">({</span><span class="s1">&#39;names&#39;</span><span class="p">:</span> <span class="n">field_names</span><span class="p">,</span>
+                            <span class="s1">&#39;formats&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">field_names</span><span class="p">]})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_results</span> <span class="o">=</span> <span class="n">usid</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">write_main_dataset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="p">,</span> <span class="n">results_shape</span><span class="p">,</span> <span class="n">results_dset_name</span><span class="p">,</span>
+                                                            <span class="n">results_quantity</span><span class="p">,</span> <span class="n">results_units</span><span class="p">,</span> <span class="n">pos_dims</span><span class="p">,</span> <span class="n">spec_dims</span><span class="p">,</span>
+                                                            <span class="n">dtype</span><span class="o">=</span><span class="n">berelaxfit32</span><span class="p">,</span> <span class="n">h5_pos_inds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="o">.</span><span class="n">h5_pos_inds</span><span class="p">,</span>
+                                                            <span class="n">h5_pos_vals</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="o">.</span><span class="n">h5_pos_vals</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="o">.</span><span class="n">file</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_get_existing_datasets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extracts references to the existing datasets with results (if any)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_method</span> <span class="o">==</span> <span class="s1">&#39;Exponential&#39;</span> <span class="ow">or</span> <span class="s1">&#39;Double_Exp&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">h5_amplitude</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span> <span class="n">h5_results_grp</span><span class="p">[</span><span class="s1">&#39;Amplitude [pm]&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">h5_time_const</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="p">[</span><span class="s1">&#39;Time_Constant [s]&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">h5_offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="p">[</span><span class="s1">&#39;Offset [pm&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_method</span> <span class="o">==</span> <span class="s1">&#39;Double_Exp&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">h5_amplitude2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span> <span class="n">h5_results_grp</span><span class="p">[</span><span class="s1">&#39;Amplitude 2 [pm]&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">h5_time_const2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="p">[</span><span class="s1">&#39;Time_Constant 2 [pm]&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_method</span> <span class="o">==</span> <span class="s1">&#39;Str_Exp&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">h5_amplitude</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="p">[</span><span class="s1">&#39;Amplitude [pm]&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">h5_beta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="p">[</span><span class="s1">&#39;Beta&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">h5_offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="p">[</span><span class="s1">&#39;Offest [pm]&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_method</span> <span class="o">==</span> <span class="s1">&#39;Logistic&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">h5_A</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="p">[</span><span class="s1">&#39;Amplitude [pm]&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">h5_K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="p">[</span><span class="s1">&#39;A&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">h5_B</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="p">[</span><span class="s1">&#39;K&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">h5_v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">h5_Q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_results</span><span class="p">[</span><span class="s1">&#39;Q&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">h5_C</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_results</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_write_results_chunk</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Writes computed results into appropriate datasets.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_method</span> <span class="o">==</span> <span class="s1">&#39;Exponential&#39;</span><span class="p">:</span>
+            <span class="n">field_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Amplitude [pm]&#39;</span><span class="p">,</span> <span class="s1">&#39;Time_Constant [s]&#39;</span><span class="p">,</span> <span class="s1">&#39;Offset [pm]&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_method</span> <span class="o">==</span> <span class="s1">&#39;Double_Exp&#39;</span><span class="p">:</span>
+            <span class="n">field_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Amplitude [pm]&#39;</span><span class="p">,</span> <span class="s1">&#39;Time_Constant 1 [s]&#39;</span><span class="p">,</span>
+                           <span class="s1">&#39;Amplitude 2 [pm]&#39;</span><span class="p">,</span> <span class="s1">&#39;Time_Constant 2 [s]&#39;</span><span class="p">,</span> <span class="s1">&#39;Offset [pm]&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_method</span> <span class="o">==</span> <span class="s1">&#39;Str_Exp&#39;</span><span class="p">:</span>
+            <span class="n">field_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Amplitude [pm]&#39;</span><span class="p">,</span> <span class="s1">&#39;Beta&#39;</span><span class="p">,</span> <span class="s1">&#39;Offset [pm]&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_method</span> <span class="o">==</span> <span class="s1">&#39;Logistic&#39;</span><span class="p">:</span>
+            <span class="n">field_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;K&#39;</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">,</span> <span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="s1">&#39;Q&#39;</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">]</span>
+        <span class="n">berelaxfit32</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">({</span><span class="s1">&#39;names&#39;</span><span class="p">:</span> <span class="n">field_names</span><span class="p">,</span>
+                            <span class="s1">&#39;formats&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">field_names</span><span class="p">]})</span>
+        <span class="c1"># write and flush results</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">usid</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">dtype_utils</span><span class="o">.</span><span class="n">stack_real_to_compound</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">,</span> <span class="n">compound_type</span><span class="o">=</span><span class="n">berelaxfit32</span><span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_results</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">pos_ind</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_start_pos</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end_pos</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_results</span><span class="p">[</span><span class="n">pos_ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="n">pos_ind</span><span class="p">]</span>
+
+        <span class="c1">#if double, make amp1 &lt; amp2:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_method</span> <span class="o">==</span> <span class="s1">&#39;Double_Exp&#39;</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">copy</span>
+            <span class="n">amp1_copy</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_results</span><span class="p">[</span><span class="s1">&#39;Amplitude [pm]&#39;</span><span class="p">])</span>
+            <span class="n">amp2_copy</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_results</span><span class="p">[</span><span class="s1">&#39;Amplitude 2 [pm]&#39;</span><span class="p">])</span>
+            <span class="n">tau1_copy</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_results</span><span class="p">[</span><span class="s1">&#39;Time_Constant [s]&#39;</span><span class="p">])</span>
+            <span class="n">tau2_copy</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_results</span><span class="p">[</span><span class="s1">&#39;Time_Constant 2 [s]&#39;</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_results</span><span class="p">[</span><span class="s1">&#39;Amplitude [pm]&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_results</span><span class="p">[</span><span class="s1">&#39;Amplitude [pm]&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_results</span><span class="p">[</span><span class="s1">&#39;Amplitude 2 [pm]&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">h5_results</span><span class="p">[</span><span class="s1">&#39;Amplitude [pm]&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">amp2_copy</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">h5_results</span><span class="p">[</span><span class="s1">&#39;Amplitude 2 [pm]&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">amp1_copy</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">h5_results</span><span class="p">[</span><span class="s1">&#39;Time_Constant [s]&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">tau2_copy</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">h5_results</span><span class="p">[</span><span class="s1">&#39;Time_Constant 2 [s]&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">tau1_copy</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+        <span class="c1"># update last_pixel and start position</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;last_pixel&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end_pos</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_start_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end_pos</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="o">.</span><span class="n">file</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_get_existing_datasets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Pycroscopy contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

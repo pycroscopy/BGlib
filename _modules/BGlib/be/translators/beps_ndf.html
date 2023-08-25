@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BGlib.be.translators.beps_ndf &mdash; BGlib 0.0.4 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/documentation_options.js?v=8c5712d9"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../../../../about.html" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            BGlib
+          </a>
+              <div class="version">
+                0.0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">BGlib</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../about.html">BGlib</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../_autosummary/BGlib.html">BGlib</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../notebooks/be/index.html">Band Excitation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../notebooks/gmode/index.html">General Mode</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">BGlib</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">BGlib.be.translators.beps_ndf</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for BGlib.be.translators.beps_ndf</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Tue Nov  3 15:07:16 2015</span>
+
+<span class="sd">@author: Suhas Somnath</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">unicode_literals</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">path</span><span class="p">,</span> <span class="n">listdir</span><span class="p">,</span> <span class="n">remove</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+<span class="kn">import</span> <span class="nn">h5py</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">xlrd</span> <span class="k">as</span> <span class="nn">xlreader</span>  <span class="c1"># To read the UDVS spreadsheet</span>
+<span class="kn">from</span> <span class="nn">scipy.io.matlab</span> <span class="kn">import</span> <span class="n">loadmat</span>  <span class="c1"># To load parameters stored in Matlab .mat file</span>
+
+<span class="kn">from</span> <span class="nn">sidpy.sid</span> <span class="kn">import</span> <span class="n">Translator</span>
+<span class="kn">from</span> <span class="nn">sidpy.hdf.hdf_utils</span> <span class="kn">import</span> <span class="n">link_h5_objects_as_attrs</span><span class="p">,</span> <span class="n">write_simple_attrs</span>
+<span class="kn">from</span> <span class="nn">pyUSID.processing.comp_utils</span> <span class="kn">import</span> <span class="n">get_available_memory</span>
+
+<span class="kn">from</span> <span class="nn">pyUSID.io.anc_build_utils</span> <span class="kn">import</span> <span class="n">make_indices_matrix</span><span class="p">,</span> <span class="n">VALUES_DTYPE</span><span class="p">,</span> \
+    <span class="n">INDICES_DTYPE</span><span class="p">,</span> <span class="n">calc_chunks</span>
+<span class="kn">from</span> <span class="nn">pyUSID.io.usi_data</span> <span class="kn">import</span> <span class="n">USIDataset</span>
+<span class="kn">from</span> <span class="nn">pyUSID.io.hdf_utils</span> <span class="kn">import</span> <span class="n">create_indexed_group</span><span class="p">,</span> <span class="n">check_if_main</span><span class="p">,</span> <span class="n">print_tree</span>
+
+<span class="kn">from</span> <span class="nn">.df_utils.be_utils</span> <span class="kn">import</span> <span class="n">trimUDVS</span><span class="p">,</span> <span class="n">getSpectroscopicParmLabel</span><span class="p">,</span> \
+    <span class="n">parmsToDict</span><span class="p">,</span> <span class="n">generatePlotGroups</span><span class="p">,</span> <span class="n">normalizeBEresponse</span><span class="p">,</span> <span class="n">createSpecVals</span><span class="p">,</span> <span class="n">nf32</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="o">.</span><span class="n">major</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+    <span class="n">unicode</span> <span class="o">=</span> <span class="nb">str</span>
+
+
+<div class="viewcode-block" id="BEPSndfTranslator">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.translators.beps_ndf.BEPSndfTranslator.html#BGlib.be.translators.beps_ndf.BEPSndfTranslator">[docs]</a>
+<span class="k">class</span> <span class="nc">BEPSndfTranslator</span><span class="p">(</span><span class="n">Translator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Translates Band Excitation Polarization Switching (BEPS) datasets from .dat</span>
+<span class="sd">    files to .h5</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">BEPSndfTranslator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_verbose</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parm_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">field_mode</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec_label</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">halve_udvs_steps</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">BE_wave</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">BE_wave_rev</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">BE_bin_inds</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">udvs_mat</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">udvs_labs</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">udvs_units</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_udvs_steps</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">excit_type_vec</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__unique_waves__</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__num_wave_types__</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_pixels</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pos_labels</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pos_mat</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pos_units</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hdf</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_ram</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">get_available_memory</span><span class="p">()</span><span class="o">*</span><span class="mf">0.8</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1024</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+
+<div class="viewcode-block" id="BEPSndfTranslator.is_valid_file">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.translators.beps_ndf.BEPSndfTranslator.html#BGlib.be.translators.beps_ndf.BEPSndfTranslator.is_valid_file">[docs]</a>
+    <span class="k">def</span> <span class="nf">is_valid_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks whether the provided file can be read by this translator</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data_path : str</span>
+<span class="sd">            Path to raw data file</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        obj : str</span>
+<span class="sd">            Path to file that will be accepted by the translate() function if</span>
+<span class="sd">            this translator is indeed capable of translating the provided file.</span>
+<span class="sd">            Otherwise, None will be returned</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">unicode</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;data_path must be a string&#39;</span><span class="p">)</span>
+
+        <span class="n">data_path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">data_path</span><span class="p">):</span>
+            <span class="c1"># we only care about the folder names at this point...</span>
+            <span class="n">data_path</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span>
+
+        <span class="n">ndf</span> <span class="o">=</span> <span class="s1">&#39;newdataformat&#39;</span>
+
+        <span class="n">_</span><span class="p">,</span> <span class="n">folder_name</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">folder_name</span> <span class="o">==</span> <span class="n">ndf</span><span class="p">:</span>
+            <span class="n">ndf_folder</span> <span class="o">=</span> <span class="n">data_path</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># perhaps we are looking at the folder above?</span>
+            <span class="k">if</span> <span class="n">ndf</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">listdir</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">data_path</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">None</span>
+            <span class="n">ndf_folder</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">ndf</span><span class="p">)</span>
+            <span class="c1"># take any file within the new data format folder I guess...</span>
+        <span class="n">file_path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ndf_folder</span><span class="p">,</span> <span class="n">listdir</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">ndf_folder</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">parm_filepath</span><span class="p">,</span> <span class="n">udvs_filepath</span><span class="p">,</span> <span class="n">parms_mat_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_file_path</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+        <span class="n">is_beps</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">parmsToDict</span><span class="p">(</span><span class="n">parm_filepath</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_beps</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">parm_filepath</span></div>
+
+
+<div class="viewcode-block" id="BEPSndfTranslator.translate">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.translators.beps_ndf.BEPSndfTranslator.html#BGlib.be.translators.beps_ndf.BEPSndfTranslator.translate">[docs]</a>
+    <span class="k">def</span> <span class="nf">translate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_filepath</span><span class="p">,</span> <span class="n">show_plots</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">save_plots</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">do_histogram</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The main function that translates the provided file into a .h5 file</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------------</span>
+<span class="sd">        data_filepath : String / unicode</span>
+<span class="sd">            Absolute path of the data file (.dat)</span>
+<span class="sd">        show_plots : Boolean (Optional. Default is True)</span>
+<span class="sd">            Whether or not to show plots</span>
+<span class="sd">        save_plots : Boolean (Optional. Default is True)</span>
+<span class="sd">            Whether or not to save the generated plots</span>
+<span class="sd">        do_histogram : Boolean (Optional. Default is False)</span>
+<span class="sd">            Whether or not to generate and save 2D histograms of the raw data</span>
+<span class="sd">        verbose : Boolean (Optional. default is false)</span>
+<span class="sd">            Whether or not to print log statements</span>
+<span class="sd">            </span>
+<span class="sd">        Returns</span>
+<span class="sd">        --------------</span>
+<span class="sd">        h5_path : String / unicode</span>
+<span class="sd">            Absolute path of the generated .h5 file</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data_filepath</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">data_filepath</span><span class="p">)</span>
+        <span class="c1"># Read the parameter files</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;BEndfTranslator: Getting file paths&#39;</span><span class="p">)</span>
+
+        <span class="n">parm_filepath</span><span class="p">,</span> <span class="n">udvs_filepath</span><span class="p">,</span> <span class="n">parms_mat_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_file_path</span><span class="p">(</span><span class="n">data_filepath</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;BEndfTranslator: Reading Parms text file&#39;</span><span class="p">)</span>
+
+        <span class="n">isBEPS</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parm_dict</span> <span class="o">=</span> <span class="n">parmsToDict</span><span class="p">(</span><span class="n">parm_filepath</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;data_type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;BEPSData&#39;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">isBEPS</span><span class="p">:</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;This is NOT a BEPS new-data-format dataset!&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Find out if this is a custom experiment and whether in and out of field were acquired</span>
+<span class="sd">        For a standard experiment where only in / out field is acquired, zeros are stored</span>
+<span class="sd">        even for those UDVS steps without band excitation&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">field_mode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;VS_measure_in_field_loops&#39;</span><span class="p">]</span>
+        <span class="n">expt_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;VS_mode&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec_label</span> <span class="o">=</span> <span class="n">getSpectroscopicParmLabel</span><span class="p">(</span><span class="n">expt_type</span><span class="p">)</span>
+        <span class="n">std_expt</span> <span class="o">=</span> <span class="n">expt_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;DC modulation mode&#39;</span><span class="p">,</span> <span class="s1">&#39;current mode&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">halve_udvs_steps</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">ignored_plt_grps</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">std_expt</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">field_mode</span> <span class="o">!=</span> <span class="s1">&#39;in and out-of-field&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">halve_udvs_steps</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">field_mode</span> <span class="o">==</span> <span class="s1">&#39;out-of-field&#39;</span><span class="p">:</span>
+                <span class="n">ignored_plt_grps</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;in-field&#39;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ignored_plt_grps</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;out-of-field&#39;</span><span class="p">]</span>
+
+        <span class="n">h5_path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">folder_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">basename</span> <span class="o">+</span> <span class="s1">&#39;.h5&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">h5_path</span><span class="p">):</span>
+            <span class="n">remove</span><span class="p">(</span><span class="n">h5_path</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;BEndfTranslator: Preparing to read parms.mat file&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">BE_wave</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">BE_wave_rev</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">BE_bin_inds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_excit_wfm</span><span class="p">(</span><span class="n">parms_mat_path</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;BEndfTranslator: About to read UDVS file&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">udvs_labs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">udvs_units</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">udvs_mat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__read_udvs_table</span><span class="p">(</span><span class="n">udvs_filepath</span><span class="p">)</span>
+        <span class="c1"># Remove the unused plot group columns before proceeding:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">udvs_mat</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">udvs_labs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">udvs_units</span> <span class="o">=</span> <span class="n">trimUDVS</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">udvs_mat</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">udvs_labs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">udvs_units</span><span class="p">,</span>
+                                                                  <span class="n">ignored_plt_grps</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;BEndfTranslator: Read UDVS file&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_udvs_steps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">udvs_mat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># This is absolutely crucial for reconstructing the data chronologically</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">excit_type_vec</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">udvs_mat</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="c1"># First figure out how many waveforms are present in the data from the UDVS</span>
+        <span class="n">unique_waves</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_unique_wave_types</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">excit_type_vec</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__unique_waves__</span> <span class="o">=</span> <span class="n">unique_waves</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__num_wave_types__</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique_waves</span><span class="p">)</span>
+        <span class="c1"># print self.__num_wave_types__, &#39;different excitation waveforms in this experiment&#39;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;BEndfTranslator: Preparing to set up parsers&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Preparing objects to parse the file(s)</span>
+        <span class="n">parsers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__assemble_parsers</span><span class="p">()</span>
+
+        <span class="c1"># Gathering some basic details before parsing the files:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_pixels</span> <span class="o">=</span> <span class="n">parsers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_num_pixels</span><span class="p">()</span>
+        <span class="n">s_pixels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">parsers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_spatial_pixels</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pos_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Laser Spot&#39;</span><span class="p">,</span> <span class="s1">&#39;Z&#39;</span><span class="p">,</span> <span class="s1">&#39;Y&#39;</span><span class="p">,</span> <span class="s1">&#39;X&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pos_labels</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">pos_labels</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">s_pixels</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pos_labels</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pos_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pos_mat</span> <span class="o">=</span> <span class="n">make_indices_matrix</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pos_mat</span> <span class="o">=</span> <span class="n">make_indices_matrix</span><span class="p">(</span><span class="n">s_pixels</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">s_pixels</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)]</span><span class="o">.</span><span class="n">squeeze</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pos_units</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;um&#39;</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pos_labels</span><span class="p">))]</span>
+        <span class="c1">#         self.pos_mat = np.int32(self.pos_mat)</span>
+
+        <span class="c1"># Helping Eric out a bit. Remove this section at a later time:</span>
+        <span class="n">main_parms</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="c1"># main_parms[&#39;grid_size_x&#39;] = self.parm_dict[&#39;grid_num_cols&#39;]</span>
+        <span class="c1"># main_parms[&#39;grid_size_y&#39;] = self.parm_dict[&#39;grid_num_rows&#39;]</span>
+        <span class="n">main_parms</span><span class="p">[</span><span class="s1">&#39;grid_size_x&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;grid_num_rows&#39;</span><span class="p">]</span>
+        <span class="n">main_parms</span><span class="p">[</span><span class="s1">&#39;grid_size_y&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;grid_num_cols&#39;</span><span class="p">]</span>
+        <span class="n">main_parms</span><span class="p">[</span><span class="s1">&#39;experiment_date&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;File_date_and_time&#39;</span><span class="p">]</span>
+        <span class="c1"># assuming that the experiment was completed:        </span>
+        <span class="n">main_parms</span><span class="p">[</span><span class="s1">&#39;current_position_x&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;grid_num_rows&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">main_parms</span><span class="p">[</span><span class="s1">&#39;current_position_y&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;grid_num_cols&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">main_parms</span><span class="p">[</span><span class="s1">&#39;data_type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;BEPSData&#39;</span>
+        <span class="n">main_parms</span><span class="p">[</span><span class="s1">&#39;translator&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;NDF&#39;</span>
+
+        <span class="c1"># Writing only the root now:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hdf</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">h5_path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+        <span class="n">write_simple_attrs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hdf</span><span class="p">,</span> <span class="n">main_parms</span><span class="p">)</span>
+
+        <span class="c1">########################################################</span>
+        <span class="c1"># Reading and parsing the .dat file(s) </span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_read_data</span><span class="p">(</span><span class="n">parsers</span><span class="p">,</span> <span class="n">unique_waves</span><span class="p">,</span> <span class="n">show_plots</span><span class="p">,</span> <span class="n">save_plots</span><span class="p">,</span> <span class="n">do_histogram</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">hdf</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">h5_path</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_read_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parsers</span><span class="p">,</span> <span class="n">unique_waves</span><span class="p">,</span> <span class="n">show_plots</span><span class="p">,</span> <span class="n">save_plots</span><span class="p">,</span> <span class="n">do_histogram</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Loops over all pixels and reads the data into the HDF5 file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        parsers : list of BEPSndfPixel</span>
+<span class="sd">            List of parser object that will read the pixel data from the files</span>
+<span class="sd">        unique_waves : numpy.ndarray of int</span>
+<span class="sd">            Array denoting the unique waveforms in the experiment</span>
+<span class="sd">        show_plots : Boolean, optional</span>
+<span class="sd">            Should generated plots be shown during translation.  Default True</span>
+<span class="sd">        save_plots : Boolean, optional</span>
+<span class="sd">            Should generated plots be saved to disk during translation.  Default True</span>
+<span class="sd">        do_histogram : Boolean, optional</span>
+<span class="sd">            Should histograms be generated for the different plot groups.  Default False</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Reading data file(s)&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dset_index</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ds_pixel_start_indx</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">pixel_ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_pixels</span><span class="p">):</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="mf">100.0</span> <span class="o">*</span> <span class="p">(</span><span class="n">pixel_ind</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_pixels</span><span class="p">)</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">% c</span><span class="s1">omplete&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="mi">100</span> <span class="o">*</span> <span class="p">(</span><span class="n">pixel_ind</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_pixels</span><span class="p">)))</span>
+
+            <span class="c1"># First read the next pixel from all parsers:</span>
+            <span class="n">current_pixels</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">prsr</span> <span class="ow">in</span> <span class="n">parsers</span><span class="p">:</span>
+                <span class="n">wave_type</span> <span class="o">=</span> <span class="n">prsr</span><span class="o">.</span><span class="n">get_wave_type</span><span class="p">()</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;VS_mode&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;AC modulation mode with time reversal&#39;</span> <span class="ow">and</span> \
+                        <span class="bp">self</span><span class="o">.</span><span class="n">BE_bin_inds</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">wave_type</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                        <span class="n">bin_fft</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">BE_wave</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">BE_bin_inds</span><span class="p">]</span>
+                    <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">wave_type</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">bin_fft</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">BE_wave_rev</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">BE_bin_inds</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">bin_fft</span> <span class="o">=</span> <span class="kc">None</span>
+
+                <span class="n">current_pixels</span><span class="p">[</span><span class="n">wave_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">prsr</span><span class="o">.</span><span class="n">read_pixel</span><span class="p">(</span><span class="n">bin_fft</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">pixel_ind</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">h5_refs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__initialize_meas_group</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_pixels</span><span class="p">,</span> <span class="n">current_pixels</span><span class="p">)</span>
+                <span class="n">prev_pixels</span> <span class="o">=</span> <span class="n">current_pixels</span>  <span class="c1"># This is here only to avoid annoying warnings.</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">current_pixels</span><span class="p">[</span><span class="n">unique_waves</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">is_different_from</span><span class="p">(</span><span class="n">prev_pixels</span><span class="p">[</span><span class="n">unique_waves</span><span class="p">[</span><span class="mi">0</span><span class="p">]]):</span>
+                    <span class="c1"># Some parameter has changed. Write current group and make new group</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">__close_meas_group</span><span class="p">(</span><span class="n">h5_refs</span><span class="p">,</span> <span class="n">show_plots</span><span class="p">,</span> <span class="n">save_plots</span><span class="p">,</span> <span class="n">do_histogram</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">ds_pixel_start_indx</span> <span class="o">=</span> <span class="n">pixel_ind</span>
+                    <span class="n">h5_refs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__initialize_meas_group</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_pixels</span> <span class="o">-</span> <span class="n">pixel_ind</span><span class="p">,</span> <span class="n">current_pixels</span><span class="p">)</span>
+
+            <span class="c1"># print(&#39;reading Pixel {} of {}&#39;.format(pixel_ind,self.max_pixels))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__append_pixel_data</span><span class="p">(</span><span class="n">current_pixels</span><span class="p">)</span>
+
+            <span class="n">prev_pixels</span> <span class="o">=</span> <span class="n">current_pixels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__close_meas_group</span><span class="p">(</span><span class="n">h5_refs</span><span class="p">,</span> <span class="n">show_plots</span><span class="p">,</span> <span class="n">save_plots</span><span class="p">,</span> <span class="n">do_histogram</span><span class="p">)</span>
+
+    <span class="c1">###################################################################################################</span>
+
+    <span class="k">def</span> <span class="nf">__close_meas_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h5_refs</span><span class="p">,</span> <span class="n">show_plots</span><span class="p">,</span> <span class="n">save_plots</span><span class="p">,</span> <span class="n">do_histogram</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Performs following operations : </span>
+<span class="sd">            * Updates the number of pixels attribute in the measurement group</span>
+<span class="sd">            * Writes Noise floor axis labels as region references</span>
+<span class="sd">            * Writes position values and indices along with region references</span>
+<span class="sd">            * Links all ancilliary datasets to the main data set</span>
+<span class="sd">            * Writes the spatiall averaged plot data</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        h5_refs : list of HDF references</span>
+<span class="sd">            References to the written datasets</span>
+<span class="sd">        show_plots : Boolean </span>
+<span class="sd">            Whether or not to show plots</span>
+<span class="sd">        save_plots : Boolean</span>
+<span class="sd">            Whether or not to save the generated plots</span>
+<span class="sd">        do_histogram : Boolean</span>
+<span class="sd">            Whether or not to generate and save 2D histograms of the raw data</span>
+<span class="sd">            </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Update the number of pixels in the attributes</span>
+        <span class="n">meas_grp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds_main</span><span class="o">.</span><span class="n">parent</span>
+        <span class="n">write_simple_attrs</span><span class="p">(</span><span class="n">meas_grp</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;num_pix&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds_pixel_index</span><span class="p">})</span>
+
+        <span class="c1"># Write position specific datasets now that the dataset is complete</span>
+        <span class="n">pos_slice_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">spat_ind</span><span class="p">,</span> <span class="n">spat_dim</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pos_labels</span><span class="p">):</span>
+            <span class="n">pos_slice_dict</span><span class="p">[</span><span class="n">spat_dim</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="nb">slice</span><span class="p">(</span><span class="n">spat_ind</span><span class="p">,</span> <span class="n">spat_ind</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pos_vals_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pos_vals_list</span><span class="p">)</span>
+        <span class="c1"># Ensuring that the X and Y values vary from 0 to N instead of -0.5 N to + 0.5 N</span>
+        <span class="k">for</span> <span class="n">col_ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+            <span class="n">min_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pos_vals_list</span><span class="p">[:,</span> <span class="n">col_ind</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pos_vals_list</span><span class="p">[:,</span> <span class="n">col_ind</span><span class="p">]</span> <span class="o">-=</span> <span class="n">min_val</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pos_vals_list</span><span class="p">[:,</span> <span class="n">col_ind</span><span class="p">]</span> <span class="o">*=</span> <span class="mf">1E+6</span>  <span class="c1"># convert to microns</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pos_vals_list</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mf">1E-3</span><span class="p">:</span>
+            <span class="c1"># Setpoint spectroscopy</span>
+            <span class="k">if</span> <span class="s1">&#39;Z&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pos_labels</span><span class="p">:</span>
+                <span class="n">dim_ind</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pos_labels</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;Z&#39;</span><span class="p">)</span>
+                <span class="c1"># TODO: Find a way to correct the labels</span>
+                <span class="c1"># self.pos_labels[dim_ind] = &#39;Setpoint&#39;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">pos_units</span><span class="p">[</span><span class="n">dim_ind</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;defl V&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Z spectroscopy</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pos_vals_list</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">*=</span> <span class="mf">1E+6</span>  <span class="c1"># convert to microns</span>
+
+        <span class="n">pos_val_mat</span> <span class="o">=</span> <span class="n">VALUES_DTYPE</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pos_mat</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ds_pixel_start_indx</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">ds_pixel_start_indx</span> <span class="o">+</span>
+                                                                         <span class="bp">self</span><span class="o">.</span><span class="n">ds_pixel_index</span><span class="p">,</span> <span class="p">:])</span>
+
+        <span class="k">for</span> <span class="n">col_ind</span><span class="p">,</span> <span class="n">targ_dim_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">([</span><span class="s1">&#39;X&#39;</span><span class="p">,</span> <span class="s1">&#39;Y&#39;</span><span class="p">,</span> <span class="s1">&#39;Z&#39;</span><span class="p">]):</span>
+            <span class="k">if</span> <span class="n">targ_dim_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pos_labels</span><span class="p">:</span>
+                <span class="n">dim_ind</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pos_labels</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">targ_dim_name</span><span class="p">)</span>
+                <span class="c1"># Replace indices with the x, y, z values from the pixels</span>
+                <span class="n">pos_val_mat</span><span class="p">[:,</span> <span class="n">dim_ind</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pos_vals_list</span><span class="p">[:,</span> <span class="n">col_ind</span><span class="p">]</span>
+
+        <span class="n">pos_inds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pos_mat</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ds_pixel_start_indx</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds_pixel_start_indx</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds_pixel_index</span><span class="p">,</span> <span class="p">:]</span>
+
+        <span class="n">h5_chan_grp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds_main</span><span class="o">.</span><span class="n">parent</span>
+
+        <span class="n">h5_pos_ind</span> <span class="o">=</span> <span class="n">h5_chan_grp</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;Position_Indices&#39;</span><span class="p">,</span>
+                                                <span class="n">data</span><span class="o">=</span><span class="n">pos_inds</span><span class="p">,</span>
+                                                <span class="n">dtype</span><span class="o">=</span><span class="n">INDICES_DTYPE</span><span class="p">)</span>
+        <span class="n">h5_pos_val</span> <span class="o">=</span> <span class="n">h5_chan_grp</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;Position_Values&#39;</span><span class="p">,</span>
+                                                <span class="n">data</span><span class="o">=</span><span class="n">pos_val_mat</span><span class="p">,</span>
+                                                <span class="n">dtype</span><span class="o">=</span><span class="n">VALUES_DTYPE</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">anc_dset</span> <span class="ow">in</span> <span class="p">[</span><span class="n">h5_pos_ind</span><span class="p">,</span> <span class="n">h5_pos_val</span><span class="p">]:</span>
+            <span class="n">write_simple_attrs</span><span class="p">(</span><span class="n">anc_dset</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;labels&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pos_labels</span><span class="p">,</span>
+                                          <span class="s1">&#39;units&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pos_units</span><span class="p">})</span>
+
+        <span class="n">link_h5_objects_as_attrs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ds_main</span><span class="p">,</span> <span class="p">[</span><span class="n">h5_pos_ind</span><span class="p">,</span> <span class="n">h5_pos_val</span><span class="p">])</span>
+
+        <span class="c1"># Do all the reference linking:</span>
+        <span class="n">aux_ds_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Excitation_Waveform&#39;</span><span class="p">,</span> <span class="s1">&#39;Position_Indices&#39;</span><span class="p">,</span> <span class="s1">&#39;Position_Values&#39;</span><span class="p">,</span> <span class="s1">&#39;UDVS_Indices&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;Spectroscopic_Indices&#39;</span><span class="p">,</span> <span class="s1">&#39;Bin_Step&#39;</span><span class="p">,</span> <span class="s1">&#39;Bin_Indices&#39;</span><span class="p">,</span> <span class="s1">&#39;Bin_Wfm_Type&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;Bin_Frequencies&#39;</span><span class="p">,</span> <span class="s1">&#39;Bin_FFT&#39;</span><span class="p">,</span> <span class="s1">&#39;UDVS&#39;</span><span class="p">,</span> <span class="s1">&#39;UDVS_Labels&#39;</span><span class="p">,</span> <span class="s1">&#39;Noise_Floor&#39;</span><span class="p">,</span> <span class="s1">&#39;Spectroscopic_Values&#39;</span><span class="p">]</span>
+
+        <span class="c1"># While we have all the references and mean data, write the plot groups as well:</span>
+        <span class="n">generatePlotGroups</span><span class="p">(</span><span class="n">USIDataset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ds_main</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_resp</span><span class="p">,</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">folder_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">basename</span><span class="p">,</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">max_resp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_resp</span><span class="p">,</span>
+                           <span class="n">max_mem_mb</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_ram</span><span class="p">,</span>
+                           <span class="n">spec_label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">spec_label</span><span class="p">,</span>
+                           <span class="n">show_plots</span><span class="o">=</span><span class="n">show_plots</span><span class="p">,</span> <span class="n">save_plots</span><span class="o">=</span><span class="n">save_plots</span><span class="p">,</span>
+                           <span class="n">do_histogram</span><span class="o">=</span><span class="n">do_histogram</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_verbose</span><span class="p">)</span>
+
+        <span class="c1"># Now that everything about this dataset is complete:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dset_index</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c1"># ##################################################################################################</span>
+
+    <span class="k">def</span> <span class="nf">__initialize_meas_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_pix</span><span class="p">,</span> <span class="n">current_pixels</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates and initializes the primary (and auxillary) datasets and datagroups</span>
+<span class="sd">        to hold the raw data for the current set of experimental parameters.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        num_pix : unsigned int</span>
+<span class="sd">            Number of pixels this datagroup is expected to hold</span>
+<span class="sd">        current_pixels : dictionary of BEPSndfPixel objects</span>
+<span class="sd">            Extracted data for the first pixel in this group</span>
+<span class="sd">            </span>
+<span class="sd">        Returns</span>
+<span class="sd">        ---------</span>
+<span class="sd">        h5_refs : list of HDF5group and HDF5Dataset references </span>
+<span class="sd">            references of the written H5 datasets</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">tot_bins</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">tot_pts</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c1"># Each wavetype can have different number of bins</span>
+        <span class="k">for</span> <span class="n">pixl</span> <span class="ow">in</span> <span class="n">current_pixels</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">tot_bins</span> <span class="o">+=</span> <span class="n">pixl</span><span class="o">.</span><span class="n">num_bins</span>
+            <span class="n">tot_pts</span> <span class="o">+=</span> <span class="n">pixl</span><span class="o">.</span><span class="n">num_bins</span> <span class="o">*</span> <span class="n">pixl</span><span class="o">.</span><span class="n">num_steps</span>
+
+        <span class="c1"># Need to halve the number of steps when only in / out field is acquired:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">halve_udvs_steps</span><span class="p">:</span>
+            <span class="n">tot_pts</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">tot_pts</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="c1"># Populate information from the columns within the pixels such as the FFT, bin freq, indices, etc. </span>
+        <span class="n">bin_freqs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">tot_bins</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">bin_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">tot_bins</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">)</span>
+        <span class="n">bin_FFT</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">tot_bins</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex64</span><span class="p">)</span>
+        <span class="n">exec_bin_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">tot_bins</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+        <span class="n">pixel_bins</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># Might be useful later</span>
+        <span class="n">stind</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">wave_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__unique_waves__</span><span class="p">:</span>
+            <span class="n">pixl</span> <span class="o">=</span> <span class="n">current_pixels</span><span class="p">[</span><span class="n">wave_type</span><span class="p">]</span>
+            <span class="n">exec_bin_vec</span><span class="p">[</span><span class="n">stind</span><span class="p">:</span><span class="n">stind</span> <span class="o">+</span> <span class="n">pixl</span><span class="o">.</span><span class="n">num_bins</span><span class="p">]</span> <span class="o">=</span> <span class="n">wave_type</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">pixl</span><span class="o">.</span><span class="n">num_bins</span><span class="p">)</span>
+            <span class="n">bin_inds</span><span class="p">[</span><span class="n">stind</span><span class="p">:</span><span class="n">stind</span> <span class="o">+</span> <span class="n">pixl</span><span class="o">.</span><span class="n">num_bins</span><span class="p">]</span> <span class="o">=</span> <span class="n">pixl</span><span class="o">.</span><span class="n">BE_bin_ind</span>
+            <span class="n">bin_freqs</span><span class="p">[</span><span class="n">stind</span><span class="p">:</span><span class="n">stind</span> <span class="o">+</span> <span class="n">pixl</span><span class="o">.</span><span class="n">num_bins</span><span class="p">]</span> <span class="o">=</span> <span class="n">pixl</span><span class="o">.</span><span class="n">BE_bin_w</span>
+            <span class="n">bin_FFT</span><span class="p">[</span><span class="n">stind</span><span class="p">:</span><span class="n">stind</span> <span class="o">+</span> <span class="n">pixl</span><span class="o">.</span><span class="n">num_bins</span><span class="p">]</span> <span class="o">=</span> <span class="n">pixl</span><span class="o">.</span><span class="n">FFT_BE_wave</span>
+            <span class="n">pixel_bins</span><span class="p">[</span><span class="n">wave_type</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">stind</span><span class="p">,</span> <span class="n">pixl</span><span class="o">.</span><span class="n">num_bins</span><span class="p">]</span>
+            <span class="n">stind</span> <span class="o">+=</span> <span class="n">pixl</span><span class="o">.</span><span class="n">num_bins</span>
+        <span class="k">del</span> <span class="n">pixl</span><span class="p">,</span> <span class="n">stind</span>
+
+        <span class="c1"># Make the index matrix that has the UDVS step number and bin indices</span>
+        <span class="n">spec_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">tot_pts</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">INDICES_DTYPE</span><span class="p">)</span>
+        <span class="n">stind</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c1"># Need to go through the UDVS file and reconstruct chronologically</span>
+        <span class="k">for</span> <span class="n">step_index</span><span class="p">,</span> <span class="n">wave_type</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">excit_type_vec</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">halve_udvs_steps</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">udvs_mat</span><span class="p">[</span><span class="n">step_index</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">1E-3</span><span class="p">:</span>  <span class="c1"># invalid AC amplitude</span>
+                <span class="k">continue</span>  <span class="c1"># skip</span>
+            <span class="n">vals</span> <span class="o">=</span> <span class="n">pixel_bins</span><span class="p">[</span><span class="n">wave_type</span><span class="p">]</span>
+            <span class="n">spec_inds</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">stind</span><span class="p">:</span><span class="n">stind</span> <span class="o">+</span> <span class="n">vals</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">step_index</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">vals</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>  <span class="c1"># UDVS step</span>
+            <span class="n">spec_inds</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">stind</span><span class="p">:</span><span class="n">stind</span> <span class="o">+</span> <span class="n">vals</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">vals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">vals</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>  <span class="c1"># Bin step</span>
+            <span class="n">stind</span> <span class="o">+=</span> <span class="n">vals</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">del</span> <span class="n">stind</span><span class="p">,</span> <span class="n">wave_type</span><span class="p">,</span> <span class="n">step_index</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec_inds</span> <span class="o">=</span> <span class="n">spec_inds</span>  <span class="c1"># will need this for plot group generation</span>
+
+        <span class="n">h5_meas_grp</span> <span class="o">=</span> <span class="n">create_indexed_group</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hdf</span><span class="p">,</span> <span class="s1">&#39;Measurement&#39;</span><span class="p">)</span>
+
+        <span class="n">curr_parm_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parm_dict</span>
+        <span class="c1"># Some very basic information that can help the processing crew</span>
+        <span class="n">curr_parm_dict</span><span class="p">[</span><span class="s1">&#39;num_bins&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tot_bins</span>
+        <span class="n">curr_parm_dict</span><span class="p">[</span><span class="s1">&#39;num_pix&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">num_pix</span>
+
+        <span class="n">write_simple_attrs</span><span class="p">(</span><span class="n">h5_meas_grp</span><span class="p">,</span> <span class="n">curr_parm_dict</span><span class="p">)</span>
+
+        <span class="n">h5_chan_grp</span> <span class="o">=</span> <span class="n">create_indexed_group</span><span class="p">(</span><span class="n">h5_meas_grp</span><span class="p">,</span> <span class="s1">&#39;Channel&#39;</span><span class="p">)</span>
+
+        <span class="n">write_simple_attrs</span><span class="p">(</span><span class="n">h5_chan_grp</span><span class="p">,</span>
+                           <span class="p">{</span><span class="s1">&#39;Channel_Input&#39;</span><span class="p">:</span> <span class="n">curr_parm_dict</span><span class="p">[</span><span class="s1">&#39;IO_Analog_Input_1&#39;</span><span class="p">]})</span>
+
+        <span class="n">ds_ex_wfm</span> <span class="o">=</span> <span class="n">h5_chan_grp</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;Excitation_Waveform&#39;</span><span class="p">,</span>
+                                               <span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifft</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifftshift</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BE_wave</span><span class="p">)))))</span>
+        <span class="n">ds_bin_freq</span> <span class="o">=</span> <span class="n">h5_chan_grp</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;Bin_Frequencies&#39;</span><span class="p">,</span>
+                                                 <span class="n">data</span><span class="o">=</span><span class="n">bin_freqs</span><span class="p">)</span>
+        <span class="n">ds_bin_inds</span> <span class="o">=</span> <span class="n">h5_chan_grp</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;Bin_Indices&#39;</span><span class="p">,</span>
+                                                 <span class="n">data</span><span class="o">=</span><span class="n">bin_inds</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+                                                 <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">)</span>  <span class="c1"># From Matlab to Python (base 0)</span>
+        <span class="n">ds_bin_fft</span> <span class="o">=</span> <span class="n">h5_chan_grp</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;Bin_FFT&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">bin_FFT</span><span class="p">)</span>
+        <span class="n">ds_wfm_typ</span> <span class="o">=</span> <span class="n">h5_chan_grp</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;Bin_Wfm_Type&#39;</span><span class="p">,</span>
+                                                <span class="n">data</span><span class="o">=</span><span class="n">exec_bin_vec</span><span class="p">)</span>
+        <span class="n">ds_bin_steps</span> <span class="o">=</span> <span class="n">h5_chan_grp</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;Bin_Step&#39;</span><span class="p">,</span>
+                                                  <span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">tot_bins</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">))</span>
+
+        <span class="n">ds_udvs_mat</span> <span class="o">=</span> <span class="n">h5_chan_grp</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;UDVS&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">udvs_mat</span><span class="p">)</span>
+        <span class="n">write_simple_attrs</span><span class="p">(</span><span class="n">ds_udvs_mat</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;labels&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">udvs_labs</span><span class="p">,</span>
+                                         <span class="s1">&#39;units&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">udvs_units</span><span class="p">})</span>
+
+        <span class="n">ds_udvs_inds</span> <span class="o">=</span> <span class="n">h5_chan_grp</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;UDVS_Indices&#39;</span><span class="p">,</span>
+                                                  <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">spec_inds</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">actual_udvs_steps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_udvs_steps</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">halve_udvs_steps</span><span class="p">:</span>
+            <span class="n">actual_udvs_steps</span> <span class="o">/=</span> <span class="mi">2</span>
+        <span class="k">if</span> <span class="n">actual_udvs_steps</span> <span class="o">%</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Actual number of UDVS steps should be an integer&#39;</span><span class="p">)</span>
+        <span class="n">actual_udvs_steps</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">actual_udvs_steps</span><span class="p">)</span>
+
+        <span class="n">curr_parm_dict</span><span class="p">[</span><span class="s1">&#39;num_udvs_steps&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">actual_udvs_steps</span>
+
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Create the Spectroscopic Values tables</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">ret_vals</span> <span class="o">=</span> <span class="n">createSpecVals</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">udvs_mat</span><span class="p">,</span> <span class="n">spec_inds</span><span class="p">,</span> <span class="n">bin_freqs</span><span class="p">,</span>
+                                  <span class="n">exec_bin_vec</span><span class="p">,</span> <span class="n">curr_parm_dict</span><span class="p">,</span>
+                                  <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">udvs_labs</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">udvs_units</span><span class="p">,</span>
+                                  <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_verbose</span><span class="p">)</span>
+        <span class="n">spec_vals</span><span class="p">,</span> <span class="n">spec_inds</span><span class="p">,</span> <span class="n">spec_vals_labs</span><span class="p">,</span> <span class="n">spec_vals_units</span><span class="p">,</span> <span class="n">spec_vals_labs_names</span> <span class="o">=</span> <span class="n">ret_vals</span>
+
+        <span class="n">ds_spec_vals_mat</span> <span class="o">=</span> <span class="n">h5_chan_grp</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;Spectroscopic_Values&#39;</span><span class="p">,</span>
+                                                      <span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">spec_vals</span><span class="p">),</span>
+                                                      <span class="n">dtype</span><span class="o">=</span><span class="n">VALUES_DTYPE</span><span class="p">)</span>
+
+        <span class="n">ds_spec_inds_mat</span> <span class="o">=</span> <span class="n">h5_chan_grp</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;Spectroscopic_Indices&#39;</span><span class="p">,</span>
+                                                      <span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">spec_inds</span><span class="p">),</span>
+                                                      <span class="n">dtype</span><span class="o">=</span><span class="n">INDICES_DTYPE</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">dset</span> <span class="ow">in</span> <span class="p">[</span><span class="n">ds_spec_inds_mat</span><span class="p">,</span> <span class="n">ds_spec_vals_mat</span><span class="p">]:</span>
+            <span class="n">write_simple_attrs</span><span class="p">(</span><span class="n">dset</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;labels&#39;</span><span class="p">:</span> <span class="n">spec_vals_labs</span><span class="p">,</span>
+                                      <span class="s1">&#39;units&#39;</span><span class="p">:</span> <span class="n">spec_vals_units</span><span class="p">})</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        # Not sure what was happening here:</span>
+<span class="sd">        for entry in spec_vals_labs_names:</span>
+<span class="sd">            label = entry[0] + &#39;_parameters&#39;</span>
+<span class="sd">            names = entry[1]</span>
+<span class="sd">            ds_spec_mat.attrs[label] = names</span>
+<span class="sd">            ds_spec_vals_mat.attrs[label] = names</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        New Method for chunking the Main_Data dataset.  Chunking is now done in N-by-N squares of UDVS steps by pixels.</span>
+<span class="sd">        N is determined dinamically based on the dimensions of the dataset.  Currently it is set such that individual</span>
+<span class="sd">        chunks are less than 10kB in size.</span>
+<span class="sd">        </span>
+<span class="sd">        Chris Smith -- csmith55@utk.edu</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        max_bins_per_pixel = np.max(list(pixel_bins.values()))</span>
+
+<span class="sd">        beps_chunks = calc_chunks([num_pix, tot_pts],</span>
+<span class="sd">                                  np.complex64(0).itemsize,</span>
+<span class="sd">                                  unit_chunks=(1, max_bins_per_pixel))</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ds_main</span> <span class="o">=</span> <span class="n">h5_chan_grp</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;Raw_Data&#39;</span><span class="p">,</span>
+                                                  <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">tot_pts</span><span class="p">),</span>
+                                                  <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex64</span><span class="p">,</span>
+                                                  <span class="n">maxshape</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">tot_pts</span><span class="p">))</span>
+
+        <span class="n">write_simple_attrs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ds_main</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;quantity&#39;</span><span class="p">:</span> <span class="s1">&#39;Piezoresponse&#39;</span><span class="p">,</span>
+                                          <span class="s1">&#39;units&#39;</span><span class="p">:</span> <span class="s1">&#39;V&#39;</span><span class="p">})</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ds_noise</span> <span class="o">=</span> <span class="n">h5_chan_grp</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;Noise_Floor&#39;</span><span class="p">,</span>
+                                                   <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span>
+                                                          <span class="n">actual_udvs_steps</span><span class="p">),</span>
+                                                   <span class="n">dtype</span><span class="o">=</span><span class="n">nf32</span><span class="p">,</span>
+                                                   <span class="n">maxshape</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span>
+                                                             <span class="n">actual_udvs_steps</span><span class="p">))</span>
+
+        <span class="n">link_h5_objects_as_attrs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ds_main</span><span class="p">,</span> <span class="p">[</span><span class="n">ds_spec_vals_mat</span><span class="p">,</span>
+                                                <span class="n">ds_spec_inds_mat</span><span class="p">])</span>
+
+        <span class="n">h5_refs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ds_main</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds_noise</span><span class="p">,</span> <span class="n">ds_udvs_mat</span><span class="p">,</span> <span class="n">ds_udvs_inds</span><span class="p">,</span>
+                   <span class="n">ds_bin_steps</span><span class="p">,</span> <span class="n">ds_wfm_typ</span><span class="p">,</span> <span class="n">ds_bin_fft</span><span class="p">,</span> <span class="n">ds_bin_inds</span><span class="p">,</span>
+                   <span class="n">ds_bin_freq</span><span class="p">,</span> <span class="n">ds_ex_wfm</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pos_vals_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+
+        <span class="c1"># self.dset_index += 1 #  raise dset index after closing only</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ds_pixel_index</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># Use this for plot groups:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mean_resp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">tot_pts</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex64</span><span class="p">)</span>
+
+        <span class="c1"># Used for Histograms</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_resp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">num_pix</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_resp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">num_pix</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">h5_refs</span>
+
+    <span class="c1"># ##################################################################################################</span>
+
+    <span class="k">def</span> <span class="nf">__append_pixel_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pixel_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Goes through the list of pixel objects and populates the raw dataset </span>
+<span class="sd">        and noise dataset for this spatial pixel.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pixel_data : List of BEPSndfPixel objects </span>
+<span class="sd">            List containing parsed data for this particular spatial pixel</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        ---------</span>
+<span class="sd">        None</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__num_wave_types__</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">halve_udvs_steps</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Technically, this will be taken care of in the later (general) part but </span>
+<span class="sd">            since this condition is more common it is worth writing for specifically&quot;&quot;&quot;</span>
+
+            <span class="n">zero_pix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__unique_waves__</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="n">data_vec</span> <span class="o">=</span> <span class="n">pixel_data</span><span class="p">[</span><span class="n">zero_pix</span><span class="p">]</span><span class="o">.</span><span class="n">spectrogram_vec</span>
+            <span class="n">noise_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="n">pixel_data</span><span class="p">[</span><span class="n">zero_pix</span><span class="p">]</span><span class="o">.</span><span class="n">noise_floor_mat</span><span class="p">)</span>
+
+            <span class="c1"># Storing a list of lists since we don&#39;t know how many pixels we will find in this measurement group</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pos_vals_list</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">pixel_data</span><span class="p">[</span><span class="n">zero_pix</span><span class="p">]</span><span class="o">.</span><span class="n">x_value</span><span class="p">,</span> <span class="n">pixel_data</span><span class="p">[</span><span class="n">zero_pix</span><span class="p">]</span><span class="o">.</span><span class="n">y_value</span><span class="p">,</span>
+                                       <span class="n">pixel_data</span><span class="p">[</span><span class="n">zero_pix</span><span class="p">]</span><span class="o">.</span><span class="n">z_value</span><span class="p">])</span>
+
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="n">data_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ds_main</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex64</span><span class="p">)</span>
+            <span class="n">noise_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds_noise</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+            <span class="n">internal_step_index</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">wave_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__unique_waves__</span><span class="p">:</span>
+                <span class="n">internal_step_index</span><span class="p">[</span><span class="n">wave_type</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="n">stind</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">step_counter</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="c1"># Go through each line in the UDVS file and reconstruct chronologically</span>
+            <span class="k">for</span> <span class="n">step_index</span><span class="p">,</span> <span class="n">wave_type</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">excit_type_vec</span><span class="p">):</span>
+                <span class="c1"># get the noise and data from correct pixel -&gt; address by wave_number.</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">halve_udvs_steps</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">udvs_mat</span><span class="p">[</span><span class="n">step_index</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">1E-3</span><span class="p">:</span>  <span class="c1"># invalid AC amplitude</span>
+                    <span class="c1"># print(&#39;Step index {} was skipped&#39;.format(step_index))</span>
+                    <span class="c1"># Not sure why each wave type has its own counter but there must have been a good reason</span>
+                    <span class="n">internal_step_index</span><span class="p">[</span><span class="n">wave_type</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">continue</span>  <span class="c1"># skip</span>
+
+                <span class="n">data_pix</span> <span class="o">=</span> <span class="n">pixel_data</span><span class="p">[</span><span class="n">wave_type</span><span class="p">]</span><span class="o">.</span><span class="n">spectrogram_mat</span>
+                <span class="n">noise_pix</span> <span class="o">=</span> <span class="n">pixel_data</span><span class="p">[</span><span class="n">wave_type</span><span class="p">]</span><span class="o">.</span><span class="n">noise_floor_mat</span>
+                <span class="n">enind</span> <span class="o">=</span> <span class="n">stind</span> <span class="o">+</span> <span class="n">pixel_data</span><span class="p">[</span><span class="n">wave_type</span><span class="p">]</span><span class="o">.</span><span class="n">num_bins</span>
+
+                <span class="n">data_vec</span><span class="p">[</span><span class="n">stind</span><span class="p">:</span><span class="n">enind</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_pix</span><span class="p">[:,</span> <span class="n">internal_step_index</span><span class="p">[</span><span class="n">wave_type</span><span class="p">]]</span>
+                <span class="n">noise_mat</span><span class="p">[:,</span> <span class="n">step_counter</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="n">noise_pix</span><span class="p">[:,</span> <span class="n">internal_step_index</span><span class="p">[</span><span class="n">wave_type</span><span class="p">]])</span>
+
+                <span class="n">stind</span> <span class="o">=</span> <span class="n">enind</span>
+                <span class="n">internal_step_index</span><span class="p">[</span><span class="n">wave_type</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">step_counter</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="c1"># Storing a list of lists since we don&#39;t know how many pixels we will find in this measurement group</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pos_vals_list</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">pixel_data</span><span class="p">[</span><span class="n">wave_type</span><span class="p">]</span><span class="o">.</span><span class="n">x_value</span><span class="p">,</span> <span class="n">pixel_data</span><span class="p">[</span><span class="n">wave_type</span><span class="p">]</span><span class="o">.</span><span class="n">y_value</span><span class="p">,</span>
+                                       <span class="n">pixel_data</span><span class="p">[</span><span class="n">wave_type</span><span class="p">]</span><span class="o">.</span><span class="n">z_value</span><span class="p">])</span>
+
+            <span class="k">del</span> <span class="n">internal_step_index</span><span class="p">,</span> <span class="n">stind</span><span class="p">,</span> <span class="n">enind</span><span class="p">,</span> <span class="n">step_index</span><span class="p">,</span> <span class="n">wave_type</span><span class="p">,</span> <span class="n">step_counter</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds_pixel_index</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># in the case of the first pixel, we already reserved zeros- no extension</span>
+            <span class="c1"># for all other lines - we extend the dataset before writing</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ds_main</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ds_main</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ds_noise</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ds_noise</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ds_main</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">data_vec</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ds_noise</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">tuple</span><span class="p">(</span><span class="n">noise</span><span class="p">)</span> <span class="k">for</span> <span class="n">noise</span> <span class="ow">in</span> <span class="n">noise_mat</span><span class="o">.</span><span class="n">T</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">nf32</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">hdf</span><span class="o">.</span><span class="n">file</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+        <span class="c1"># Take mean response here:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mean_resp</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ds_pixel_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="n">data_vec</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds_pixel_index</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_resp</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_resp</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ds_pixel_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">data_vec</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_resp</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ds_pixel_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">data_vec</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ds_pixel_index</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c1">###################################################################################################</span>
+
+    <span class="k">def</span> <span class="nf">_parse_file_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the file paths to the parms text file and UDVS spreadsheet.\n</span>
+<span class="sd">        Note: This function also initializes the basename and the folder_path for this instance</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        file_path : String / unicode</span>
+<span class="sd">            Absolute path of the any file inside the measurment folder</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        parm_filepath : String / unicode</span>
+<span class="sd">            absolute filepath of the parms text file</span>
+<span class="sd">        udvs_filepath : String / unicode</span>
+<span class="sd">            absolute file path of the UDVS spreadsheet</span>
+<span class="sd">        parms_mat_path : String / unicode</span>
+<span class="sd">            absolute filepath of the .mat parms file</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">udvs_filepath</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">folder_path</span><span class="p">,</span> <span class="n">tail</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+        <span class="n">main_folder_path</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">listdir</span><span class="p">(</span><span class="n">folder_path</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">item</span> <span class="o">==</span> <span class="s1">&#39;newdataformat&#39;</span><span class="p">:</span>
+                <span class="n">main_folder_path</span> <span class="o">=</span> <span class="n">folder_path</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">folder_path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder_path</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
+                <span class="k">break</span>
+        <span class="k">if</span> <span class="n">main_folder_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">folder_path</span> <span class="o">=</span> <span class="n">folder_path</span>
+            <span class="c1"># need to set the parent as the root_folder</span>
+            <span class="n">main_folder_path</span><span class="p">,</span> <span class="n">tail</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">folder_path</span><span class="p">)</span>
+
+        <span class="n">parms_mat_path</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">parm_filepath</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">filenames</span> <span class="ow">in</span> <span class="n">listdir</span><span class="p">(</span><span class="n">main_folder_path</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">filenames</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.txt&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">filenames</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;parm&#39;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">parm_filepath</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">main_folder_path</span><span class="p">,</span> <span class="n">filenames</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">filenames</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;all.mat&#39;</span><span class="p">):</span>
+                <span class="n">parms_mat_path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">main_folder_path</span><span class="p">,</span> <span class="n">filenames</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">filenames</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;more_parms.mat&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">parms_mat_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">parms_mat_path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">main_folder_path</span><span class="p">,</span> <span class="n">filenames</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">filenames</span> <span class="ow">in</span> <span class="n">listdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">folder_path</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">filenames</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.xlsx&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">filenames</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.xls&#39;</span><span class="p">))</span> <span class="ow">and</span> <span class="n">filenames</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;UD_VS&#39;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">udvs_filepath</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">folder_path</span><span class="p">,</span> <span class="n">filenames</span><span class="p">)</span>
+                <span class="k">break</span>
+        <span class="k">if</span> <span class="n">parm_filepath</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">filenames</span> <span class="ow">in</span> <span class="n">listdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">folder_path</span><span class="p">):</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">filenames</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.xls&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">filenames</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.xlsx&#39;</span><span class="p">))</span> <span class="ow">and</span> <span class="n">filenames</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;parm&#39;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">parm_filepath</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">main_folder_path</span><span class="p">,</span> <span class="n">filenames</span><span class="p">)</span>
+
+        <span class="p">(</span><span class="n">tail</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">basename</span><span class="p">)</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">main_folder_path</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">parm_filepath</span><span class="p">,</span> <span class="n">udvs_filepath</span><span class="p">,</span> <span class="n">parms_mat_path</span>
+
+    <span class="c1">###################################################################################################</span>
+
+    <span class="k">def</span> <span class="nf">__assemble_parsers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a list of BEPSndfParser objects per excitation wave type</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        ---------</span>
+<span class="sd">        parsers: list of BEPSndfParser objects </span>
+<span class="sd">            list of the same length as the input numpy array</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">parsers</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Maybe this needs to be a dictionary instead for easier access?</span>
+        <span class="k">for</span> <span class="n">wave_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__unique_waves__</span><span class="p">:</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;_1_&#39;</span>
+            <span class="k">if</span> <span class="n">wave_type</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;_1_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">wave_type</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.dat&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;_1_r&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">wave_type</span><span class="p">))</span> <span class="o">+</span> <span class="s1">&#39;.dat&#39;</span>
+            <span class="n">datapath</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">folder_path</span><span class="p">,</span>
+                                 <span class="bp">self</span><span class="o">.</span><span class="n">basename</span> <span class="o">+</span> <span class="n">filename</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">datapath</span><span class="p">):</span>
+                <span class="c1"># It is possible that the folder was renamed</span>
+                <span class="c1"># i.e. - try finding without self.basename</span>
+                <span class="n">temp</span> <span class="o">=</span> <span class="p">[</span><span class="n">this</span> <span class="k">for</span> <span class="n">this</span> <span class="ow">in</span> <span class="n">listdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">folder_path</span><span class="p">)</span> <span class="k">if</span> <span class="n">this</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">filename</span><span class="p">)]</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;.dat file: </span><span class="si">{}</span><span class="s1"> did not have same base name as &#39;</span>
+                         <span class="s1">&#39;root folder: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">temp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">basename</span><span class="p">))</span>
+                    <span class="n">datapath</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">folder_path</span><span class="p">,</span> <span class="n">temp</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> expected but not found!&#39;</span>
+                                            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+                <span class="c1"># return</span>
+            <span class="n">parsers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">BEPSndfParser</span><span class="p">(</span><span class="n">datapath</span><span class="p">,</span> <span class="n">wave_type</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">parsers</span>
+
+    <span class="c1"># ##################################################################################################</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">__get_excit_wfm</span><span class="p">(</span><span class="n">filepath</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the excitation BE waveform present in the more parms.mat file</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ------------</span>
+<span class="sd">        filepath : String / unicode</span>
+<span class="sd">            Absolute filepath of the .mat parameter file</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -----------</span>
+<span class="sd">        ex_wfm : 1D numpy float array</span>
+<span class="sd">            Band Excitation waveform</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filepath</span><span class="p">):</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;BEPSndfTranslator - NO more_parms.mat file found&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s1">&#39;more_parms&#39;</span> <span class="ow">in</span> <span class="n">filepath</span><span class="p">:</span>
+            <span class="n">matread</span> <span class="o">=</span> <span class="n">loadmat</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">variable_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;FFT_BE_wave&#39;</span><span class="p">])</span>
+            <span class="n">fft_full</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">complex64</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">matread</span><span class="p">[</span><span class="s1">&#39;FFT_BE_wave&#39;</span><span class="p">]))</span>
+            <span class="n">bin_inds</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">fft_full_rev</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">matread</span> <span class="o">=</span> <span class="n">loadmat</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">variable_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;FFT_BE_wave&#39;</span><span class="p">,</span> <span class="s1">&#39;FFT_BE_rev_wave&#39;</span><span class="p">,</span> <span class="s1">&#39;BE_bin_ind&#39;</span><span class="p">])</span>
+            <span class="n">bin_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">matread</span><span class="p">[</span><span class="s1">&#39;BE_bin_ind&#39;</span><span class="p">]))</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">fft_full</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">complex64</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">matread</span><span class="p">[</span><span class="s1">&#39;FFT_BE_wave&#39;</span><span class="p">]))</span>
+            <span class="n">fft_full_rev</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">complex64</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">matread</span><span class="p">[</span><span class="s1">&#39;FFT_BE_rev_wave&#39;</span><span class="p">]))</span>
+
+        <span class="k">return</span> <span class="n">fft_full</span><span class="p">,</span> <span class="n">fft_full_rev</span><span class="p">,</span> <span class="n">bin_inds</span>
+
+    <span class="c1"># ##################################################################################################</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">__read_udvs_table</span><span class="p">(</span><span class="n">udvs_filepath</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reads the UDVS spreadsheet in either .xls or .xlsx format!</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        udvs_filepath : String / unicode</span>
+<span class="sd">            absolute path to the spreadsheet</span>
+<span class="sd">            </span>
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        udvs_labs : list of strings</span>
+<span class="sd">            names of columns in the UDVS table</span>
+<span class="sd">        udvs_units : list of strings</span>
+<span class="sd">            units for columns in the UDVS table</span>
+<span class="sd">        UDVS_mat : 2D numpy float array</span>
+<span class="sd">            Contents of the UDVS table</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">workbook</span> <span class="o">=</span> <span class="n">xlreader</span><span class="o">.</span><span class="n">open_workbook</span><span class="p">(</span><span class="n">udvs_filepath</span><span class="p">)</span>
+        <span class="n">worksheet</span> <span class="o">=</span> <span class="n">workbook</span><span class="o">.</span><span class="n">sheet_by_index</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">udvs_labs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">worksheet</span><span class="o">.</span><span class="n">ncols</span><span class="p">):</span>
+            <span class="n">udvs_labs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">worksheet</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">col</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+        <span class="c1"># sometimes, the first few columns are named incorrectly. FORCE them to be named correclty:</span>
+        <span class="n">udvs_units</span> <span class="o">=</span> <span class="nb">list</span><span class="p">([</span><span class="s1">&#39;&#39;</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">udvs_labs</span><span class="p">))])</span>
+        <span class="n">udvs_labs</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;step_num&#39;</span><span class="p">,</span> <span class="s1">&#39;dc_offset&#39;</span><span class="p">,</span> <span class="s1">&#39;ac_amp&#39;</span><span class="p">,</span> <span class="s1">&#39;wave_type&#39;</span><span class="p">,</span> <span class="s1">&#39;wave_mod&#39;</span><span class="p">]</span>
+        <span class="n">udvs_units</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;V&#39;</span><span class="p">,</span> <span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">]</span>
+
+        <span class="n">udvs_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">worksheet</span><span class="o">.</span><span class="n">nrows</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">worksheet</span><span class="o">.</span><span class="n">ncols</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">worksheet</span><span class="o">.</span><span class="n">nrows</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">worksheet</span><span class="o">.</span><span class="n">ncols</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">udvs_mat</span><span class="p">[</span><span class="n">row</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">worksheet</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="n">udvs_mat</span><span class="p">[</span><span class="n">row</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;NaN&#39;</span><span class="p">)</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="k">raise</span>
+
+        <span class="c1"># Decrease counter of number of steps by 1 (Python base 0)</span>
+        <span class="n">udvs_mat</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">udvs_labs</span><span class="p">,</span> <span class="n">udvs_units</span><span class="p">,</span> <span class="n">udvs_mat</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">__get_unique_wave_types</span><span class="p">(</span><span class="n">vec</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a numpy array containing the different waveforms in a </span>
+<span class="sd">        BEPS experiment in the format: [1,-1,2,-2.....]</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ---------------</span>
+<span class="sd">        vec : 1D list or 1D numpy array </span>
+<span class="sd">            waveform types in the UDVS table</span>
+<span class="sd">            </span>
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        uniq : 1D numpy array</span>
+<span class="sd">            Unique waveform types in format listed above</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sorted_all</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">vec</span><span class="p">)</span>
+        <span class="n">pos_vals</span> <span class="o">=</span> <span class="n">sorted_all</span><span class="p">[</span><span class="n">sorted_all</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">neg_vals</span> <span class="o">=</span> <span class="n">sorted_all</span><span class="p">[</span><span class="n">sorted_all</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pos_vals</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">neg_vals</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">neg_vals</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pos_vals</span>
+
+        <span class="n">uniq</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">posind</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">negind</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">neg_vals</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="k">while</span> <span class="n">posind</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">pos_vals</span><span class="p">)</span> <span class="ow">or</span> <span class="n">negind</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="n">posind</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">pos_vals</span><span class="p">):</span>
+                <span class="n">uniq</span> <span class="o">+=</span> <span class="nb">list</span><span class="p">(</span><span class="n">neg_vals</span><span class="p">)</span>
+                <span class="k">break</span>
+            <span class="k">if</span> <span class="n">negind</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">neg_vals</span><span class="p">):</span>
+                <span class="n">uniq</span> <span class="o">+=</span> <span class="nb">list</span><span class="p">(</span><span class="n">pos_vals</span><span class="p">)</span>
+                <span class="k">break</span>
+            <span class="c1"># Otherwise compare</span>
+            <span class="k">if</span> <span class="n">pos_vals</span><span class="p">[</span><span class="n">posind</span><span class="p">]</span> <span class="o">&lt;</span> <span class="nb">abs</span><span class="p">(</span><span class="n">neg_vals</span><span class="p">[</span><span class="n">negind</span><span class="p">]):</span>
+                <span class="n">uniq</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pos_vals</span><span class="p">[</span><span class="n">posind</span><span class="p">])</span>
+                <span class="n">posind</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">elif</span> <span class="n">pos_vals</span><span class="p">[</span><span class="n">posind</span><span class="p">]</span> <span class="o">==</span> <span class="nb">abs</span><span class="p">(</span><span class="n">neg_vals</span><span class="p">[</span><span class="n">negind</span><span class="p">]):</span>
+                <span class="n">uniq</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pos_vals</span><span class="p">[</span><span class="n">posind</span><span class="p">])</span>
+                <span class="n">uniq</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">neg_vals</span><span class="p">[</span><span class="n">negind</span><span class="p">])</span>
+                <span class="n">posind</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">negind</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">uniq</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">neg_vals</span><span class="p">[</span><span class="n">negind</span><span class="p">])</span>
+                <span class="n">negind</span> <span class="o">-=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">uniq</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="BEPSndfParser">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.translators.beps_ndf.BEPSndfParser.html#BGlib.be.translators.beps_ndf.BEPSndfParser">[docs]</a>
+<span class="k">class</span> <span class="nc">BEPSndfParser</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An object of this class is given the responsibility to step through a </span>
+<span class="sd">    BEPS new data format file and return parsed BEPSndfPixel objects.\n</span>
+<span class="sd">    This class is NOT responsible for actually parsing the byte contents within</span>
+<span class="sd">    each pixel.\n</span>
+<span class="sd">    Each wave type is given its own Parser object since it has a file of its own</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_path</span><span class="p">,</span> <span class="n">wave_type</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">scout</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes the BEPSndfParser object with following inputs:</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        -----------</span>
+<span class="sd">        file_path : string or unicode</span>
+<span class="sd">            Absolute path of the .dat file</span>
+<span class="sd">        wave_type : int (optional. Default = 1)</span>
+<span class="sd">            Integer value signifying type of the excitation waveform\n</span>
+<span class="sd">        scout : Boolean (optional. Default = true) </span>
+<span class="sd">            whether or not the parser should figure out basic details such as </span>
+<span class="sd">            the number of pixels, and the spatial dimensionality</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__file_handle__</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__EOF__</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__curr_Pixel__</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__start_point__</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__wave_type__</span> <span class="o">=</span> <span class="n">wave_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__filesize__</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__pixel_indices__</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">scout</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__scout</span><span class="p">()</span>
+
+<div class="viewcode-block" id="BEPSndfParser.get_wave_type">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.translators.beps_ndf.BEPSndfParser.html#BGlib.be.translators.beps_ndf.BEPSndfParser.get_wave_type">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_wave_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the excitation wave type as an integer</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        wave_type : int</span>
+<span class="sd">            Wave type. Positive number means chirp up, negative number is chirp down.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__wave_type__</span></div>
+
+
+<div class="viewcode-block" id="BEPSndfParser.get_num_pixels">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.translators.beps_ndf.BEPSndfParser.html#BGlib.be.translators.beps_ndf.BEPSndfParser.get_num_pixels">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_num_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the total number of spatial pixels. This includes X, Y, Z, Laser positions</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        num_pix : unsigned int</span>
+<span class="sd">            Number of pixels in this file</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__num_pixels__</span></div>
+
+
+<div class="viewcode-block" id="BEPSndfParser.get_spatial_pixels">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.translators.beps_ndf.BEPSndfParser.html#BGlib.be.translators.beps_ndf.BEPSndfParser.get_spatial_pixels">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_spatial_pixels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the number of steps in each spatial dimension </span>
+<span class="sd">        organized from fastest to slowest varying dimension</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        __num_laser_steps__ : unsigned int</span>
+<span class="sd">            Number of laser steps</span>
+<span class="sd">        __num_z_steps__ : unsigned int</span>
+<span class="sd">            Number of height steps</span>
+<span class="sd">        __num_x_steps__ : unsigned int</span>
+<span class="sd">            Number of columns</span>
+<span class="sd">        __num_y_steps__ : unsigned int</span>
+<span class="sd">            Number of rows</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__num_laser_steps__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__num_z_steps__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__num_x_steps__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__num_y_steps__</span></div>
+
+
+    <span class="c1"># Don&#39;t use this to figure out if something changes. You need pixel to previous pixel comparison    </span>
+    <span class="k">def</span> <span class="nf">__scout</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Steps through the file quickly without parsing it. </span>
+<span class="sd">        The idea is to calculate the number of pixels ahead of time so that </span>
+<span class="sd">        it is easier to parse the dataset. </span>
+<span class="sd">        For phase checking, it is recommended that this function be modified to </span>
+<span class="sd">        also keep track of the byte positions of the pixels so that pixels can be </span>
+<span class="sd">        directly accessed if need be.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__num_pixels__</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__pixel_indices__</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__start_point__</span> <span class="o">*</span> <span class="mi">4</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__file_handle__</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__start_point__</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">spectrogram_length</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__file_handle__</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;f&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>  <span class="c1"># length of spectrogram</span>
+
+            <span class="k">if</span> <span class="n">count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__file_handle__</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__start_point__</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="n">data_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__file_handle__</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">spectrogram_length</span> <span class="o">*</span> <span class="mi">4</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;f&#39;</span><span class="p">)</span>
+                <span class="n">pix</span> <span class="o">=</span> <span class="n">BEPSndfPixel</span><span class="p">(</span><span class="n">data_vec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__wave_type__</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__num_x_steps__</span> <span class="o">=</span> <span class="n">pix</span><span class="o">.</span><span class="n">num_x_steps</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__num_y_steps__</span> <span class="o">=</span> <span class="n">pix</span><span class="o">.</span><span class="n">num_y_steps</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__num_z_steps__</span> <span class="o">=</span> <span class="n">pix</span><span class="o">.</span><span class="n">num_z_steps</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__num_bins__</span> <span class="o">=</span> <span class="n">pix</span><span class="o">.</span><span class="n">num_bins</span>
+
+            <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__start_point__</span> <span class="o">+=</span> <span class="n">spectrogram_length</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__filesize__</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">__start_point__</span> <span class="o">*</span> <span class="mi">4</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__num_pixels__</span> <span class="o">=</span> <span class="n">count</span>
+
+                <span class="c1"># Laser position spectroscopy is NOT accounted for anywhere. </span>
+                <span class="c1"># It is impossible to find out from the parms.txt, UD_VS, or the binary .dat file</span>
+                <span class="n">num_laser_steps</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">*</span> <span class="n">count</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__num_z_steps__</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">__num_y_steps__</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">__num_x_steps__</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">num_laser_steps</span> <span class="o">%</span> <span class="mf">1.0</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Some parameter changed inbetween. </span><span class="se">\</span>
+<span class="s1">                          BEPS NDF Translator does not handle this usecase at the moment&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">__num_laser_steps__</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_laser_steps</span><span class="p">)</span>
+
+                <span class="k">break</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__filesize__</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">__start_point__</span> <span class="o">*</span> <span class="mi">4</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__num_pixels__</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__start_point__</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">spat_dim</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__num_z_steps__</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># print(&#39;Z is varying&#39;)</span>
+            <span class="n">spat_dim</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__num_y_steps__</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># print(&#39;Y is varying&#39;)</span>
+            <span class="n">spat_dim</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__num_x_steps__</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># print(&#39;X is varying&#39;)</span>
+            <span class="n">spat_dim</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__num_laser_steps__</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># Laser spot position vector is junk in the .dat file</span>
+            <span class="c1"># print(&#39;Laser position / unknown parameter varying&#39;)</span>
+            <span class="n">spat_dim</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="c1"># print(&#39;Total of {} spatial dimensions&#39;.format(spat_dim))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__spat_dim__</span> <span class="o">=</span> <span class="n">spat_dim</span>
+
+<div class="viewcode-block" id="BEPSndfParser.read_pixel">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.translators.beps_ndf.BEPSndfParser.html#BGlib.be.translators.beps_ndf.BEPSndfParser.read_pixel">[docs]</a>
+    <span class="k">def</span> <span class="nf">read_pixel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bin_fft</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a BEpixel object containing the parsed information within a pixel.</span>
+<span class="sd">        Moves pixel index up by one.</span>
+<span class="sd">        This is where one could conceivably read the file in one pass instead of making 100,000 file I/Os.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pixel : BEPSndfPixel</span>
+<span class="sd">            Object that describes the data contained within the pixel</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__filesize__</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">__start_point__</span> <span class="o">*</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;BEPS NDF Parser - No more pixels left!&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__file_handle__</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__start_point__</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">spectrogram_length</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__file_handle__</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;f&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>  <span class="c1"># length of spectrogram</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__file_handle__</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__start_point__</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">data_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__file_handle__</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">spectrogram_length</span> <span class="o">*</span> <span class="mi">4</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;f&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__start_point__</span> <span class="o">+=</span> <span class="n">spectrogram_length</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__curr_Pixel__</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__filesize__</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">__start_point__</span> <span class="o">*</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;BEPS NDF Parser reached End of File&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__EOF__</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__file_handle__</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">BEPSndfPixel</span><span class="p">(</span><span class="n">data_vec</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__wave_type__</span><span class="p">),</span> <span class="n">bin_fft</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="BEPSndfPixel">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.translators.beps_ndf.BEPSndfPixel.html#BGlib.be.translators.beps_ndf.BEPSndfPixel">[docs]</a>
+<span class="k">class</span> <span class="nc">BEPSndfPixel</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Stands for BEPS (new data format) Pixel. </span>
+<span class="sd">    This class parses (and keeps) the stream of data contained in a single cell of a BEPS data set of the new data </span>
+<span class="sd">    format. Access desired parameter directly without get methods.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_vec</span><span class="p">,</span> <span class="n">harm</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">bin_fft</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes the pixel instance by parsing the provided data. </span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data_vec : 1D float numpy array</span>
+<span class="sd">            Data contained within each pixel</span>
+<span class="sd">        harm: unsigned int</span>
+<span class="sd">            Harmonic of the BE waveform. absolute value of the wave type used to normalize the response waveform.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">harm</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">harm</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">harm</span> <span class="o">&gt;</span> <span class="mi">3</span> <span class="ow">or</span> <span class="n">harm</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">harm</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Error in BEPSndfPixel: invalid wave type / harmonic provided.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">harm</span> <span class="o">=</span> <span class="n">harm</span>
+        <span class="c1"># Begin parsing data:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spatial_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">data_vec</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">spectrogram_length</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">data_vec</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="c1"># calculate indices for parsing</span>
+        <span class="n">s1</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">data_vec</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>  <span class="c1"># total rows in pixel</span>
+        <span class="n">s2</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">data_vec</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>  <span class="c1"># total cols in pixel</span>
+        <span class="n">data_vec1</span> <span class="o">=</span> <span class="n">data_vec</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">spectrogram_length</span><span class="p">]</span>
+        <span class="n">data_mat1</span> <span class="o">=</span> <span class="n">data_vec1</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">)</span>
+        <span class="n">spect_size1</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">data_mat1</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>  <span class="c1"># total rows in spectrogram set</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_bins</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">spect_size1</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>  <span class="c1"># or, len(BE_bin_w)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_steps</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">data_mat1</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>  <span class="c1"># total cols in spectrogram set </span>
+        <span class="n">s3</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">s1</span> <span class="o">-</span> <span class="n">spect_size1</span><span class="p">)</span>  <span class="c1"># row index of beginning of spectrogram set</span>
+        <span class="n">s4</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">s2</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_steps</span><span class="p">)</span>  <span class="c1"># col index of beginning of spectrogram set</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">wave_label</span> <span class="o">=</span> <span class="n">data_mat1</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>  <span class="c1"># This is useless</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wave_modulation_type</span> <span class="o">=</span> <span class="n">data_mat1</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>  <span class="c1"># this is the one with useful information</span>
+        <span class="c1"># print &#39;Pixel #&#39;,self.spatial_index,&#39; Wave label: &#39;,self.wave_label, &#39;, Wave Type: &#39;, self.wave_modulation_type</span>
+
+        <span class="c1"># First get the information from the columns:</span>
+        <span class="c1"># real part of excitation waveform</span>
+        <span class="n">fft_be_wave_real</span> <span class="o">=</span> <span class="n">data_mat1</span><span class="p">[</span><span class="n">s3</span><span class="p">:</span><span class="n">s3</span> <span class="o">-</span> <span class="mi">0</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_bins</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="c1"># imaginary part of excitation waveform</span>
+        <span class="n">fft_be_wave_imag</span> <span class="o">=</span> <span class="n">data_mat1</span><span class="p">[</span><span class="n">s3</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_bins</span><span class="p">:</span><span class="n">s3</span> <span class="o">-</span> <span class="mi">0</span> <span class="o">+</span> <span class="n">spect_size1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Though typecasting the combination of the real and imaginary data looks fine in HDFviewer and Spyder, </span>
+<span class="sd">        Labview sees such data as an array of clusters having &#39;r&#39; and &#39;i&#39; elements &quot;&quot;&quot;</span>
+        <span class="c1"># self.FFT_BE_wave = np.complex64(fft_be_wave_real + 1j*fft_be_wave_imag) </span>
+
+        <span class="c1"># complex excitation waveform! due to a problem in the acquisition software, this may not be normalized properly</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">FFT_BE_wave</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_bins</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex64</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">FFT_BE_wave</span><span class="o">.</span><span class="n">real</span> <span class="o">=</span> <span class="n">fft_be_wave_real</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">FFT_BE_wave</span><span class="o">.</span><span class="n">imag</span> <span class="o">=</span> <span class="n">fft_be_wave_imag</span>
+
+        <span class="k">del</span> <span class="n">fft_be_wave_real</span><span class="p">,</span> <span class="n">fft_be_wave_imag</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">BE_bin_w</span> <span class="o">=</span> <span class="n">data_mat1</span><span class="p">[</span><span class="n">s3</span><span class="p">:</span><span class="n">s3</span> <span class="o">-</span> <span class="mi">0</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_bins</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>  <span class="c1"># vector of band frequencies</span>
+        <span class="c1"># vector of band indices (out of all accessible frequencies below Nyquist frequency)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">BE_bin_ind</span> <span class="o">=</span> <span class="n">data_mat1</span><span class="p">[</span><span class="n">s3</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_bins</span><span class="p">:</span><span class="n">s3</span> <span class="o">-</span> <span class="mi">0</span> <span class="o">+</span> <span class="n">spect_size1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+
+        <span class="c1"># Now look at the top few rows to get more information: </span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">daq_channel</span> <span class="o">=</span> <span class="n">data_mat1</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+        <span class="c1"># self.num_x_steps = int(data_mat1[3, 0])</span>
+        <span class="c1"># self.num_y_steps = int(data_mat1[4, 0])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_z_steps</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">data_mat1</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">z_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">data_mat1</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># self.y_index = int(data_mat1[4, 1] - 1)</span>
+        <span class="c1"># self.x_index = int(data_mat1[3, 1] - 1)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">z_value</span> <span class="o">=</span> <span class="n">data_mat1</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+        <span class="c1"># self.y_value = data_mat1[4, 2]</span>
+        <span class="c1"># self.x_value = data_mat1[3, 2]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_x_steps</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">data_mat1</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_y_steps</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">data_mat1</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">data_mat1</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">data_mat1</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_value</span> <span class="o">=</span> <span class="n">data_mat1</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_value</span> <span class="o">=</span> <span class="n">data_mat1</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">step_ind_vec</span> <span class="o">=</span> <span class="n">data_mat1</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">s4</span><span class="p">:]</span>  <span class="c1"># vector of step indices   </span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">DC_off_vec</span> <span class="o">=</span> <span class="n">data_mat1</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">s4</span><span class="p">:]</span>  <span class="c1"># vector of dc offsets  voltages</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">AC_amp_vec</span> <span class="o">=</span> <span class="n">data_mat1</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="n">s4</span><span class="p">:]</span>  <span class="c1"># vector of ac amplitude voltages </span>
+
+        <span class="c1"># matrix of noise floor data. Use this information to exclude bins during fitting</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">noise_floor_mat</span> <span class="o">=</span> <span class="n">data_mat1</span><span class="p">[</span><span class="mi">3</span><span class="p">:</span><span class="mi">6</span><span class="p">,</span> <span class="n">s4</span><span class="p">:]</span>
+
+        <span class="c1"># self.plot_group_list_mat = data_mat1[6:s3-2, s4:]  # matrix of plot groups</span>
+
+        <span class="c1"># Here come the optional parameter rows:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">deflVolt_vec</span> <span class="o">=</span> <span class="n">data_mat1</span><span class="p">[</span><span class="n">s3</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="n">s4</span><span class="p">:]</span>  <span class="c1"># vector of dc cantilever deflection</span>
+        <span class="c1"># I think this is how the defl setpoint vec should be fixed:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">deflVolt_vec</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">deflVolt_vec</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c1"># so far, this vector seemed to match the DC offset vector....</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">laser_spot_pos_vec</span> <span class="o">=</span> <span class="n">data_mat1</span><span class="p">[</span><span class="n">s3</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">s4</span><span class="p">:]</span>  <span class="c1"># NEVER used</span>
+
+        <span class="c1"># Actual data for this pixel:</span>
+        <span class="c1"># real part of response spectrogram</span>
+        <span class="n">spectrogram_real_mat</span> <span class="o">=</span> <span class="n">data_mat1</span><span class="p">[</span><span class="n">s3</span><span class="p">:</span><span class="n">s3</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_bins</span><span class="p">,</span> <span class="n">s4</span><span class="p">:]</span>
+        <span class="c1"># imaginary part of response spectrogram</span>
+        <span class="n">spectrogram_imag_mat</span> <span class="o">=</span> <span class="n">data_mat1</span><span class="p">[</span><span class="n">s3</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_bins</span><span class="p">:</span><span class="n">s3</span> <span class="o">+</span> <span class="n">spect_size1</span><span class="p">,</span> <span class="n">s4</span><span class="p">:]</span>
+        <span class="c1"># Be consistent and ensure that the data is also stored as 64 bit complex as in the array creation</span>
+        <span class="c1"># complex part of response spectrogram</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spectrogram_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">complex64</span><span class="p">(</span><span class="n">spectrogram_real_mat</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">spectrogram_imag_mat</span><span class="p">)</span>
+        <span class="k">del</span> <span class="n">spectrogram_real_mat</span><span class="p">,</span> <span class="n">spectrogram_imag_mat</span>
+
+        <span class="k">if</span> <span class="n">bin_fft</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">FFT_BE_wave</span> <span class="o">=</span> <span class="n">bin_fft</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">spectrogram_mat</span> <span class="o">=</span> <span class="n">normalizeBEresponse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spectrogram_mat</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">FFT_BE_wave</span><span class="p">,</span> <span class="n">harm</span><span class="p">)</span>
+
+        <span class="c1">#  Reshape as one column (its free in Python anyway):</span>
+        <span class="n">temp_mat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spectrogram_mat</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spectrogram_vec</span> <span class="o">=</span> <span class="n">temp_mat</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spectrogram_mat</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BEPSndfPixel.is_different_from">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.translators.beps_ndf.BEPSndfPixel.html#BGlib.be.translators.beps_ndf.BEPSndfPixel.is_different_from">[docs]</a>
+    <span class="k">def</span> <span class="nf">is_different_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prev_pixel</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compares parameters in this object with those another BEPSndfPixel object </span>
+<span class="sd">        to tell if any parameter has changed between these pixels</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        prev_pixel : BEPSndfPixel object</span>
+<span class="sd">            The other pixel object to compare this pixel to</span>
+<span class="sd">            </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        is_different : Boolean</span>
+<span class="sd">            Whether or not these pixel objects share the same parameters</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        *Typical things that change during BEPS*</span>
+<span class="sd">        1. BE parameters:</span>
+<span class="sd">        a. Center Frequency, Band Width - changes in the BE_bin_w</span>
+<span class="sd">        b. Amplitude, Phase Variation, Band Edge Smoothing, Band Edge Trim - Harder to find out what happened</span>
+<span class="sd">        exactly - FFT should show changes</span>
+<span class="sd">        c. BE repeats, desired duration - changes in the spectrogram length?</span>
+<span class="sd">        2. VS Parameters</span>
+<span class="sd">        a. Amplitude, Phase shift - Changes in the AC_amp_vec / DC offset</span>
+<span class="sd">        b. Offset, Read voltage - Shows up in the DC offset</span>
+<span class="sd">        c. Steps per full Cycle - Changes in DC offset / AC amplitude ....</span>
+<span class="sd">        d. Number of cycles, Cycle fraction, In and out of field - changes in the length of DC offset etc.</span>
+<span class="sd">        e. FORC - should all show up in DC / AC amplitude</span>
+<span class="sd">        3. IO parameters : don&#39;t change really</span>
+<span class="sd">        4. grid parameters : cannot do anything about this.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">disp_on</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">spectrogram_length</span> <span class="o">!=</span> <span class="n">prev_pixel</span><span class="o">.</span><span class="n">spectrogram_length</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">disp_on</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Spectrogram Length changed on pixel </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spatial_index</span><span class="p">))</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_bins</span> <span class="o">!=</span> <span class="n">prev_pixel</span><span class="o">.</span><span class="n">num_bins</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">disp_on</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Number of bins changed on on pixel </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spatial_index</span><span class="p">))</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BE_bin_w</span><span class="p">,</span> <span class="n">prev_pixel</span><span class="o">.</span><span class="n">BE_bin_w</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">disp_on</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Bin Frequencies changed on pixel </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spatial_index</span><span class="p">))</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">FFT_BE_wave</span><span class="p">,</span> <span class="n">prev_pixel</span><span class="o">.</span><span class="n">FFT_BE_wave</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">disp_on</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;BE FFT changed on pixel </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spatial_index</span><span class="p">))</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">AC_amp_vec</span><span class="p">,</span> <span class="n">prev_pixel</span><span class="o">.</span><span class="n">AC_amp_vec</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">disp_on</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;AC amplitude (UDVS) changed on pixel </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spatial_index</span><span class="p">))</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">DC_off_vec</span><span class="p">,</span> <span class="n">prev_pixel</span><span class="o">.</span><span class="n">DC_off_vec</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">disp_on</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;DC offset (UDVS) changed on pixel </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spatial_index</span><span class="p">))</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+            <span class="c1"># I was told that this section was just garbage in the file.</span>
+            <span class="c1"># if not np.array_equal(self.laser_spot_pos_vec, prev_pixel.laser_spot_pos_vec):</span>
+            <span class="c1"># print &#39;Laser spot position vec was different....&#39;</span>
+            <span class="c1"># print self.laser_spot_pos_vec</span>
+            <span class="c1"># return True</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">deflVolt_vec</span><span class="p">,</span> <span class="n">prev_pixel</span><span class="o">.</span><span class="n">deflVolt_vec</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;deflVolt_vec vec was different....&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="kc">False</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Pycroscopy contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

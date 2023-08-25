@@ -1,0 +1,6 @@
+BGlib.gmode.proc.fft.fft\_to\_real
+==================================
+
+.. currentmodule:: BGlib.gmode.proc.fft
+
+.. autofunction:: fft_to_real

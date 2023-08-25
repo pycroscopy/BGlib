@@ -1,0 +1,6 @@
+BGlib.be.analysis.be\_loop\_fitter.guess\_loops\_hierarchically
+===============================================================
+
+.. currentmodule:: BGlib.be.analysis.be_loop_fitter
+
+.. autofunction:: guess_loops_hierarchically

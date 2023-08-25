@@ -1,0 +1,32 @@
+BGlib.be.analysis.fitter
+========================
+
+.. automodule:: BGlib.be.analysis.fitter
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :nosignatures:
+   
+      Fitter
+   
+   
+
+   
+   
+   
+
+
+

@@ -1,0 +1,6 @@
+BGlib.be.viz.be\_viz\_utils.viz\_berelaxfit
+===========================================
+
+.. currentmodule:: BGlib.be.viz.be_viz_utils
+
+.. autofunction:: viz_berelaxfit

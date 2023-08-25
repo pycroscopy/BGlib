@@ -1,0 +1,26 @@
+BGlib.gmode.proc.fft.BandPassFilter
+===================================
+
+.. currentmodule:: BGlib.gmode.proc.fft
+
+.. autoclass:: BandPassFilter
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~BandPassFilter.get_parms
+      ~BandPassFilter.is_compatible
+   
+   
+
+   
+   
+   

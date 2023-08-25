@@ -1,0 +1,6 @@
+BGlib.gmode.proc.gmode\_utils.reshape\_from\_lines\_to\_pixels
+==============================================================
+
+.. currentmodule:: BGlib.gmode.proc.gmode_utils
+
+.. autofunction:: reshape_from_lines_to_pixels

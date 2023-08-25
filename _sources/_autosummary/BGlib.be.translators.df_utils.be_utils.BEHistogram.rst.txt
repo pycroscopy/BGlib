@@ -1,0 +1,27 @@
+BGlib.be.translators.df\_utils.be\_utils.BEHistogram
+====================================================
+
+.. currentmodule:: BGlib.be.translators.df_utils.be_utils
+
+.. autoclass:: BEHistogram
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~BEHistogram.addBEHist
+      ~BEHistogram.buildBEHist
+      ~BEHistogram.buildPlotGroupHist
+   
+   
+
+   
+   
+   

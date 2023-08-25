@@ -1,0 +1,30 @@
+BGlib.misc.translators
+======================
+
+.. automodule:: BGlib.misc.translators
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. autosummary::
+   :toctree:
+      :template: custom-module-template.rst
+   :recursive:
+
+   BGlib.misc.translators.tr_kpfm
+

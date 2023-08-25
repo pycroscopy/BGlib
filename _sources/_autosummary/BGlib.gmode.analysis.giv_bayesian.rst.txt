@@ -1,0 +1,32 @@
+BGlib.gmode.analysis.giv\_bayesian
+==================================
+
+.. automodule:: BGlib.gmode.analysis.giv_bayesian
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :nosignatures:
+   
+      GIVBayesian
+   
+   
+
+   
+   
+   
+
+
+

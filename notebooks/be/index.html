@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Band Excitation &mdash; BGlib 0.0.4 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/documentation_options.js?v=8c5712d9"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Band Excitation data procesing" href="BE_Processing.html" />
+    <link rel="prev" title="BGlib" href="../../_autosummary/BGlib.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            BGlib
+          </a>
+              <div class="version">
+                0.0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">BGlib</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">BGlib</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_autosummary/BGlib.html">BGlib</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Band Excitation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="BE_Processing.html">Band Excitation data procesing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BE_Processing_cKPFM.html">Band Excitation data procesing using pycroscopy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BE_Processing_cKPFM.html#cKPFM-analysis">cKPFM analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BE_Processing_cKPFM.html#Configure-the-notebook">Configure the notebook</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BE_Processing_cKPFM.html#Set-some-basic-parameters-for-computation">Set some basic parameters for computation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BE_Processing_cKPFM.html#Make-the-data-pycroscopy-compatible">Make the data pycroscopy compatible</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BE_Processing_cKPFM.html#Get-some-basic-parameters-from-the-H5-file">Get some basic parameters from the H5 file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BE_Processing_cKPFM.html#Visualize-the-raw-data">Visualize the raw data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BE_Processing_cKPFM.html#Fit-the-Band-Excitation-(BE)-spectra">Fit the Band Excitation (BE) spectra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BE_Processing_cKPFM.html#Remove-phase-offset">Remove phase offset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BE_Processing_cKPFM.html#Display-cKPFM-data">Display cKPFM data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BE_Processing_cKPFM.html#Display-averaged-cKPFM-data">Display averaged cKPFM data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BE_Processing_cKPFM.html#Export-response-after-all-write-steps-for-all-pixels">Export response after all write steps for all pixels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BE_Processing_cKPFM.html#Display-averaged-response-at-0-V-read-voltage">Display averaged response at 0 V read voltage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BE_Processing_cKPFM.html#Display-response,-amplitude-and-phase-data-at-0-V-read-voltage-for-a-single-pixel">Display response, amplitude and phase data at 0 V read voltage for a single pixel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BE_Processing_cKPFM.html#Display-on-field-loops-for-all-read-steps">Display on-field loops for all read steps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BE_Processing_cKPFM.html#Calculate-the-jCPD">Calculate the jCPD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BE_Processing_cKPFM.html#Display-jCPD-data">Display jCPD data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BE_Processing_cKPFM.html#Display-jCPD-and-fitting-parameters">Display jCPD and fitting parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BE_Processing_cKPFM.html#jCPD-plots">jCPD plots</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BE_Processing_cKPFM.html#PCA-analysis">PCA analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BE_Processing_cKPFM.html#Visualize-the-SHO-results-of-BEline,-BEPS-and-FORC-data">Visualize the SHO results of BEline, BEPS and FORC data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BE_Processing_cKPFM.html#Fit-loops-to-a-function">Fit loops to a function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BE_Processing_cKPFM.html#Prepare-datasets-for-visualization">Prepare datasets for visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BE_Processing_cKPFM.html#Visualize-Loop-fits">Visualize Loop fits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BE_Processing_cKPFM.html#Save-and-close">Save and close</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BE_Relaxation%20Processing.html">Band Excitation Relaxation Spectroscopy Data Processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BE_Relaxation%20Processing.html#Configure-the-notebook">Configure the notebook</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BE_Relaxation%20Processing.html#Set-some-basic-parameters-for-computation">Set some basic parameters for computation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BE_Relaxation%20Processing.html#Make-the-data-pycroscopy-compatible">Make the data pycroscopy compatible</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BE_Relaxation%20Processing.html#Get-some-basic-parameters-from-the-H5-file">Get some basic parameters from the H5 file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BE_Relaxation%20Processing.html#Perform-SHO-fits-to-data-to-extract-PFM-response">Perform SHO fits to data to extract PFM response</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BE_Relaxation%20Processing.html#Perform-functional-fits-to-PFM-relaxation-data">Perform functional fits to PFM relaxation data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BE_Relaxation%20Processing.html#Visualize-the-data">Visualize the data</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../gmode/index.html">General Mode</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BGlib</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Band Excitation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/notebooks/be/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="band-excitation">
+<h1>Band Excitation<a class="headerlink" href="#band-excitation" title="Link to this heading">¶</a></h1>
+<p>Notebooks on processing and visualizing Band Excitation (BE) Data.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>These notebooks are meant to be run manually by the user</p>
+</div>
+<ul class="simple">
+<li><p><a class="reference internal" href="BE_Processing.html"><span class="doc">BE-Imaging and Band Excitation Polarization Switching (BEPS) processing</span></a></p></li>
+<li><p><a class="reference internal" href="BE_Processing_cKPFM.html"><span class="doc">Contact Kelvin Probe Force Microsocpy (cKPFM) processing</span></a></p></li>
+<li><p><a class="reference external" href="./BE_RelaxationProcessing.ipynb">BE relaxation processing</a></p></li>
+</ul>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../../_autosummary/BGlib.html" class="btn btn-neutral float-left" title="BGlib" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="BE_Processing.html" class="btn btn-neutral float-right" title="Band Excitation data procesing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Pycroscopy contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

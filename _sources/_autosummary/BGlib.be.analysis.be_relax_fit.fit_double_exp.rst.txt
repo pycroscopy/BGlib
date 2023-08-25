@@ -1,0 +1,6 @@
+BGlib.be.analysis.be\_relax\_fit.fit\_double\_exp
+=================================================
+
+.. currentmodule:: BGlib.be.analysis.be_relax_fit
+
+.. autofunction:: fit_double_exp

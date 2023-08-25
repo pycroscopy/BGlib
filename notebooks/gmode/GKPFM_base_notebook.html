@@ -1,0 +1,1788 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>G-Mode KPFM with Fast Free Force Recovery (F3R) &mdash; BGlib 0.0.4 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/nbsphinx-code-cells.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/documentation_options.js?v=8c5712d9"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="prev" title="General Mode" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            BGlib
+          </a>
+              <div class="version">
+                0.0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">BGlib</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">BGlib</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_autosummary/BGlib.html">BGlib</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../be/index.html">Band Excitation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">General Mode</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">G-Mode KPFM with Fast Free Force Recovery (F3R)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Liam-Collins,-Anugrah-Saxena,-and-Chris-R.-Smith">Liam Collins, Anugrah Saxena, and Chris R. Smith</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#References:">References:</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Methodology:">Methodology:</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#(1)-Models-the-Cantilever-Transfer-Function-(H(w))">(1) Models the Cantilever Transfer Function (H(w))</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#(3)-Fast-Free-Force-Reconstruction">(3) Fast Free Force Reconstruction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#(4)-Data-Analysis">(4) Data Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#(5)-Data-Visualization">(5) Data Visualization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Change-the-filepath-below,-used-for-storing-images">Change the filepath below, used for storing images</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Define-Cantilever-Parameters">Define Cantilever Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Step-1a.-Translates-Tune-file-to-HF5-format">Step 1a. Translates Tune file to HF5 format</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#Step-(2)-Load,-Translate-and-Denoize-the-G-KPFM-data">Step (2) Load, Translate and Denoize the G-KPFM data</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Step-(2a)-Load-and-Translates-image-file-to-.H5-file-format.">Step (2a) Load and Translates image file to .H5 file format.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Extract-some-relevant-parameters">Extract some relevant parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Step-2b-Fourier-Filter-data.">Step 2b Fourier Filter data.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Here-you-should-adjust-your-phase-to-close-the-parabola-in-the-second-set-of-images">Here you should adjust your phase to close the parabola in the second set of images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Does-PCA-on-the-filtered-response">Does PCA on the filtered response</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Step-3.-Fast-Free-Force-Reconstruction">Step 3. Fast Free Force Reconstruction</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Step(3a,-b,-c).-Divide-filtered-displacement-Y(w)-by-the-effective-transfer-function-(H(w)).">Step(3a, b, c). Divide filtered displacement Y(w) by the effective transfer function (H(w)).</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Parabolic-Fitting-of-Cleaned-Data">Parabolic Fitting of Cleaned Data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Test-fitting-on-sample-data">Test fitting on sample data</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Plot-single-point">Plot single point</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BGlib</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">General Mode</a></li>
+      <li class="breadcrumb-item active">G-Mode KPFM with Fast Free Force Recovery (F3R)</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/notebooks/gmode/GKPFM_base_notebook.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="G-Mode-KPFM-with-Fast-Free-Force-Recovery-(F3R)">
+<h1>G-Mode KPFM with Fast Free Force Recovery (F3R)<a class="headerlink" href="#G-Mode-KPFM-with-Fast-Free-Force-Recovery-(F3R)" title="Link to this heading">¶</a></h1>
+<section id="Liam-Collins,-Anugrah-Saxena,-and-Chris-R.-Smith">
+<h2>Liam Collins, Anugrah Saxena, and Chris R. Smith<a class="headerlink" href="#Liam-Collins,-Anugrah-Saxena,-and-Chris-R.-Smith" title="Link to this heading">¶</a></h2>
+<p>The Center for Nanophase Materials Science and The Institute for Functional Imaging for Materials Oak Ridge National Laboratory</p>
+<section id="References:">
+<h3>References:<a class="headerlink" href="#References:" title="Link to this heading">¶</a></h3>
+<p>This Jupyter notebook uses <a class="reference external" href="https://pycroscopy.github.io/pycroscopy/about.html">pycroscopy</a> to analyze Band Excitation data. We request you to reference the following papers if you use this notebook for your research:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://arxiv.org/abs/1903.09515">Arxiv paper</a> titled “<em>USID and Pycroscopy - Open frameworks for storing and analyzing spectroscopic and imaging data</em>” in your publications.</p></li>
+<li><p><a class="reference external" href="https://pubs.acs.org/doi/abs/10.1021/acsnano.7b02114">ACS Nano paper</a> titled “<em>Breaking the Time Barrier in Kelvin Probe Force Microscopy: Fast Free Force Reconstruction Using the G-Mode Platform</em>”</p></li>
+</ul>
+</section>
+<section id="Methodology:">
+<h3>Methodology:<a class="headerlink" href="#Methodology:" title="Link to this heading">¶</a></h3>
+<p>This notebook will allow fast KPFM by recovery of the electrostatic foce directly from the photodetector response. Information on the procedure can be found in Collins et al. (<a class="reference external" href="http://pubs.acs.org/doi/abs/10.1021/acsnano.7b02114">DOI: 10.1021/acsnano.7b02114</a>) In this notebook the following procedured are performed.</p>
+</section>
+</section>
+<section id="(1)-Models-the-Cantilever-Transfer-Function-(H(w))">
+<h2>(1) Models the Cantilever Transfer Function (H(w))<a class="headerlink" href="#(1)-Models-the-Cantilever-Transfer-Function-(H(w))" title="Link to this heading">¶</a></h2>
+<p><strong>(1a)</strong> Translates Tune file to H5 <strong>(1b)</strong> Fits Cantilever resonances to SHO Model <strong>(1c)</strong> Constructs the effective cantilever transfer function (H(w)) from SHO fits of the tune. #### (2)Load, Translate and Denoize the G-KPFM data <strong>(2a)</strong> Loads and translates the .mat file containing the image data to .H5 file format. <strong>(2b)</strong> Fourier Filters data. <strong>(2bii)</strong> Checks Force Recovery for 1 pixel…here you need to find the phase offset used in 3. <strong>(2c- optional)</strong> PCA Denoizing.</p>
+</section>
+<section id="(3)-Fast-Free-Force-Reconstruction">
+<h2>(3) Fast Free Force Reconstruction<a class="headerlink" href="#(3)-Fast-Free-Force-Reconstruction" title="Link to this heading">¶</a></h2>
+<p><strong>(3a)</strong> Divides filtered displacement Y(w) by the effective transfer function (H(w)). This takes some time, can we parallelize it?. One option would be to incorperate it into the FFT filtering <strong>step (2b</strong> <strong>(3b)</strong> iFFT the response above a user defined noise floor to recovery Force in time domain. <strong>(3c)</strong> Phase correction (from step 2biii). I havent settled on the best way to find the phase shift required, but I see ye are working towards incorperating a phase shift into the filtering</p>
+</section>
+<section id="(4)-Data-Analysis">
+<h2>(4) Data Analysis<a class="headerlink" href="#(4)-Data-Analysis" title="Link to this heading">¶</a></h2>
+<p><strong>(4a)</strong> Parabolic fitting to extract CPD. Needs to be parallilized and output written to H5 file correctly.</p>
+</section>
+<section id="(5)-Data-Visualization">
+<h2>(5) Data Visualization<a class="headerlink" href="#(5)-Data-Visualization" title="Link to this heading">¶</a></h2>
+<p><strong>(5a)</strong> Visualization and clustering of fitting parameters and CPD. GIF movies and Kmeans clustering will be added.</p>
+<hr class="docutils" />
+<p>This is a Jupyter Notebook - it contains text and executable code <code class="docutils literal notranslate"><span class="pre">cells</span></code>. To learn more about how to use it, please see <a class="reference external" href="https://www.youtube.com/watch?v=jZ952vChhuI">this video</a>. Please see the image below for some basic tips on using this notebook.</p>
+<p>If you have any questions or need help running this notebook, please get in touch with your host if you are a users at the Center for Nanophase Materials Science (CNMS) or our <a class="reference external" href="https://groups.google.com/forum/#!forum/pycroscopy">google group</a>.</p>
+<p><img alt="notebook_rules.png" src="https://raw.githubusercontent.com/pycroscopy/pycroscopy/master/jupyter_notebooks/notebook_rules.png" /></p>
+<p>Image courtesy of Jean Bilheux from the <a class="reference external" href="https://github.com/neutronimaging/python_notebooks">neutron imaging</a> GitHub repository.</p>
+</section>
+<section id="Change-the-filepath-below,-used-for-storing-images">
+<h2>Change the filepath below, used for storing images<a class="headerlink" href="#Change-the-filepath-below,-used-for-storing-images" title="Link to this heading">¶</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><br/><span></span><span class="n">output_filepath</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;E:\Dropbox (ORNL)\Paper Drafts\GMode KPFM photovoltaics\data\IMageA_3V_3Vac_0022 - Copy - Copy&quot;</span>
+
+<span class="c1">################################################################</span>
+<span class="c1">### here you can decide what analysis to do // or what previous results to load</span>
+<span class="c1">################################################################</span>
+
+<span class="n">save_figure</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">load_tune_results</span> <span class="o">=</span> <span class="kc">True</span> <span class="c1"># Set this to true if you want to go fetch already analyzed data</span>
+<span class="n">load_image_results</span> <span class="o">=</span> <span class="kc">True</span> <span class="c1"># Set this to true if you want to go fetch already analyzed data</span>
+<span class="n">Filter_data</span><span class="o">=</span> <span class="kc">False</span>   <span class="c1"># Set this to true if you want to filter data</span>
+<span class="n">PCA_clean</span><span class="o">=</span><span class="kc">False</span>   <span class="c1"># Set this to true if you want to do PCA filtering</span>
+<span class="n">Do_PCA2</span><span class="o">=</span><span class="kc">False</span>
+<span class="n">DO_F3R</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># Set this to true if you want to do F3R recovery or just load data from file</span>
+<span class="n">do_para_fit</span><span class="o">=</span> <span class="kc">False</span>  <span class="c1"># Set this to true if you want to do parabolic fitting</span>
+<span class="n">do_PCA_CPD</span><span class="o">=</span> <span class="kc">False</span>  <span class="c1"># Set this to true if you want to do PCA of CPD results</span>
+
+<span class="c1">#Number of cores available for parallel processing</span>
+<span class="n">num_cores</span><span class="o">=</span><span class="mi">10</span>
+
+
+
+<span class="c1">#If you have already fit the data (i.e. load_tune_results or load_image_results are true) then you should provide links to tune and image files below</span>
+
+<span class="k">if</span> <span class="n">load_tune_results</span><span class="p">:</span>
+    <span class="c1">#Tune data</span>
+    <span class="n">h5tune_file_path</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;E:\Dropbox (ORNL)\Paper Drafts\GMode KPFM photovoltaics\data\Tune_Edrive_2Mhz_6V_withdrive100nm_0019\Tune_Edrive_2Mhz_6V_withdrive100nm_0019.h5&quot;</span>
+
+
+<span class="k">if</span> <span class="n">load_image_results</span><span class="p">:</span>
+    <span class="c1">#Image data</span>
+    <span class="n">h5image_file_path</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;E:\Dropbox (ORNL)\Paper Drafts\GMode KPFM photovoltaics\data\IMageA_3V_3Vac_0022 - Copy - Copy\IMageA_3V_3Vac_0022 - Copy - Copy.h5&quot;</span>
+<br/><br/></pre></div>
+</div>
+</div>
+<p>If you run the cell below it will update your pycrosocpy to the latest version from repository as well as installing updates to some important functions. Note we use a rolled back version of joblib</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># If not sure then uncomment run this at least once</span>
+<span class="c1">####################################################################</span>
+<span class="c1"># Make sure needed packages are installed and up-to-date</span>
+<span class="c1">######################################################</span>
+
+<span class="c1">#import sys</span>
+<span class="c1">#!conda install --yes --prefix {sys.prefix} numpy scipy matplotlib scikit-learn Ipython ipywidgets h5py</span>
+<span class="c1">#!{sys.executable} -m pip install -U --no-deps pycroscopy</span>
+<span class="c1"># Current joblib release has some issues, so install from the github repository.</span>
+<span class="c1">#!{sys.executable} -m pip install --ignore-installed -U git+https://github.com/joblib/joblib.git@14784b711f2e777e87c857c5a0e8fbd9d5849936</span>
+</pre></div>
+</div>
+</div>
+<p>In the cell below we import important packages required below</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># set up notebook to show plots within the notebook</span>
+<span class="o">%</span><span class="k">matplotlib</span> inline
+<span class="o">%</span><span class="k">precision</span> %.4g
+
+<span class="c1"># Import necessary libraries:</span>
+
+<span class="c1"># Visualization:</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">display</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">signal</span>
+<span class="kn">from</span> <span class="nn">scipy.signal</span> <span class="kn">import</span> <span class="n">butter</span><span class="p">,</span> <span class="n">filtfilt</span>
+<span class="kn">from</span> <span class="nn">scipy.io</span> <span class="kn">import</span> <span class="n">loadmat</span>
+
+<span class="c1"># General utilities:</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">scipy.signal</span> <span class="kn">import</span> <span class="n">correlate</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+
+<span class="c1"># Interactive Value picker</span>
+<span class="kn">import</span> <span class="nn">ipywidgets</span> <span class="k">as</span> <span class="nn">widgets</span>
+
+<span class="c1"># Computation:</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">numpy.polynomial.polynomial</span> <span class="k">as</span> <span class="nn">npPoly</span>
+
+<span class="c1"># Parallel computation library:</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">joblib</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;joblib not found.  Will install with pip.&#39;</span><span class="p">)</span>
+    <span class="kn">import</span> <span class="nn">pip</span>
+    <span class="n">pip</span><span class="o">.</span><span class="n">main</span><span class="p">([</span><span class="s1">&#39;install&#39;</span><span class="p">,</span> <span class="s1">&#39;joblib&#39;</span><span class="p">])</span>
+<span class="kn">import</span> <span class="nn">joblib</span>
+
+<span class="kn">import</span> <span class="nn">h5py</span>
+
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
+
+<span class="c1"># multivariate analysis:</span>
+<span class="kn">from</span> <span class="nn">sklearn.cluster</span> <span class="kn">import</span> <span class="n">KMeans</span>
+<span class="kn">from</span> <span class="nn">sklearn.decomposition</span> <span class="kn">import</span> <span class="n">NMF</span>
+
+<span class="c1">#sys.path.insert(0,r&#39;C:\Users\lz1\Documents\PyWorkspace\pycroscopy\pycroscopy-latest&#39;)</span>
+<span class="c1"># Finally, pycroscopy itself</span>
+<span class="kn">import</span> <span class="nn">pycroscopy</span> <span class="k">as</span> <span class="nn">px</span>
+
+<span class="kn">from</span> <span class="nn">pycroscopy.core.viz.plot_utils</span> <span class="kn">import</span> <span class="n">set_tick_font_size</span><span class="p">,</span> <span class="n">plot_curves</span><span class="p">,</span> <span class="n">plot_map_stack</span>
+
+<span class="c1"># Define Layouts for Widgets</span>
+<span class="n">lbl_layout</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+    <span class="n">width</span><span class="o">=</span><span class="s1">&#39;15%&#39;</span>
+<span class="p">)</span>
+<span class="n">widget_layout</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+    <span class="n">width</span><span class="o">=</span><span class="s1">&#39;15%&#39;</span><span class="p">,</span><span class="n">margin</span><span class="o">=</span><span class="s1">&#39;0px 0px 5px 12px&#39;</span>
+<span class="p">)</span>
+<span class="n">button_layout</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+    <span class="n">width</span><span class="o">=</span><span class="s1">&#39;15%&#39;</span><span class="p">,</span><span class="n">margin</span><span class="o">=</span><span class="s1">&#39;0px 0px 0px 5px&#39;</span>
+<span class="p">)</span>
+
+<span class="c1"># IPython.OutputArea.prototype._should_scroll = function(lines) (</span>
+<span class="c1">#     return false;</span>
+<span class="c1"># )</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+C:\Users\lz1\AppData\Local\Continuum\anaconda3\lib\site-packages\h5py\__init__.py:36: FutureWarning: Conversion of the second argument of issubdtype from `float` to `np.floating` is deprecated. In future, it will be treated as `np.float64 == np.dtype(float).type`.
+  from ._conv import register_converters as _register_converters
+</pre></div></div>
+</div>
+<section id="Define-Cantilever-Parameters">
+<h3>Define Cantilever Parameters<a class="headerlink" href="#Define-Cantilever-Parameters" title="Link to this heading">¶</a></h3>
+<p>Here you should input the calibrated parameters of the tip from your experiment. In particular the lever sensitivity (m/V) and Spring Constant (N/m) which will be used to convert signals to displacement and force respectively.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># &#39;k&#39;, &#39;invols&#39;, &#39;Thermal_Q&#39;, &#39;Thermal_resonance&#39;</span>
+<span class="n">cantl_parms</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+<span class="n">cantl_parms</span><span class="p">[</span><span class="s1">&#39;k&#39;</span><span class="p">]</span><span class="o">=</span><span class="mi">70</span> <span class="c1"># N/M</span>
+<span class="n">cantl_parms</span><span class="p">[</span><span class="s1">&#39;invols&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">2e-9</span> <span class="c1">#m/V</span>
+
+
+<span class="nb">print</span><span class="p">(</span><span class="n">cantl_parms</span><span class="p">)</span>
+
+<span class="n">num_cores</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">max_mem_mb</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="mi">1048</span>
+<span class="n">keep_vars</span> <span class="o">=</span> <span class="nb">dir</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{&#39;k&#39;: 70, &#39;invols&#39;: 2e-09}
+</pre></div></div>
+</div>
+<section id="Step-1.)-Model-the-Cantilever-Transfer-Function">
+<h4>Step 1.) Model the Cantilever Transfer Function<a class="headerlink" href="#Step-1.)-Model-the-Cantilever-Transfer-Function" title="Link to this heading">¶</a></h4>
+<p>First we need to read in the tune file for the cantilever your used to perform your measurment with. This tune show capture the “free” SHO parameters of the cantilever. If you have previously translated this data you can change the data type in the bottom right corner to .h5, others click the parms file.txt</p>
+</section>
+</section>
+</section>
+<section id="Step-1a.-Translates-Tune-file-to-HF5-format">
+<h2>Step 1a. Translates Tune file to HF5 format<a class="headerlink" href="#Step-1a.-Translates-Tune-file-to-HF5-format" title="Link to this heading">¶</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><br/><span></span><span class="k">if</span> <span class="ow">not</span> <span class="n">load_tune_results</span><span class="p">:</span>
+   <span class="n">input_file_path</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">io_utils</span><span class="o">.</span><span class="n">file_dialog</span><span class="p">(</span><span class="n">file_filter</span><span class="o">=</span><span class="s1">&#39;Parameters for raw G-Line data (*.dat);; </span><span class="se">\</span>
+<span class="s1">                                        Translated file (*.h5)&#39;</span><span class="p">,</span> <span class="n">caption</span><span class="o">=</span><span class="s1">&#39;Select translated .h5 file or raw experiment data&#39;</span><span class="p">)</span>
+
+
+   <span class="n">tune_path</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">input_file_path</span><span class="p">)</span>
+   <span class="n">tune_file_base_name</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">tune_path</span><span class="p">)</span>
+
+   <span class="k">if</span> <span class="n">input_file_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.h5&#39;</span><span class="p">):</span>
+     <span class="n">h5_path_tuned</span> <span class="o">=</span> <span class="n">input_file_path</span>
+   <span class="k">else</span><span class="p">:</span>
+     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Translating raw data to h5. Please wait&#39;</span><span class="p">)</span>
+     <span class="n">tran</span><span class="o">=</span><span class="n">px</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">translators</span><span class="o">.</span><span class="n">GTuneTranslator</span><span class="p">()</span>
+     <span class="n">h5_path_tuned</span><span class="o">=</span><span class="n">tran</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">input_file_path</span><span class="p">)</span>
+
+
+    <span class="c1">##############################################################</span>
+    <span class="c1">##Step 1b. Extract the Resonance Modes Considered in the Force Reconstruction</span>
+    <span class="c1">##############################################################</span>
+
+    <span class="c1">#define number of eigenmodes to consider</span>
+   <span class="n">num_bandsVal</span><span class="o">=</span><span class="mi">2</span>
+
+    <span class="c1">#define bands (center frequency +/- bandwith)</span>
+   <span class="n">MB0_w1</span> <span class="o">=</span> <span class="mf">70E3</span> <span class="o">-</span> <span class="mf">20E3</span>
+   <span class="n">MB0_w2</span> <span class="o">=</span> <span class="mf">70E3</span> <span class="o">+</span> <span class="mf">20E3</span>
+
+   <span class="n">MB1_w1</span> <span class="o">=</span> <span class="mf">460E3</span> <span class="o">-</span> <span class="mf">20E3</span>
+   <span class="n">MB1_w2</span> <span class="o">=</span> <span class="mf">460E3</span> <span class="o">+</span> <span class="mf">20E3</span>
+
+   <span class="n">MB1_amp</span> <span class="o">=</span> <span class="mf">30E-9</span>
+   <span class="n">MB2_amp</span> <span class="o">=</span> <span class="mf">1E-9</span>
+
+   <span class="n">MB_parm_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">MB1_amp</span><span class="p">,</span><span class="n">MB0_w1</span><span class="p">,</span><span class="n">MB0_w2</span><span class="p">,</span><span class="n">MB1_amp</span><span class="p">,</span><span class="n">MB1_w1</span><span class="p">,</span><span class="n">MB1_w2</span><span class="p">])</span>
+   <span class="n">MB_parm_vec</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+   <span class="n">band_edge_mat</span> <span class="o">=</span> <span class="n">MB_parm_vec</span><span class="p">[:,</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+
+   <span class="n">h5_file</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">h5_path_tuned</span><span class="p">,</span> <span class="s1">&#39;r+&#39;</span><span class="p">)</span>
+
+   <span class="n">h5_tune_resp</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">find_dataset</span><span class="p">(</span><span class="n">h5_file</span><span class="p">,</span> <span class="s1">&#39;Raw_Data&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+   <span class="n">h5_tune</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">find_dataset</span><span class="p">(</span><span class="n">h5_file</span><span class="p">,</span> <span class="s1">&#39;Raw_Data&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+   <span class="n">samp_rate</span> <span class="o">=</span> <span class="p">(</span><span class="n">px</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">get_attr</span><span class="p">(</span><span class="n">h5_tune</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="s1">&#39;IO_rate_[Hz]&#39;</span><span class="p">))</span>
+   <span class="n">num_rows</span><span class="o">=</span><span class="n">h5_tune</span><span class="o">.</span><span class="n">pos_dim_sizes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+   <span class="n">N_points_per_line</span><span class="o">=</span><span class="n">h5_tune</span><span class="o">.</span><span class="n">spec_dim_sizes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+   <span class="n">N_points_per_pixel</span><span class="o">=</span><span class="n">N_points_per_line</span> <span class="o">/</span> <span class="n">num_rows</span>
+   <span class="n">w_vec2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">samp_rate</span><span class="p">,</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">samp_rate</span> <span class="o">-</span> <span class="mf">1.0</span><span class="o">*</span><span class="n">samp_rate</span> <span class="o">/</span> <span class="n">N_points_per_line</span><span class="p">,</span> <span class="n">N_points_per_line</span><span class="p">)</span>
+   <span class="n">dt</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">samp_rate</span>
+   <span class="n">df</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">dt</span>
+
+    <span class="c1"># Response</span>
+   <span class="n">A_pd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">h5_tune_resp</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+   <span class="n">yt0_tune</span> <span class="o">=</span> <span class="n">A_pd</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">A_pd</span><span class="p">)</span>
+   <span class="n">Yt0_tune</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fftshift</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="n">yt0_tune</span><span class="p">,</span><span class="n">N_points_per_line</span><span class="p">)</span><span class="o">*</span><span class="n">dt</span><span class="p">)</span>
+
+    <span class="c1"># Excitation</span>
+   <span class="n">h5_spec_vals</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">get_auxiliary_datasets</span><span class="p">(</span><span class="n">h5_tune</span><span class="p">,</span> <span class="n">aux_dset_name</span><span class="o">=</span><span class="s1">&#39;Spectroscopic_Values&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+   <span class="n">BE_pd</span> <span class="o">=</span> <span class="n">h5_spec_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span>
+
+   <span class="n">f0</span> <span class="o">=</span> <span class="n">BE_pd</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">BE_pd</span><span class="p">)</span>
+   <span class="n">F0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fftshift</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="n">f0</span><span class="p">,</span><span class="n">N_points_per_line</span><span class="p">)</span><span class="o">*</span><span class="n">dt</span><span class="p">)</span>
+   <span class="n">excited_bin_ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">F0</span><span class="p">)</span><span class="o">&gt;</span><span class="mf">1e-3</span><span class="p">)</span>
+
+   <span class="n">TF_vec</span> <span class="o">=</span> <span class="n">Yt0_tune</span><span class="o">/</span><span class="n">F0</span>
+
+   <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+   <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+   <span class="n">plt</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">w_vec2</span><span class="p">[</span><span class="n">excited_bin_ind</span><span class="p">])</span><span class="o">*</span><span class="mf">1E-6</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">TF_vec</span><span class="p">[</span><span class="n">excited_bin_ind</span><span class="p">]))</span>
+   <span class="n">plt</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labelsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+   <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Frequency (MHz)&#39;</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+   <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Amplitude (a.u.)&#39;</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+   <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">(</span><span class="n">pad</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">w_pad</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">h_pad</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+   <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+   <span class="n">plt</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">w_vec2</span><span class="p">[</span><span class="n">excited_bin_ind</span><span class="p">])</span><span class="o">*</span><span class="mf">1E-6</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">TF_vec</span><span class="p">[</span><span class="n">excited_bin_ind</span><span class="p">]))</span>
+   <span class="n">plt</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labelsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+    <span class="c1">#plt.ylim([1E-4, 1E+1]) # Beth added this line</span>
+    <span class="c1">#plt.xlim([0,1]) # Beth added this line</span>
+   <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Frequency (MHz)&#39;</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+   <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Phase (Rad)&#39;</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+   <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">(</span><span class="n">pad</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">w_pad</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">h_pad</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+
+
+    <span class="c1">##############################################################</span>
+    <span class="c1">##Step 1c. Construct an effective Transfer function (TF_Norm) from SHO fits</span>
+    <span class="c1">##############################################################</span>
+
+   <span class="n">TunePhase</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+   <span class="n">num_bands</span> <span class="o">=</span> <span class="n">band_edge_mat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+   <span class="n">coef_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_bands</span><span class="p">,</span><span class="mi">4</span><span class="p">))</span>
+   <span class="n">coef_guess_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">4</span><span class="p">))</span>
+   <span class="n">TF_fit_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">w_vec2</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+   <span class="n">TFb_vec</span> <span class="o">=</span> <span class="n">TF_vec</span><span class="p">[</span><span class="n">excited_bin_ind</span><span class="p">]</span>
+   <span class="n">wb</span> <span class="o">=</span> <span class="n">w_vec2</span><span class="p">[</span><span class="n">excited_bin_ind</span><span class="p">]</span>
+
+
+   <span class="k">for</span> <span class="n">k1</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_bandsVal</span><span class="p">):</span>
+
+        <span class="c1"># locate the fitting region</span>
+       <span class="n">w1</span> <span class="o">=</span> <span class="n">band_edge_mat</span><span class="p">[</span><span class="n">k1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+       <span class="n">w2</span> <span class="o">=</span> <span class="n">band_edge_mat</span><span class="p">[</span><span class="n">k1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+       <span class="n">bin_ind1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">w1</span><span class="o">-</span><span class="n">wb</span><span class="p">)</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">w1</span><span class="o">-</span><span class="n">wb</span><span class="p">)))[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+       <span class="n">bin_ind2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">w2</span><span class="o">-</span><span class="n">wb</span><span class="p">)</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">w2</span><span class="o">-</span><span class="n">wb</span><span class="p">)))[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+       <span class="n">response_vec</span> <span class="o">=</span> <span class="n">TFb_vec</span><span class="p">[</span><span class="n">bin_ind1</span><span class="p">:</span><span class="n">bin_ind2</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">T</span>
+       <span class="n">wbb</span> <span class="o">=</span> <span class="n">wb</span><span class="p">[</span><span class="n">bin_ind1</span><span class="p">:</span><span class="n">bin_ind2</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="o">/</span><span class="mf">1E+6</span>
+
+       <span class="k">if</span> <span class="n">k1</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">Q_guess</span> <span class="o">=</span> <span class="mi">120</span>
+            <span class="c1">#Q_guess = 50</span>
+
+       <span class="k">elif</span> <span class="n">k1</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+           <span class="n">Q_guess</span> <span class="o">=</span> <span class="mi">500</span>
+           <span class="c1"># Q_guess = 150</span>
+       <span class="k">else</span><span class="p">:</span>
+           <span class="n">Q_guess</span> <span class="o">=</span> <span class="mi">700</span>
+          <span class="c1">#  Q_guess = 75</span>
+
+       <span class="n">response_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">response_vec</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">response_vec</span><span class="p">)])</span><span class="o">.</span><span class="n">T</span>
+       <span class="n">A_max_ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">response_vec</span><span class="p">))</span>
+       <span class="n">A_max</span> <span class="o">=</span> <span class="n">response_vec</span><span class="p">[</span><span class="n">A_max_ind</span><span class="p">]</span>
+       <span class="n">A_guess</span> <span class="o">=</span> <span class="n">A_max</span><span class="o">/</span><span class="n">Q_guess</span>
+       <span class="n">wo_guess</span> <span class="o">=</span> <span class="n">wbb</span><span class="p">[</span><span class="n">A_max_ind</span><span class="p">]</span>
+
+       <span class="k">if</span> <span class="n">k1</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+           <span class="n">phi_guess</span> <span class="o">=</span> <span class="n">TunePhase</span>
+
+       <span class="n">coef_guess_vec</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">A_guess</span><span class="p">)</span>
+       <span class="n">coef_guess_vec</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">wo_guess</span>
+       <span class="n">coef_guess_vec</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">Q_guess</span>
+       <span class="n">coef_guess_vec</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">phi_guess</span>
+
+       <span class="n">LL_vec</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">w1</span><span class="o">/</span><span class="mf">1E+6</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">]</span> <span class="c1"># lower limit</span>
+       <span class="n">UL_vec</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">),</span><span class="n">w2</span><span class="o">/</span><span class="mf">1E+6</span><span class="p">,</span><span class="mi">10000</span><span class="p">,</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">]</span> <span class="c1"># upper limit</span>
+
+       <span class="n">coef_vec</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">analysis</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">be_sho</span><span class="o">.</span><span class="n">SHOestimateGuess</span><span class="p">(</span><span class="n">response_vec</span><span class="p">,</span><span class="n">wbb</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
+
+       <span class="n">response_guess_vec</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">analysis</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">be_sho</span><span class="o">.</span><span class="n">SHOfunc</span><span class="p">(</span><span class="n">coef_guess_vec</span><span class="p">,</span><span class="n">wbb</span><span class="p">)</span>
+       <span class="n">response_fit_vec</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">analysis</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">be_sho</span><span class="o">.</span><span class="n">SHOfunc</span><span class="p">(</span><span class="n">coef_vec</span><span class="p">,</span><span class="n">wbb</span><span class="p">)</span>
+
+       <span class="n">coef_vec</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">coef_vec</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="mf">1E6</span>
+       <span class="n">coef_mat</span><span class="p">[</span><span class="n">k1</span><span class="p">,:]</span> <span class="o">=</span> <span class="n">coef_vec</span>
+
+       <span class="n">response_fit_full_vec</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">analysis</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">be_sho</span><span class="o">.</span><span class="n">SHOfunc</span><span class="p">(</span><span class="n">coef_vec</span><span class="p">,</span><span class="n">w_vec2</span><span class="p">)</span>
+
+       <span class="n">TF_fit_vec</span> <span class="o">=</span> <span class="n">TF_fit_vec</span> <span class="o">+</span> <span class="n">response_fit_full_vec</span> <span class="c1"># check for length and dimension</span>
+
+
+       <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+       <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">k1</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+       <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">wbb</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">response_vec</span><span class="p">),</span><span class="s1">&#39;.-&#39;</span><span class="p">)</span>
+       <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">wbb</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">response_guess_vec</span><span class="p">),</span><span class="n">c</span><span class="o">=</span><span class="s1">&#39;g&#39;</span><span class="p">)</span>
+       <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">wbb</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">response_fit_vec</span><span class="p">),</span><span class="n">c</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+       <span class="n">plt</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labelsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+       <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Frequency (MHz)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+       <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Amplitude (nm)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+       <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="p">(</span><span class="n">k1</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span>
+       <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">wbb</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">response_vec</span><span class="p">),</span><span class="s1">&#39;.-&#39;</span><span class="p">)</span>
+       <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">wbb</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">response_guess_vec</span><span class="p">),</span><span class="n">c</span><span class="o">=</span><span class="s1">&#39;g&#39;</span><span class="p">)</span>
+       <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">wbb</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">response_fit_vec</span><span class="p">),</span><span class="n">c</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+       <span class="n">plt</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labelsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+       <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Frequency (MHz)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+       <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Phase (Rad)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+       <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">(</span><span class="n">pad</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">w_pad</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">h_pad</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+
+   <span class="k">if</span> <span class="n">save_figure</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+       <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_filepath</span><span class="o">+</span><span class="s1">&#39;\SHOFitting.tif&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;tiff&#39;</span><span class="p">,</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1">##############################################################</span>
+    <span class="c1">##Step 1d. write and save data to HDF5</span>
+    <span class="c1">##############################################################</span>
+
+   <span class="n">Q</span> <span class="o">=</span> <span class="n">coef_mat</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span>
+   <span class="n">TF_norm</span> <span class="o">=</span> <span class="p">((</span><span class="n">TF_fit_vec</span><span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">TF_fit_vec</span><span class="p">)))</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">TF_fit_vec</span><span class="p">))</span><span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">TF_fit_vec</span><span class="p">)))</span><span class="o">*</span><span class="n">Q</span>
+
+
+   <span class="n">tf_grp</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">create_indexed_group</span><span class="p">(</span><span class="n">h5_tune</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="s1">&#39;Tune_Function&#39;</span><span class="p">)</span>
+   <span class="n">tf_pos_dim</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">Dimension</span><span class="p">(</span><span class="s1">&#39;Single Step&#39;</span><span class="p">,</span> <span class="s1">&#39;a.u.&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+   <span class="n">tf_spec_dim</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">Dimension</span><span class="p">(</span><span class="s1">&#39;Frequency&#39;</span><span class="p">,</span> <span class="s1">&#39;MHz&#39;</span><span class="p">,</span> <span class="n">w_vec2</span><span class="p">)</span>
+   <span class="n">h5_tf</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">write_main_dataset</span><span class="p">(</span><span class="n">tf_grp</span><span class="p">,</span> <span class="n">TF_norm</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="s1">&#39;Tune_Data&#39;</span><span class="p">,</span>
+                                               <span class="s1">&#39;Response&#39;</span><span class="p">,</span> <span class="s1">&#39;a.u.&#39;</span><span class="p">,</span>
+                                               <span class="n">tf_pos_dim</span><span class="p">,</span> <span class="n">tf_spec_dim</span><span class="p">)</span>
+
+   <span class="n">h5_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+
+<span class="k">if</span> <span class="n">load_tune_results</span><span class="p">:</span>
+   <span class="n">h5_file</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">h5tune_file_path</span><span class="p">,</span> <span class="s1">&#39;r+&#39;</span><span class="p">)</span>
+   <span class="n">px</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">print_tree</span><span class="p">(</span><span class="n">h5_file</span><span class="p">)</span>
+
+   <span class="n">h5_tune</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">find_dataset</span><span class="p">(</span><span class="n">h5_file</span><span class="p">,</span> <span class="s1">&#39;Raw_Data&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+   <span class="n">TFnorm</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">find_dataset</span><span class="p">(</span><span class="n">h5_file</span><span class="p">,</span> <span class="s1">&#39;Tune_Data&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+   <span class="n">TF_norm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">TFnorm</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+   <span class="n">samp_rate</span> <span class="o">=</span> <span class="p">(</span><span class="n">px</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">get_attr</span><span class="p">(</span><span class="n">h5_tune</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="s1">&#39;IO_rate_[Hz]&#39;</span><span class="p">))</span>
+   <span class="n">num_rows</span><span class="o">=</span><span class="n">h5_tune</span><span class="o">.</span><span class="n">pos_dim_sizes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+   <span class="n">N_points_per_line</span><span class="o">=</span><span class="n">h5_tune</span><span class="o">.</span><span class="n">spec_dim_sizes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+   <span class="n">N_points_per_pixel</span><span class="o">=</span><span class="n">N_points_per_line</span> <span class="o">/</span> <span class="n">num_rows</span>
+   <span class="n">w_vec2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">samp_rate</span><span class="p">,</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">samp_rate</span> <span class="o">-</span> <span class="mf">1.0</span><span class="o">*</span><span class="n">samp_rate</span> <span class="o">/</span> <span class="n">N_points_per_line</span><span class="p">,</span> <span class="n">N_points_per_line</span><span class="p">)</span>
+
+
+   <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+   <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">TF_norm</span><span class="p">))</span>
+   <span class="n">plt</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labelsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+   <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Frequency (MHz)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+   <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Effective TF (a.u.)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+/
+├ Measurement_000
+  ---------------
+  ├ Channel_000
+    -----------
+    ├ Raw_Data
+  ├ Channel_001
+    -----------
+    ├ Raw_Data
+  ├ Position_Indices
+  ├ Position_Values
+  ├ Spectroscopic_Indices
+  ├ Spectroscopic_Values
+  ├ Tune_Function_000
+    -----------------
+    ├ Position_Indices
+    ├ Position_Values
+    ├ Spectroscopic_Indices
+    ├ Spectroscopic_Values
+    ├ Tune_Data
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/notebooks_gmode_GKPFM_base_notebook_11_1.png" src="../../_images/notebooks_gmode_GKPFM_base_notebook_11_1.png" />
+</div>
+</div>
+</section>
+</section>
+<section id="Step-(2)-Load,-Translate-and-Denoize-the-G-KPFM-data">
+<h1>Step (2) Load, Translate and Denoize the G-KPFM data<a class="headerlink" href="#Step-(2)-Load,-Translate-and-Denoize-the-G-KPFM-data" title="Link to this heading">¶</a></h1>
+<section id="Step-(2a)-Load-and-Translates-image-file-to-.H5-file-format.">
+<h2>Step (2a) Load and Translates image file to .H5 file format.<a class="headerlink" href="#Step-(2a)-Load-and-Translates-image-file-to-.H5-file-format." title="Link to this heading">¶</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">img_length</span> <span class="o">=</span> <span class="mf">10e-6</span>
+<span class="n">img_height</span> <span class="o">=</span> <span class="mf">5e-6</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="ow">not</span> <span class="n">load_image_results</span><span class="p">:</span>
+    <span class="n">input_file_path</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">io_utils</span><span class="o">.</span><span class="n">file_dialog</span><span class="p">(</span><span class="n">caption</span><span class="o">=</span><span class="s1">&#39;Select translated .h5 file or raw experiment data&#39;</span><span class="p">,</span>
+                                            <span class="n">file_filter</span><span class="o">=</span><span class="s1">&#39;Parameters for raw G-Line data (*.dat);; </span><span class="se">\</span>
+<span class="s1">                                            Translated file (*.h5)&#39;</span><span class="p">)</span>
+    <span class="n">folder_path</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">input_file_path</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">input_file_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.h5&#39;</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Working on:</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">h5_path</span><span class="p">)</span>
+        <span class="n">h5_path</span> <span class="o">=</span> <span class="n">input_file_path</span>
+
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Translating raw data to h5. Please wait&#39;</span><span class="p">)</span>
+        <span class="n">tran</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">translators</span><span class="o">.</span><span class="n">GLineTranslator</span><span class="p">()</span>
+        <span class="n">h5_path</span> <span class="o">=</span> <span class="n">tran</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">input_file_path</span><span class="p">)</span>
+<br/><br/></pre></div>
+</div>
+</div>
+</section>
+<section id="Extract-some-relevant-parameters">
+<h2>Extract some relevant parameters<a class="headerlink" href="#Extract-some-relevant-parameters" title="Link to this heading">¶</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="ow">not</span> <span class="n">load_image_results</span><span class="p">:</span>
+    <span class="n">hdf</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">h5_path</span><span class="p">,</span> <span class="s1">&#39;r+&#39;</span><span class="p">)</span>
+
+    <span class="n">h5_main</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">find_dataset</span><span class="p">(</span><span class="n">hdf</span><span class="p">,</span><span class="s1">&#39;Raw_Data&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="p">(</span><span class="n">basename</span><span class="p">,</span> <span class="n">parm_paths</span><span class="p">,</span> <span class="n">data_paths</span><span class="p">)</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">translators</span><span class="o">.</span><span class="n">GLineTranslator</span><span class="o">.</span><span class="n">_parse_file_path</span><span class="p">(</span><span class="n">input_file_path</span><span class="p">)</span>
+
+<span class="k">elif</span> <span class="n">load_image_results</span><span class="p">:</span>
+
+    <span class="n">hdf</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">h5image_file_path</span><span class="p">,</span> <span class="s1">&#39;r+&#39;</span><span class="p">)</span>
+
+    <span class="n">h5_main</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">find_dataset</span><span class="p">(</span><span class="n">hdf</span><span class="p">,</span><span class="s1">&#39;Raw_Data&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="p">(</span><span class="n">basename</span><span class="p">,</span> <span class="n">parm_paths</span><span class="p">,</span> <span class="n">data_paths</span><span class="p">)</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">translators</span><span class="o">.</span><span class="n">GLineTranslator</span><span class="o">.</span><span class="n">_parse_file_path</span><span class="p">(</span><span class="n">h5image_file_path</span><span class="p">)</span>
+    <span class="n">px</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">print_tree</span><span class="p">(</span><span class="n">hdf</span><span class="p">)</span>
+
+<span class="n">matread</span> <span class="o">=</span> <span class="n">loadmat</span><span class="p">(</span><span class="n">parm_paths</span><span class="p">[</span><span class="s1">&#39;parm_mat&#39;</span><span class="p">],</span> <span class="n">variable_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;BE_wave_AO_0&#39;</span><span class="p">,</span> <span class="s1">&#39;BE_wave_AO_1&#39;</span><span class="p">,</span> <span class="s1">&#39;total_cols&#39;</span><span class="p">,</span> <span class="s1">&#39;total_rows&#39;</span><span class="p">])</span>
+<span class="n">pulse_wave</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">matread</span><span class="p">[</span><span class="s1">&#39;BE_wave_AO_1&#39;</span><span class="p">]))</span>
+
+<span class="n">h5_pos_vals</span><span class="o">=</span><span class="n">h5_main</span><span class="o">.</span><span class="n">h5_spec_vals</span>
+<span class="n">h5_pos_inds</span><span class="o">=</span><span class="n">h5_main</span><span class="o">.</span><span class="n">h5_spec_inds</span>
+<span class="n">h5_spec_vals</span> <span class="o">=</span> <span class="n">h5_main</span><span class="o">.</span><span class="n">h5_spec_vals</span>
+<span class="n">h5_spec_inds</span> <span class="o">=</span> <span class="n">h5_main</span><span class="o">.</span><span class="n">h5_spec_inds</span>
+
+<span class="n">samp_rate</span> <span class="o">=</span> <span class="p">(</span><span class="n">px</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">get_attr</span><span class="p">(</span><span class="n">h5_main</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="s1">&#39;IO_rate_[Hz]&#39;</span><span class="p">))</span>
+
+<span class="n">num_rows</span><span class="o">=</span><span class="n">h5_main</span><span class="o">.</span><span class="n">pos_dim_sizes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">N_points_per_line</span><span class="o">=</span><span class="n">h5_main</span><span class="o">.</span><span class="n">spec_dim_sizes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">N_points_per_pixel</span><span class="o">=</span><span class="n">N_points_per_line</span> <span class="o">/</span> <span class="n">num_rows</span>
+
+<span class="c1"># General parameters</span>
+<span class="n">parms_dict</span> <span class="o">=</span> <span class="n">h5_main</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">attrs</span>
+<span class="n">samp_rate</span> <span class="o">=</span> <span class="n">parms_dict</span><span class="p">[</span><span class="s1">&#39;IO_rate_[Hz]&#39;</span><span class="p">]</span>
+<span class="n">ex_freq</span> <span class="o">=</span> <span class="n">parms_dict</span><span class="p">[</span><span class="s1">&#39;BE_center_frequency_[Hz]&#39;</span><span class="p">]</span>
+<span class="n">num_rows</span> <span class="o">=</span> <span class="n">parms_dict</span><span class="p">[</span><span class="s1">&#39;grid_num_rows&#39;</span><span class="p">]</span>
+<span class="n">num_cols</span> <span class="o">=</span> <span class="n">parms_dict</span><span class="p">[</span><span class="s1">&#39;grid_num_cols&#39;</span><span class="p">]</span>
+
+<span class="n">num_pts</span> <span class="o">=</span> <span class="n">h5_main</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">pnts_per_pix</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">num_pts</span><span class="o">/</span><span class="n">num_cols</span><span class="p">)</span>
+
+
+<span class="c1"># Adding image size to the parameters</span>
+<span class="n">parms_dict</span><span class="p">[</span><span class="s1">&#39;FastScanSize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">img_length</span>
+<span class="n">parms_dict</span><span class="p">[</span><span class="s1">&#39;SlowScanSize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">img_height</span>
+
+<span class="n">N_points</span> <span class="o">=</span> <span class="n">parms_dict</span><span class="p">[</span><span class="s1">&#39;num_bins&#39;</span><span class="p">]</span>
+<span class="n">N_points_per_pixel</span> <span class="o">=</span> <span class="n">parms_dict</span><span class="p">[</span><span class="s1">&#39;num_bins&#39;</span><span class="p">]</span>
+<span class="n">time_per_osc</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">parms_dict</span><span class="p">[</span><span class="s1">&#39;BE_center_frequency_[Hz]&#39;</span><span class="p">])</span>
+<span class="n">IO_rate</span> <span class="o">=</span> <span class="n">parms_dict</span><span class="p">[</span><span class="s1">&#39;IO_rate_[Hz]&#39;</span><span class="p">]</span>     <span class="c1">#sampling_rate</span>
+<span class="n">parms_dict</span><span class="p">[</span><span class="s1">&#39;sampling_rate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">IO_rate</span>
+<span class="n">pnts_per_period</span> <span class="o">=</span> <span class="n">IO_rate</span> <span class="o">*</span> <span class="n">time_per_osc</span> <span class="c1">#points per oscillation period</span>
+<span class="n">pxl_time</span> <span class="o">=</span> <span class="n">N_points_per_pixel</span><span class="o">/</span><span class="n">IO_rate</span>    <span class="c1">#seconds per pixel</span>
+<span class="n">num_periods</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">pxl_time</span><span class="o">/</span><span class="n">time_per_osc</span><span class="p">)</span> <span class="c1">#total # of periods per pixel, should be an integer</span>
+
+<span class="c1"># Excitation waveform for a single pixel</span>
+<span class="c1">#pixel_ex_wfm = h5_spec_vals[0, :int(h5_spec_vals.shape[1]/num_cols)]</span>
+
+<span class="n">pixel_ex_wfm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">matread</span><span class="p">[</span><span class="s1">&#39;BE_wave_AO_0&#39;</span><span class="p">]))</span>
+
+<span class="c1"># Excitation waveform for a single line / row of data</span>
+<span class="n">excit_wfm</span> <span class="o">=</span> <span class="n">h5_spec_vals</span><span class="o">.</span><span class="n">value</span>
+
+<span class="c1"># Preparing the frequency axis:</span>
+<span class="n">w_vec</span> <span class="o">=</span> <span class="mf">1E-3</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="o">*</span><span class="n">samp_rate</span><span class="p">,</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">samp_rate</span> <span class="o">-</span> <span class="n">samp_rate</span><span class="o">/</span><span class="n">num_pts</span><span class="p">,</span> <span class="n">num_pts</span><span class="p">)</span>
+<span class="n">w_vec_pix</span> <span class="o">=</span> <span class="mf">1E-3</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="o">*</span><span class="n">samp_rate</span><span class="p">,</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">samp_rate</span> <span class="o">-</span> <span class="n">samp_rate</span><span class="o">/</span><span class="n">pnts_per_pix</span><span class="p">,</span> <span class="n">pnts_per_pix</span><span class="p">)</span>
+
+<span class="c1"># Preparing the time axis:</span>
+<span class="n">t_vec_line</span> <span class="o">=</span> <span class="mf">1E3</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_pts</span><span class="o">/</span><span class="n">samp_rate</span><span class="p">,</span> <span class="n">num_pts</span><span class="p">)</span>
+<span class="n">t_vec_pix</span> <span class="o">=</span> <span class="mf">1E3</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pnts_per_pix</span><span class="o">/</span><span class="n">samp_rate</span><span class="p">,</span> <span class="n">pnts_per_pix</span><span class="p">)</span>
+
+<span class="c1"># Dimension objects</span>
+<span class="n">rows_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">img_height</span><span class="p">,</span> <span class="n">num_rows</span><span class="p">)</span>
+<span class="n">cols_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">img_length</span><span class="p">,</span> <span class="n">num_cols</span><span class="p">)</span>
+<span class="n">time_vals</span> <span class="o">=</span> <span class="n">t_vec_pix</span>
+
+<span class="c1"># Correctly adds the ancillary datasets</span>
+<span class="n">pos_dims</span> <span class="o">=</span> <span class="p">[</span><span class="n">px</span><span class="o">.</span><span class="n">write_utils</span><span class="o">.</span><span class="n">Dimension</span><span class="p">(</span><span class="s1">&#39;Cols&#39;</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="n">cols_vals</span><span class="p">),</span>
+            <span class="n">px</span><span class="o">.</span><span class="n">write_utils</span><span class="o">.</span><span class="n">Dimension</span><span class="p">(</span><span class="s1">&#39;Rows&#39;</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="n">rows_vals</span><span class="p">)]</span>
+<span class="n">spec_dims</span> <span class="o">=</span> <span class="p">[</span><span class="n">px</span><span class="o">.</span><span class="n">write_utils</span><span class="o">.</span><span class="n">Dimension</span><span class="p">(</span><span class="s1">&#39;Time&#39;</span><span class="p">,</span> <span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="n">time_vals</span><span class="p">)]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+/
+├ Measurement_000
+  ---------------
+  ├ CPD_000
+    -------
+    ├ CPD
+    ├ CPD-SVD_000
+      -----------
+      ├ Position_Indices
+      ├ Position_Values
+      ├ Rebuilt_Data_000
+        ----------------
+        ├ Rebuilt_Data
+      ├ S
+      ├ Spectroscopic_Indices
+      ├ Spectroscopic_Values
+      ├ U
+      ├ V
+    ├ Position_Indices
+    ├ Position_Values
+    ├ Spectroscopic_Indices
+    ├ Spectroscopic_Values
+  ├ Channel_000
+    -----------
+    ├ F3R_Results_000
+      ---------------
+      ├ F3R_data
+      ├ F3R_data-Reshape_000
+        --------------------
+        ├ Position_Indices
+        ├ Position_Values
+        ├ Reshaped_Data
+        ├ Reshaped_Data-SVD_000
+          ---------------------
+          ├ Position_Indices
+          ├ Position_Values
+          ├ S
+          ├ Spectroscopic_Indices
+          ├ Spectroscopic_Values
+          ├ U
+          ├ V
+        ├ Spectroscopic_Indices
+        ├ Spectroscopic_Values
+      ├ Position_Indices
+      ├ Position_Values
+      ├ Spectroscopic_Indices
+      ├ Spectroscopic_Values
+    ├ Raw_Data
+    ├ Raw_Data-FFT_Filtering_000
+      --------------------------
+      ├ Composite_Filter
+      ├ Filtered_Data
+      ├ Filtered_Data-Reshape_000
+        -------------------------
+        ├ Position_Indices
+        ├ Position_Values
+        ├ Reshaped_Data
+        ├ Reshaped_Data-SVD_000
+          ---------------------
+          ├ Position_Indices
+          ├ Position_Values
+          ├ S
+          ├ Spectroscopic_Indices
+          ├ Spectroscopic_Values
+          ├ U
+          ├ V
+        ├ Spectroscopic_Indices
+        ├ Spectroscopic_Values
+      ├ Noise_Floors
+      ├ Noise_Spec_Indices
+      ├ Noise_Spec_Values
+  ├ Channel_001
+    -----------
+    ├ Raw_Data
+  ├ Position_Indices
+  ├ Position_Values
+  ├ Spectroscopic_Indices
+  ├ Spectroscopic_Values
+├ relaxation_fit
+</pre></div></div>
+</div>
+</section>
+<section id="Step-2b-Fourier-Filter-data.">
+<h2>Step 2b Fourier Filter data.<a class="headerlink" href="#Step-2b-Fourier-Filter-data." title="Link to this heading">¶</a></h2>
+<p>–Step ignored if loading previous results</p>
+<p>** Here you can play with Noise tolerance **</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span> <span class="c1"># Test filter on a single line:</span>
+ <span class="n">row_ind</span> <span class="o">=</span> <span class="mi">9</span>
+
+<span class="k">if</span> <span class="n">Filter_data</span><span class="p">:</span>
+    <span class="c1"># Set Filter parameters here:</span>
+    <span class="n">num_spectral_pts</span> <span class="o">=</span> <span class="n">h5_main</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="c1">##############################################################################################################################</span>
+    <span class="c1">#### Here you can play with Low Pass Filter</span>
+    <span class="c1">################################################################################################################</span>
+    <span class="n">lpf</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">processing</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">LowPassFilter</span><span class="p">(</span><span class="n">num_pts</span><span class="p">,</span> <span class="n">samp_rate</span><span class="p">,</span> <span class="mf">180E+3</span><span class="p">)</span> <span class="c1"># low pass filter</span>
+
+     <span class="c1">##############################################################################################################################</span>
+    <span class="c1">#### Here you can play with Noise band filter</span>
+    <span class="c1">################################################################################################################</span>
+    <span class="n">nbf</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">processing</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">NoiseBandFilter</span><span class="p">(</span><span class="n">num_pts</span><span class="p">,</span> <span class="n">samp_rate</span><span class="p">,</span> <span class="p">[</span><span class="mf">125E+3</span><span class="p">,</span> <span class="mf">50E+3</span><span class="p">,</span> <span class="mf">5E+3</span><span class="p">,</span> <span class="mf">100E+3</span><span class="p">],</span> <span class="p">[</span><span class="mf">2E+3</span><span class="p">,</span> <span class="mf">1E+3</span><span class="p">,</span> <span class="mf">20E+3</span><span class="p">,</span> <span class="mf">5E+3</span> <span class="p">])</span>
+
+    <span class="c1">################################################################################################################################</span>
+    <span class="c1">#### Here you can play with Noise Noise tolerance</span>
+    <span class="c1">################################################################################################################</span>
+
+    <span class="n">noise_tolerance</span> <span class="o">=</span> <span class="mf">1000E-9</span>
+
+    <span class="n">freq_filts</span> <span class="o">=</span> <span class="p">[</span><span class="n">lpf</span><span class="p">,</span> <span class="n">nbf</span><span class="p">]</span>
+
+
+
+    <span class="n">excit_wfm</span> <span class="o">=</span> <span class="n">h5_spec_vals</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">filt_line</span><span class="p">,</span> <span class="n">fig_filt</span><span class="p">,</span> <span class="n">axes_filt</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">processing</span><span class="o">.</span><span class="n">gmode_utils</span><span class="o">.</span><span class="n">test_filter</span><span class="p">(</span><span class="n">h5_main</span><span class="p">[</span><span class="n">row_ind</span><span class="p">],</span>
+                                                                           <span class="n">frequency_filters</span><span class="o">=</span><span class="n">freq_filts</span><span class="p">,</span>
+                                                                           <span class="n">noise_threshold</span><span class="o">=</span><span class="n">noise_tolerance</span><span class="p">,</span>
+                                                                           <span class="n">show_plots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">(</span><span class="n">pad</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">w_pad</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">h_pad</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+
+
+    <span class="k">if</span> <span class="n">save_figure</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">fig</span><span class="o">=</span><span class="n">fig_filt</span>
+
+        <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_filepath</span><span class="o">+</span><span class="s1">&#39;\FFTFiltering.tif&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;tiff&#39;</span><span class="p">)</span>
+
+
+        <span class="n">filt_row</span> <span class="o">=</span> <span class="n">filt_line</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">pixel_ex_wfm</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+
+        <span class="n">fig_loops</span><span class="p">,</span> <span class="n">axes_loops</span> <span class="o">=</span> <span class="n">plot_curves</span><span class="p">(</span><span class="n">pixel_ex_wfm</span><span class="p">,</span> <span class="n">filt_row</span><span class="p">,</span> <span class="n">line_colors</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">],</span> <span class="n">x_label</span><span class="o">=</span><span class="s1">&#39;Excitation&#39;</span><span class="p">,</span>
+                                                    <span class="n">y_label</span><span class="o">=</span><span class="s1">&#39;Signal&#39;</span><span class="p">,</span> <span class="n">subtitle_prefix</span><span class="o">=</span><span class="s1">&#39;Col &#39;</span><span class="p">,</span> <span class="n">num_plots</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+                                                    <span class="n">title</span><span class="o">=</span><span class="s1">&#39;test&#39;</span><span class="p">,</span><span class="n">use_rainbow_plots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1">#############################################################################################################</span>
+    <span class="c1">####  Try force conversion on random row</span>
+    <span class="c1">###############################################################################################################</span>
+
+
+    <span class="c1">################################################################################################################</span>
+    <span class="c1">#### Here you should adjust phas to reduce hysteresis in the parabola</span>
+    <span class="c1">################################################################################################################</span>
+
+    <span class="n">ph</span><span class="o">=-</span><span class="mf">0.35</span><span class="c1">#original</span>
+
+
+    <span class="c1">################################################################################################################</span>
+    <span class="c1">#### Here you set the Noise threshold for the force recovery bins</span>
+    <span class="c1">################################################################################################################</span>
+
+    <span class="n">Noiselimit</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+
+    <span class="c1"># Try Force Conversion on Filtered data</span>
+    <span class="n">G</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">w_vec</span><span class="o">.</span><span class="n">size</span><span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
+
+    <span class="n">G_wPhase</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">w_vec</span><span class="o">.</span><span class="n">size</span><span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
+
+
+    <span class="n">signal_ind_vec</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">w_vec</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+    <span class="n">ind_drive</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">w_vec</span><span class="o">*</span><span class="mf">1e3</span><span class="o">-</span><span class="n">ex_freq</span><span class="p">))</span><span class="o">.</span><span class="n">argmin</span><span class="p">()</span>
+    <span class="n">test1</span><span class="o">=</span><span class="n">filt_line</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">filt_line</span><span class="p">)</span>
+    <span class="n">test1</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fftshift</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="n">test1</span><span class="p">))</span>
+   <span class="c1"># signal_kill = np.where(np.abs(test1)&lt;Noiselimit)</span>
+    <span class="c1">#signal_ind_vec=np.delete(signal_ind_vec,signal_kill)</span>
+    <span class="n">signal_keep</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">test1</span><span class="p">)</span><span class="o">&gt;=</span><span class="n">Noiselimit</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+
+    <span class="n">test</span><span class="o">=</span><span class="p">(</span><span class="n">test1</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">w_vec</span><span class="o">*</span><span class="mf">1e3</span> <span class="o">/</span><span class="p">(</span><span class="n">w_vec</span><span class="p">[</span><span class="n">ind_drive</span><span class="p">]</span><span class="o">*</span><span class="mf">1e3</span><span class="p">)</span><span class="o">*</span><span class="n">ph</span><span class="p">)</span>
+
+    <span class="n">G_wPhase</span><span class="p">[</span><span class="n">signal_keep</span><span class="p">]</span><span class="o">=</span><span class="n">test</span><span class="p">[</span><span class="n">signal_keep</span><span class="p">]</span>
+    <span class="n">G_wPhase</span><span class="o">=</span><span class="p">(</span><span class="n">G_wPhase</span><span class="o">/</span><span class="n">TF_norm</span><span class="p">)</span>
+
+    <span class="n">G_wPhase_time</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifft</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifftshift</span><span class="p">(</span><span class="n">G_wPhase</span><span class="p">)))</span>
+
+    <span class="c1">#G[signal_ind_vec]=test1[signal_ind_vec]</span>
+    <span class="n">G</span><span class="p">[</span><span class="n">signal_keep</span><span class="p">]</span><span class="o">=</span><span class="n">test1</span><span class="p">[</span><span class="n">signal_keep</span><span class="p">]</span>
+    <span class="n">G</span><span class="o">=</span><span class="p">(</span><span class="n">G</span><span class="o">/</span><span class="n">TF_norm</span><span class="p">)</span>
+    <span class="n">G_time</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifft</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifftshift</span><span class="p">(</span><span class="n">G</span><span class="p">)))</span>
+
+    <span class="n">FRaw_resp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fftshift</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="n">h5_main</span><span class="p">[</span><span class="n">row_ind</span><span class="p">]))</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">7</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="n">w_vec</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">FRaw_resp</span><span class="p">)),</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Response&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="n">w_vec</span><span class="p">[</span><span class="n">signal_keep</span><span class="p">],</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">signal_keep</span><span class="p">])),</span> <span class="s1">&#39;og&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="n">w_vec</span><span class="p">[</span><span class="n">signal_keep</span><span class="p">],</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">FRaw_resp</span><span class="p">[</span><span class="n">signal_keep</span><span class="p">])),</span><span class="s1">&#39;.r&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;F3r&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Frequency (kHz)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Amplitude (a.u.)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">200</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Noise Spectrum for row &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">row_ind</span><span class="p">),</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">25</span><span class="p">)</span>
+    <span class="n">px</span><span class="o">.</span><span class="n">plot_utils</span><span class="o">.</span><span class="n">set_tick_font_size</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">(</span><span class="n">pad</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">w_pad</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">h_pad</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+
+    <span class="n">raw</span><span class="o">=</span><span class="n">G_time</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">pixel_ex_wfm</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+
+    <span class="n">phaseshifed</span><span class="o">=</span><span class="n">G_wPhase_time</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">pixel_ex_wfm</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plot_curves</span><span class="p">(</span><span class="n">pixel_ex_wfm</span><span class="p">,</span> <span class="n">phaseshifed</span><span class="p">,</span> <span class="n">line_colors</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">],</span> <span class="n">x_label</span><span class="o">=</span><span class="s1">&#39;Excitation&#39;</span><span class="p">,</span>
+                                                    <span class="n">y_label</span><span class="o">=</span><span class="s1">&#39;Signal&#39;</span><span class="p">,</span> <span class="n">subtitle_prefix</span><span class="o">=</span><span class="s1">&#39;Col &#39;</span><span class="p">,</span> <span class="n">num_plots</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+                                                    <span class="n">title</span><span class="o">=</span><span class="s1">&#39;test&#39;</span><span class="p">,</span><span class="n">use_rainbow_plots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<br/><br/></pre></div>
+</div>
+</div>
+<p>We need to find the phase offset between the measured response and drive voltage.</p>
+</section>
+<section id="Here-you-should-adjust-your-phase-to-close-the-parabola-in-the-second-set-of-images">
+<h2>Here you should adjust your phase to close the parabola in the second set of images<a class="headerlink" href="#Here-you-should-adjust-your-phase-to-close-the-parabola-in-the-second-set-of-images" title="Link to this heading">¶</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">Filter_data</span><span class="p">:</span>
+
+
+
+    <span class="n">h5_filt_grp</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">find_results_groups</span><span class="p">(</span><span class="n">h5_main</span><span class="p">,</span> <span class="s1">&#39;FFT_Filtering&#39;</span><span class="p">)</span>
+
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">h5_filt_grp</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Taking previously filtered results&#39;</span><span class="p">)</span>
+        <span class="n">h5_filt_grp</span> <span class="o">=</span> <span class="n">h5_filt_grp</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;FFT filtering not performed on this dataset. Filtering now:&#39;</span><span class="p">)</span>
+
+
+    <span class="n">sig_filt</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">processing</span><span class="o">.</span><span class="n">SignalFilter</span><span class="p">(</span><span class="n">h5_main</span><span class="p">,</span> <span class="n">frequency_filters</span><span class="o">=</span><span class="n">freq_filts</span><span class="p">,</span> <span class="n">noise_threshold</span><span class="o">=</span><span class="n">noise_tolerance</span><span class="p">,</span>
+                                              <span class="n">write_filtered</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">write_condensed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">num_pix</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">h5_filt_grp</span> <span class="o">=</span> <span class="n">sig_filt</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+
+    <span class="n">h5_filt</span> <span class="o">=</span> <span class="n">h5_filt_grp</span><span class="p">[</span><span class="s1">&#39;Filtered_Data&#39;</span><span class="p">]</span>
+
+
+<span class="k">elif</span> <span class="ow">not</span> <span class="n">Filter_data</span><span class="p">:</span>
+
+
+    <span class="n">h5_filt</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">find_dataset</span><span class="p">(</span><span class="n">hdf</span><span class="p">,</span> <span class="s1">&#39;Filtered_Data&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">################################################################################################################</span>
+<span class="c1">##### This reshapes the data into (rows*cols, N_points)                                                    #####</span>
+<span class="c1">################################################################################################################</span>
+
+<span class="n">scan_width</span><span class="o">=</span><span class="mi">1</span>
+
+<span class="n">h5_resh</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">processing</span><span class="o">.</span><span class="n">gmode_utils</span><span class="o">.</span><span class="n">reshape_from_lines_to_pixels</span><span class="p">(</span><span class="n">h5_filt</span><span class="p">,</span> <span class="n">pixel_ex_wfm</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">scan_width</span> <span class="o">/</span> <span class="n">num_cols</span><span class="p">)</span>
+<span class="n">h5_resh_grp</span> <span class="o">=</span> <span class="n">h5_resh</span><span class="o">.</span><span class="n">parent</span>
+
+<span class="n">h5_resh</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Starting to reshape G-mode line data. Please be patient
+Finished reshaping G-mode line data to rows and columns
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(65536, 8192)
+</pre></div></div>
+</div>
+</section>
+<section id="Does-PCA-on-the-filtered-response">
+<h2>Does PCA on the filtered response<a class="headerlink" href="#Does-PCA-on-the-filtered-response" title="Link to this heading">¶</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><br/><span></span><span class="k">if</span> <span class="n">PCA_clean</span><span class="p">:</span>
+
+    <span class="n">do_svd</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">processing</span><span class="o">.</span><span class="n">svd_utils</span><span class="o">.</span><span class="n">SVD</span><span class="p">(</span><span class="n">h5_resh</span><span class="p">,</span> <span class="n">num_components</span><span class="o">=</span><span class="mi">256</span><span class="p">)</span>
+    <span class="n">h5_svd_group</span> <span class="o">=</span> <span class="n">do_svd</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+
+    <span class="n">h5_u</span> <span class="o">=</span> <span class="n">h5_svd_group</span><span class="p">[</span><span class="s1">&#39;U&#39;</span><span class="p">]</span>
+    <span class="n">h5_v</span> <span class="o">=</span> <span class="n">h5_svd_group</span><span class="p">[</span><span class="s1">&#39;V&#39;</span><span class="p">]</span>
+    <span class="n">h5_s</span> <span class="o">=</span> <span class="n">h5_svd_group</span><span class="p">[</span><span class="s1">&#39;S&#39;</span><span class="p">]</span>
+
+    <span class="c1"># Since the two spatial dimensions (x, y) have been collapsed to one, we need to reshape the abundance maps:</span>
+    <span class="n">abun_maps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">h5_u</span><span class="p">[:,:</span><span class="mi">25</span><span class="p">],</span> <span class="p">(</span><span class="n">num_rows</span><span class="p">,</span> <span class="n">num_cols</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+
+    <span class="c1"># Visualize the variance / statistical importance of each component:</span>
+    <span class="n">px</span><span class="o">.</span><span class="n">plot_utils</span><span class="o">.</span><span class="n">plot_scree</span><span class="p">(</span><span class="n">h5_s</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Scree plot&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">save_figure</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_filepath</span><span class="o">+</span><span class="s1">&#39;\PCARaw_Scree_2.tif&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;tiff&#39;</span><span class="p">)</span>
+
+
+    <span class="c1"># Visualize the eigenvectors:</span>
+    <span class="n">first_evecs</span> <span class="o">=</span> <span class="n">h5_v</span><span class="p">[:</span><span class="mi">9</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plot_curves</span><span class="p">(</span><span class="n">pixel_ex_wfm</span><span class="p">,</span> <span class="n">first_evecs</span><span class="p">,</span> <span class="n">line_colors</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">],</span> <span class="n">x_label</span><span class="o">=</span><span class="s1">&#39;Voltage (V$_</span><span class="si">{ac}</span><span class="s1">$)&#39;</span><span class="p">,</span>
+                                                    <span class="n">y_label</span><span class="o">=</span><span class="s1">&#39;Displacement (a.u.)&#39;</span><span class="p">,</span> <span class="n">subtitle_prefix</span><span class="o">=</span><span class="s1">&#39;Col &#39;</span><span class="p">,</span> <span class="n">num_plots</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+                                                    <span class="n">title</span><span class="o">=</span><span class="s1">&#39;SVD Eigenvectors (F$^</span><span class="si">{3}</span><span class="s1">$R)&#39;</span><span class="p">,</span><span class="n">use_rainbow_plots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+    <span class="k">if</span> <span class="n">save_figure</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_filepath</span><span class="o">+</span><span class="s1">&#39;\PCARaw_Eig_2.tif&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;tiff&#39;</span><span class="p">)</span>
+
+
+    <span class="c1"># Visualize the abundance maps:</span>
+    <span class="n">plot_map_stack</span><span class="p">(</span><span class="n">abun_maps</span><span class="p">,</span> <span class="n">num_comps</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;SVD Abundance Maps&#39;</span><span class="p">,</span> <span class="n">reverse_dims</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                 <span class="n">color_bar_mode</span><span class="o">=</span><span class="s1">&#39;single&#39;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;inferno&#39;</span><span class="p">,</span> <span class="n">title_yoffset</span><span class="o">=</span><span class="mf">0.95</span><span class="p">)</span>
+
+
+    <span class="k">if</span> <span class="n">save_figure</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_filepath</span><span class="o">+</span><span class="s1">&#39;\PCARaw_Loading_2.tif&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;tiff&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><br/><span></span><span class="k">if</span> <span class="n">PCA_clean</span><span class="p">:</span>
+
+    <span class="n">h5_u</span> <span class="o">=</span> <span class="n">h5_svd_group</span><span class="p">[</span><span class="s1">&#39;U&#39;</span><span class="p">]</span>
+    <span class="n">h5_v</span> <span class="o">=</span> <span class="n">h5_svd_group</span><span class="p">[</span><span class="s1">&#39;V&#39;</span><span class="p">]</span>
+    <span class="n">h5_s</span> <span class="o">=</span> <span class="n">h5_svd_group</span><span class="p">[</span><span class="s1">&#39;S&#39;</span><span class="p">]</span>
+
+    <span class="n">skree_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">h5_s</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">h5_s</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="n">skree_sum</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">h5_s</span><span class="p">[:</span><span class="n">i</span><span class="p">])</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">h5_s</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">skree_sum</span><span class="p">,</span> <span class="s1">&#39;o&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Need&#39;</span><span class="p">,</span> <span class="n">skree_sum</span><span class="p">[</span><span class="n">skree_sum</span><span class="o">&lt;</span><span class="mf">0.8</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="s1">&#39;components for 80%&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Need&#39;</span><span class="p">,</span> <span class="n">skree_sum</span><span class="p">[</span><span class="n">skree_sum</span><span class="o">&lt;</span><span class="mf">0.9</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="s1">&#39;components for 90%&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Need&#39;</span><span class="p">,</span> <span class="n">skree_sum</span><span class="p">[</span><span class="n">skree_sum</span><span class="o">&lt;</span><span class="mf">0.95</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="s1">&#39;components for 95%&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Since the two spatial dimensions (x, y) have been collapsed to one, we need to reshape the abundance maps:</span>
+    <span class="c1"># The &quot;25&quot; is how many of the eigenvectors to keep</span>
+    <span class="n">abun_maps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">h5_u</span><span class="p">[:,:</span><span class="mi">25</span><span class="p">],</span> <span class="p">(</span><span class="n">num_rows</span><span class="p">,</span> <span class="n">num_cols</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">PCA_clean</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Performs PCA filtering prior to F3R Step</span>
+
+<span class="sd">    To avoid constantly redoing SVD, this segment also checks the components_used attribute to see if the SVD rebuilt has been</span>
+<span class="sd">    done with these components before.</span>
+
+<span class="sd">    clean_components can either be:</span>
+<span class="sd">        -a single component; [0]</span>
+<span class="sd">        -a range; [0,2] is same as [0,1,2]</span>
+<span class="sd">        -a subset of components; [0,1,4,5] would not include 2,3, and 6-end</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">PCA_pre_reconstruction_clean</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="c1"># Filters out the components specified from h5_resh (the reshaped h5 data)</span>
+    <span class="k">if</span> <span class="n">PCA_pre_reconstruction_clean</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+
+        <span class="c1"># important! If choosing components, min is 3 or interprets as start/stop range of slice</span>
+        <span class="n">clean_components</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">])</span> <span class="c1"># np.append(range(5,9),(17,18))</span>
+
+        <span class="c1"># checks for existing SVD</span>
+        <span class="n">itms</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">h5_resh</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
+        <span class="n">svdnames</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">itms</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;Reshaped_Data-SVD&#39;</span> <span class="ow">in</span> <span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="n">svdnames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">SVD_exists</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">svdnames</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">px</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">find_dataset</span><span class="p">(</span><span class="n">hdf</span><span class="o">.</span><span class="n">file</span><span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">name</span><span class="p">],</span> <span class="s1">&#39;Rebuilt_Data&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="p">[]:</span>
+                <span class="n">rb</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">find_dataset</span><span class="p">(</span><span class="n">hdf</span><span class="o">.</span><span class="n">file</span><span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">name</span><span class="p">],</span> <span class="s1">&#39;Rebuilt_Data&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">rb</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;components_used&#39;</span><span class="p">],</span> <span class="n">clean_components</span><span class="p">):</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="s1">&#39;has same components&#39;</span><span class="p">)</span>
+                    <span class="n">SVD_exists</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="n">test</span> <span class="o">=</span> <span class="n">rb</span>
+
+        <span class="k">if</span> <span class="n">SVD_exists</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;#### Doing SVD ####&#39;</span><span class="p">)</span>
+            <span class="n">test</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">processing</span><span class="o">.</span><span class="n">svd_utils</span><span class="o">.</span><span class="n">rebuild_svd</span><span class="p">(</span><span class="n">h5_resh</span><span class="p">,</span> <span class="n">components</span><span class="o">=</span><span class="n">clean_components</span><span class="p">)</span>
+
+        <span class="n">PCA_clean_data_prerecon</span> <span class="o">=</span> <span class="n">test</span><span class="p">[:,:]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">num_rows</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<section id="Step-3.-Fast-Free-Force-Reconstruction">
+<h3>Step 3. Fast Free Force Reconstruction<a class="headerlink" href="#Step-3.-Fast-Free-Force-Reconstruction" title="Link to this heading">¶</a></h3>
+<p>Below we perform fast free recovery of the electrostatic force by dividing the filtered response by the effective transfer function. We futher set a noise treshold, above which is included in the iFFT transform into the time domain</p>
+</section>
+</section>
+<section id="Step(3a,-b,-c).-Divide-filtered-displacement-Y(w)-by-the-effective-transfer-function-(H(w)).">
+<h2>Step(3a, b, c). Divide filtered displacement Y(w) by the effective transfer function (H(w)).<a class="headerlink" href="#Step(3a,-b,-c).-Divide-filtered-displacement-Y(w)-by-the-effective-transfer-function-(H(w))." title="Link to this heading">¶</a></h2>
+<p>Quite a bit of work done here. (a) Diivde by Transfer function (b) Phase Correction and (c) iFFT the response above a user defined noise floor to recovery Force in time domain.</p>
+<p>Here you can adjust Noiselimit which controls iFFT invesion <strong>step (2b</strong></p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">DO_F3R</span><span class="p">:</span>
+
+    <span class="c1">#########################################################################################################</span>
+    <span class="c1">### Function</span>
+    <span class="c1">#########################################################################################################</span>
+    <span class="k">def</span> <span class="nf">scale_by_tune</span><span class="p">(</span><span class="n">filt_vec</span><span class="p">,</span> <span class="n">w_vec</span><span class="p">,</span> <span class="n">ph</span><span class="p">,</span> <span class="n">ind_drive</span><span class="p">,</span> <span class="n">TF_norm</span><span class="p">):</span>
+        <span class="n">tmp</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fftshift</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="n">filt_vec</span><span class="p">))</span>
+        <span class="n">signal_keep</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span><span class="o">&gt;=</span><span class="n">Noiselimit</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+        <span class="n">tmp</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">w_vec</span><span class="o">/</span><span class="p">(</span><span class="n">w_vec</span><span class="p">[</span><span class="n">ind_drive</span><span class="p">])</span><span class="o">*</span><span class="n">ph</span><span class="p">)</span>
+        <span class="n">G</span><span class="p">[</span><span class="n">signal_keep</span><span class="p">]</span><span class="o">=</span><span class="n">tmp</span><span class="p">[</span><span class="n">signal_keep</span><span class="p">]</span>
+        <span class="n">G_time</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifft</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifftshift</span><span class="p">(</span><span class="n">G</span><span class="o">/</span><span class="n">TF_norm</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="n">G_time</span>
+
+
+    <span class="c1">#########################################################################################################</span>
+    <span class="c1">### Perform F3R in parallel -- You should change n_jobs to match #cores you want to use</span>
+    <span class="c1">#########################################################################################################</span>
+    <span class="n">raw_data</span> <span class="o">=</span> <span class="n">h5_filt</span><span class="p">[()]</span>
+    <span class="n">scale_part</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">scale_by_tune</span><span class="p">,</span> <span class="n">w_vec</span><span class="o">=</span><span class="n">w_vec2</span><span class="p">,</span> <span class="n">ph</span><span class="o">=</span><span class="n">ph</span><span class="p">,</span> <span class="n">ind_drive</span><span class="o">=</span><span class="n">ind_drive</span><span class="p">,</span> <span class="n">TF_norm</span><span class="o">=</span><span class="n">TF_norm</span><span class="p">)</span>
+
+    <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">joblib</span><span class="o">.</span><span class="n">delayed</span><span class="p">(</span><span class="n">scale_part</span><span class="p">)(</span><span class="n">filt_vec</span><span class="p">)</span> <span class="k">for</span> <span class="n">filt_vec</span> <span class="ow">in</span> <span class="n">h5_filt</span><span class="p">]</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">joblib</span><span class="o">.</span><span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="n">num_cores</span><span class="p">)(</span><span class="n">values</span><span class="p">)</span>
+
+    <span class="n">G_time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+
+    <span class="k">del</span> <span class="n">values</span><span class="p">,</span> <span class="n">results</span>
+
+    <span class="c1">#########################################################################################################</span>
+    <span class="c1">### Storing and Reshaping</span>
+    <span class="c1">#########################################################################################################</span>
+
+    <span class="n">F3R_pos_vals</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">h5_main</span><span class="o">.</span><span class="n">h5_pos_vals</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+    <span class="n">F3R_pos_inds</span><span class="o">=</span><span class="n">h5_main</span><span class="o">.</span><span class="n">h5_pos_inds</span>
+    <span class="n">F3R_spec_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">h5_main</span><span class="o">.</span><span class="n">h5_spec_vals</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+    <span class="n">F3R_spec_inds</span> <span class="o">=</span> <span class="n">h5_main</span><span class="o">.</span><span class="n">h5_spec_inds</span>
+
+    <span class="n">F3R_pos_dim</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">Dimension</span><span class="p">(</span><span class="s1">&#39;Rows&#39;</span><span class="p">,</span> <span class="s1">&#39;um&#39;</span><span class="p">,</span> <span class="n">F3R_pos_vals</span><span class="p">)</span>
+    <span class="n">F3R_spec_dim</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">Dimension</span><span class="p">(</span><span class="s1">&#39;Bias&#39;</span><span class="p">,</span> <span class="s1">&#39;V&#39;</span><span class="p">,</span> <span class="n">F3R_spec_vals</span><span class="p">)</span>
+
+    <span class="n">F3R_grp</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">create_indexed_group</span><span class="p">(</span><span class="n">h5_main</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="s1">&#39;F3R_Results&#39;</span><span class="p">)</span>
+
+    <span class="n">h5_F3R</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">write_main_dataset</span><span class="p">(</span><span class="n">F3R_grp</span><span class="p">,</span> <span class="n">G_time</span><span class="p">,</span> <span class="s1">&#39;F3R_data&#39;</span><span class="p">,</span>
+                                           <span class="s1">&#39;Response&#39;</span><span class="p">,</span> <span class="s1">&#39;a.u.&#39;</span><span class="p">,</span>
+                                          <span class="n">F3R_pos_dim</span><span class="p">,</span> <span class="n">F3R_spec_dim</span><span class="p">)</span>
+    <span class="n">hdf</span><span class="o">.</span><span class="n">file</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+<span class="k">elif</span> <span class="ow">not</span> <span class="n">DO_F3R</span><span class="p">:</span>
+    <span class="n">G_time</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">find_dataset</span><span class="p">(</span><span class="n">hdf</span><span class="p">,</span> <span class="s1">&#39;F3R_data&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+<span class="c1">###################################</span>
+<span class="c1">### Check a single row</span>
+<span class="c1">###################################</span>
+
+<span class="n">raw</span><span class="o">=</span><span class="n">G_time</span><span class="p">[</span><span class="n">row_ind</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">pixel_ex_wfm</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plot_curves</span><span class="p">(</span><span class="n">pixel_ex_wfm</span><span class="p">,</span> <span class="n">raw</span><span class="p">,</span> <span class="n">line_colors</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">],</span> <span class="n">x_label</span><span class="o">=</span><span class="s1">&#39;Voltage (V$_</span><span class="si">{ac}</span><span class="s1">$)&#39;</span><span class="p">,</span>
+                                                <span class="n">y_label</span><span class="o">=</span><span class="s1">&#39;Deflection (a.u.)&#39;</span><span class="p">,</span> <span class="n">subtitle_prefix</span><span class="o">=</span><span class="s1">&#39;Col &#39;</span><span class="p">,</span> <span class="n">num_plots</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+                                                <span class="n">title</span><span class="o">=</span><span class="s1">&#39;test&#39;</span><span class="p">,</span><span class="n">use_rainbow_plots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/notebooks_gmode_GKPFM_base_notebook_30_0.png" src="../../_images/notebooks_gmode_GKPFM_base_notebook_30_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">###################################</span>
+<span class="c1">### Reshape Data</span>
+<span class="c1">###################################</span>
+
+<span class="n">G_time</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">find_dataset</span><span class="p">(</span><span class="n">hdf</span><span class="p">,</span> <span class="s1">&#39;F3R_data&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">h5_resh_grp</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">find_results_groups</span><span class="p">(</span><span class="n">G_time</span><span class="p">,</span><span class="s1">&#39;F3R_data&#39;</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">h5_resh_grp</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Taking previously reshaped results&#39;</span><span class="p">)</span>
+    <span class="n">h5_resh_grp</span> <span class="o">=</span> <span class="n">h5_resh_grp</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">h5_resh</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">find_dataset</span><span class="p">(</span><span class="n">hdf</span><span class="p">,</span><span class="s1">&#39;Reshaped_Data&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="k">else</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Reshape not performed on this dataset. Reshaping now:&#39;</span><span class="p">)</span>
+    <span class="n">scan_width</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">h5_resh</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">processing</span><span class="o">.</span><span class="n">gmode_utils</span><span class="o">.</span><span class="n">reshape_from_lines_to_pixels</span><span class="p">(</span><span class="n">h5_F3R</span><span class="p">,</span> <span class="n">pixel_ex_wfm</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">scan_width</span> <span class="o">/</span> <span class="n">num_cols</span><span class="p">)</span>
+    <span class="n">h5_resh_grp</span> <span class="o">=</span> <span class="n">h5_resh</span><span class="o">.</span><span class="n">parent</span>
+
+
+
+<span class="n">px</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">print_tree</span><span class="p">(</span><span class="n">hdf</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Taking previously reshaped results
+/
+├ Measurement_000
+  ---------------
+  ├ CPD_000
+    -------
+    ├ CPD
+    ├ CPD-SVD_000
+      -----------
+      ├ Position_Indices
+      ├ Position_Values
+      ├ Rebuilt_Data_000
+        ----------------
+        ├ Rebuilt_Data
+      ├ S
+      ├ Spectroscopic_Indices
+      ├ Spectroscopic_Values
+      ├ U
+      ├ V
+    ├ Position_Indices
+    ├ Position_Values
+    ├ Spectroscopic_Indices
+    ├ Spectroscopic_Values
+  ├ Channel_000
+    -----------
+    ├ F3R_Results_000
+      ---------------
+      ├ F3R_data
+      ├ F3R_data-Reshape_000
+        --------------------
+        ├ Position_Indices
+        ├ Position_Values
+        ├ Reshaped_Data
+        ├ Reshaped_Data-SVD_000
+          ---------------------
+          ├ Position_Indices
+          ├ Position_Values
+          ├ S
+          ├ Spectroscopic_Indices
+          ├ Spectroscopic_Values
+          ├ U
+          ├ V
+        ├ Spectroscopic_Indices
+        ├ Spectroscopic_Values
+      ├ Position_Indices
+      ├ Position_Values
+      ├ Spectroscopic_Indices
+      ├ Spectroscopic_Values
+    ├ Raw_Data
+    ├ Raw_Data-FFT_Filtering_000
+      --------------------------
+      ├ Composite_Filter
+      ├ Filtered_Data
+      ├ Filtered_Data-Reshape_000
+        -------------------------
+        ├ Position_Indices
+        ├ Position_Values
+        ├ Reshaped_Data
+        ├ Reshaped_Data-SVD_000
+          ---------------------
+          ├ Position_Indices
+          ├ Position_Values
+          ├ S
+          ├ Spectroscopic_Indices
+          ├ Spectroscopic_Values
+          ├ U
+          ├ V
+        ├ Spectroscopic_Indices
+        ├ Spectroscopic_Values
+      ├ Filtered_Data-Reshape_001
+        -------------------------
+        ├ Position_Indices
+        ├ Position_Values
+        ├ Reshaped_Data
+        ├ Spectroscopic_Indices
+        ├ Spectroscopic_Values
+      ├ Noise_Floors
+      ├ Noise_Spec_Indices
+      ├ Noise_Spec_Values
+  ├ Channel_001
+    -----------
+    ├ Raw_Data
+  ├ Position_Indices
+  ├ Position_Values
+  ├ Spectroscopic_Indices
+  ├ Spectroscopic_Values
+├ relaxation_fit
+</pre></div></div>
+</div>
+<section id="Parabolic-Fitting-of-Cleaned-Data">
+<h3>Parabolic Fitting of Cleaned Data<a class="headerlink" href="#Parabolic-Fitting-of-Cleaned-Data" title="Link to this heading">¶</a></h3>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">###################################</span>
+<span class="c1">### DO PCA (optional)</span>
+<span class="c1">###################################</span>
+
+
+<span class="k">if</span> <span class="n">Do_PCA2</span><span class="p">:</span>
+    <span class="n">do_svd</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">processing</span><span class="o">.</span><span class="n">svd_utils</span><span class="o">.</span><span class="n">SVD</span><span class="p">(</span><span class="n">h5_resh</span><span class="p">,</span> <span class="n">num_components</span><span class="o">=</span><span class="mi">256</span><span class="p">)</span>
+    <span class="n">h5_svd_group</span> <span class="o">=</span> <span class="n">do_svd</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+
+    <span class="n">h5_u</span> <span class="o">=</span> <span class="n">h5_svd_group</span><span class="p">[</span><span class="s1">&#39;U&#39;</span><span class="p">]</span>
+    <span class="n">h5_v</span> <span class="o">=</span> <span class="n">h5_svd_group</span><span class="p">[</span><span class="s1">&#39;V&#39;</span><span class="p">]</span>
+    <span class="n">h5_s</span> <span class="o">=</span> <span class="n">h5_svd_group</span><span class="p">[</span><span class="s1">&#39;S&#39;</span><span class="p">]</span>
+
+    <span class="c1"># Since the two spatial dimensions (x, y) have been collapsed to one, we need to reshape the abundance maps:</span>
+    <span class="n">abun_maps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">h5_u</span><span class="p">[:,:</span><span class="mi">25</span><span class="p">],</span> <span class="p">(</span><span class="n">num_rows</span><span class="p">,</span> <span class="n">num_cols</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+
+    <span class="c1"># Visualize the variance / statistical importance of each component:</span>
+    <span class="n">px</span><span class="o">.</span><span class="n">plot_utils</span><span class="o">.</span><span class="n">plot_scree</span><span class="p">(</span><span class="n">h5_s</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Scree plot&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">save_figure</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_filepath</span><span class="o">+</span><span class="s1">&#39;\PCARaw_Scree_2.tif&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;tiff&#39;</span><span class="p">)</span>
+
+
+    <span class="c1"># Visualize the eigenvectors:</span>
+    <span class="n">first_evecs</span> <span class="o">=</span> <span class="n">h5_v</span><span class="p">[:</span><span class="mi">9</span><span class="p">,</span> <span class="p">:]</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plot_curves</span><span class="p">(</span><span class="n">pixel_ex_wfm</span><span class="p">,</span> <span class="n">first_evecs</span><span class="p">,</span> <span class="n">line_colors</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">],</span> <span class="n">x_label</span><span class="o">=</span><span class="s1">&#39;Voltage (V$_</span><span class="si">{ac}</span><span class="s1">$)&#39;</span><span class="p">,</span>
+                                                    <span class="n">y_label</span><span class="o">=</span><span class="s1">&#39;Displacement (a.u.)&#39;</span><span class="p">,</span> <span class="n">subtitle_prefix</span><span class="o">=</span><span class="s1">&#39;Col &#39;</span><span class="p">,</span> <span class="n">num_plots</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+                                                    <span class="n">title</span><span class="o">=</span><span class="s1">&#39;SVD Eigenvectors (F$^</span><span class="si">{3}</span><span class="s1">$R)&#39;</span><span class="p">,</span><span class="n">use_rainbow_plots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+    <span class="k">if</span> <span class="n">save_figure</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_filepath</span><span class="o">+</span><span class="s1">&#39;\PCARaw_Eig_2.tif&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;tiff&#39;</span><span class="p">)</span>
+
+
+    <span class="c1"># Visualize the abundance maps:</span>
+    <span class="n">plot_map_stack</span><span class="p">(</span><span class="n">abun_maps</span><span class="p">,</span> <span class="n">num_comps</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;SVD Abundance Maps&#39;</span><span class="p">,</span> <span class="n">reverse_dims</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                 <span class="n">color_bar_mode</span><span class="o">=</span><span class="s1">&#39;single&#39;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;inferno&#39;</span><span class="p">,</span> <span class="n">title_yoffset</span><span class="o">=</span><span class="mf">0.95</span><span class="p">)</span>
+
+
+    <span class="k">if</span> <span class="n">save_figure</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+         <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_filepath</span><span class="o">+</span><span class="s1">&#39;\PCARaw_Loading_2.tif&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;tiff&#39;</span><span class="p">)</span>
+<br/><br/></pre></div>
+</div>
+</div>
+</section>
+<section id="Test-fitting-on-sample-data">
+<h3>Test fitting on sample data<a class="headerlink" href="#Test-fitting-on-sample-data" title="Link to this heading">¶</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">##########################################</span>
+<span class="c1">### DO parabolic fitting of single point</span>
+<span class="c1">##########################################</span>
+
+<span class="n">time_per_osc</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">parms_dict</span><span class="p">[</span><span class="s1">&#39;BE_center_frequency_[Hz]&#39;</span><span class="p">]</span>
+<span class="n">IO_rate</span> <span class="o">=</span> <span class="n">parms_dict</span><span class="p">[</span><span class="s1">&#39;IO_rate_[Hz]&#39;</span><span class="p">]</span>
+
+<span class="n">N_points_per_pixel</span> <span class="o">=</span> <span class="n">parms_dict</span><span class="p">[</span><span class="s1">&#39;num_bins&#39;</span><span class="p">]</span>
+<span class="n">pxl_time</span> <span class="o">=</span> <span class="n">N_points_per_pixel</span><span class="o">/</span><span class="n">IO_rate</span>
+<span class="n">num_periods</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">pxl_time</span> <span class="o">//</span> <span class="n">time_per_osc</span><span class="p">)</span>
+<span class="n">pnts_per_per</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">N_points_per_pixel</span> <span class="o">//</span> <span class="n">num_periods</span><span class="p">)</span>
+
+<span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">pxl_time</span><span class="p">,</span><span class="n">num_periods</span><span class="p">)</span>
+
+<span class="n">deg</span> <span class="o">=</span> <span class="mi">2</span>
+
+<span class="n">n</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">m</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">k4</span> <span class="o">=</span> <span class="mi">22</span>
+
+
+<span class="n">resp</span> <span class="o">=</span> <span class="n">h5_resh</span><span class="p">[</span><span class="n">m</span><span class="p">][</span><span class="n">pnts_per_per</span><span class="o">*</span><span class="n">k4</span><span class="p">:</span><span class="n">pnts_per_per</span><span class="o">*</span><span class="p">(</span><span class="n">k4</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+
+<span class="n">resp</span> <span class="o">=</span> <span class="n">resp</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+
+<span class="n">V_per_osc</span> <span class="o">=</span> <span class="n">pixel_ex_wfm</span><span class="p">[</span><span class="n">pnts_per_per</span><span class="o">*</span><span class="n">k4</span><span class="p">:</span><span class="n">pnts_per_per</span><span class="o">*</span><span class="p">(</span><span class="n">k4</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+<span class="n">p1</span><span class="p">,</span><span class="n">s</span> <span class="o">=</span> <span class="n">npPoly</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">V_per_osc</span><span class="p">,</span><span class="n">resp</span><span class="p">,</span><span class="n">deg</span><span class="p">,</span><span class="n">full</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">y1</span> <span class="o">=</span> <span class="n">npPoly</span><span class="o">.</span><span class="n">polyval</span><span class="p">(</span><span class="n">V_per_osc</span><span class="p">,</span><span class="n">p1</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">V_per_osc</span><span class="p">,</span> <span class="n">resp</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">V_per_osc</span><span class="p">,</span> <span class="n">y1</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Voltage V$_</span><span class="si">{ac}</span><span class="s1">$&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Displacement (a.u.)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+No handles with labels found to put in legend.
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Text(0,0.5,&#39;Displacement (a.u.)&#39;)
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/notebooks_gmode_GKPFM_base_notebook_35_2.png" src="../../_images/notebooks_gmode_GKPFM_base_notebook_35_2.png" />
+</div>
+</div>
+<section id="Repeat-on-the-full-dataset">
+<h4>Repeat on the full dataset<a class="headerlink" href="#Repeat-on-the-full-dataset" title="Link to this heading">¶</a></h4>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">do_para_fit</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="nf">fit_cleaned</span><span class="p">(</span><span class="n">data_vec</span><span class="p">,</span> <span class="n">pixel_ex_wfm</span><span class="p">,</span> <span class="n">pnts_per_per</span><span class="p">,</span> <span class="n">num_periods</span><span class="p">,</span> <span class="n">deg</span><span class="p">):</span>
+        <span class="n">fit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">num_periods</span><span class="p">,</span> <span class="n">deg</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">k4</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_periods</span><span class="p">):</span><span class="c1">#osc_period</span>
+            <span class="n">resp</span><span class="o">=</span><span class="n">data_vec</span><span class="p">[</span><span class="n">pnts_per_per</span><span class="o">*</span><span class="n">k4</span><span class="p">:</span><span class="n">pnts_per_per</span><span class="o">*</span><span class="p">(</span><span class="n">k4</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+            <span class="n">resp</span><span class="o">=</span><span class="n">resp</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+            <span class="n">V_per_osc</span><span class="o">=</span><span class="n">pixel_ex_wfm</span><span class="p">[</span><span class="n">pnts_per_per</span><span class="o">*</span><span class="n">k4</span><span class="p">:</span><span class="n">pnts_per_per</span><span class="o">*</span><span class="p">(</span><span class="n">k4</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+            <span class="n">p1</span><span class="p">,</span><span class="n">s</span><span class="o">=</span><span class="n">npPoly</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">V_per_osc</span><span class="p">,</span><span class="n">resp</span><span class="p">,</span><span class="n">deg</span><span class="p">,</span><span class="n">full</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">y1</span><span class="o">=</span><span class="n">npPoly</span><span class="o">.</span><span class="n">polyval</span><span class="p">(</span><span class="n">V_per_osc</span><span class="p">,</span><span class="n">p1</span><span class="p">)</span>
+
+            <span class="n">fit</span><span class="p">[</span><span class="n">k4</span><span class="p">,:]</span><span class="o">=</span><span class="n">p1</span>
+        <span class="k">return</span> <span class="n">fit</span>
+
+    <span class="n">part_fit_func</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">fit_cleaned</span><span class="p">,</span> <span class="n">pixel_ex_wfm</span><span class="o">=</span><span class="n">pixel_ex_wfm</span><span class="p">,</span> <span class="n">pnts_per_per</span><span class="o">=</span><span class="n">pnts_per_per</span><span class="p">,</span> <span class="n">num_periods</span><span class="o">=</span><span class="n">num_periods</span><span class="p">,</span> <span class="n">deg</span><span class="o">=</span><span class="n">deg</span><span class="p">)</span>
+
+
+
+    <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">joblib</span><span class="o">.</span><span class="n">delayed</span><span class="p">(</span><span class="n">part_fit_func</span><span class="p">)(</span><span class="n">data</span><span class="p">)</span> <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">h5_resh</span><span class="p">]</span>
+    <span class="c1">#change n_jobs below as approraite to the number of cores you want to use</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">joblib</span><span class="o">.</span><span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="n">num_cores</span><span class="p">)(</span><span class="n">values</span><span class="p">)</span>
+
+    <span class="n">wHfit3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+
+    <span class="n">CPD</span><span class="o">=-</span><span class="mf">0.5</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">wHfit3</span><span class="p">[:,:,</span><span class="mi">1</span><span class="p">],</span><span class="n">wHfit3</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">del</span> <span class="n">values</span><span class="p">,</span> <span class="n">results</span>
+
+    <span class="c1">##########################################</span>
+    <span class="c1">### Save CPD to HD5 (need to change to save all fit)</span>
+    <span class="c1">##########################################</span>
+
+
+    <span class="n">CPD_pos_vals</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">num_rows</span><span class="o">*</span><span class="n">num_cols</span><span class="p">)</span>
+    <span class="n">CPD_spec_vals</span> <span class="o">=</span> <span class="n">time</span>
+
+    <span class="n">CPD_pos_dim</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">Dimension</span><span class="p">(</span><span class="s1">&#39;Rows&#39;</span><span class="p">,</span> <span class="s1">&#39;um&#39;</span><span class="p">,</span> <span class="n">CPD_pos_vals</span><span class="p">)</span>
+    <span class="n">CPD_spec_dim</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">Dimension</span><span class="p">(</span><span class="s1">&#39;Time&#39;</span><span class="p">,</span> <span class="s1">&#39;S&#39;</span><span class="p">,</span> <span class="n">CPD_spec_vals</span><span class="p">)</span>
+
+    <span class="n">CPD_grp</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">create_indexed_group</span><span class="p">(</span><span class="n">h5_main</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="s1">&#39;CPD&#39;</span><span class="p">)</span>
+
+    <span class="n">h5_CPD</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">write_main_dataset</span><span class="p">(</span><span class="n">CPD_grp</span><span class="p">,</span> <span class="n">CPD</span><span class="p">,</span> <span class="s1">&#39;CPD&#39;</span><span class="p">,</span>
+                                           <span class="s1">&#39;CPD&#39;</span><span class="p">,</span> <span class="s1">&#39;V&#39;</span><span class="p">,</span>
+                                          <span class="n">pos_dims</span><span class="p">,</span> <span class="n">CPD_spec_dim</span><span class="p">)</span>
+
+    <span class="n">hdf</span><span class="o">.</span><span class="n">file</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+<span class="k">elif</span> <span class="ow">not</span> <span class="n">do_para_fit</span><span class="p">:</span>
+  <span class="n">px</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">print_tree</span><span class="p">(</span><span class="n">hdf</span><span class="p">)</span>
+  <span class="n">h5_CPD</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">find_dataset</span><span class="p">(</span><span class="n">hdf</span><span class="p">,</span><span class="s1">&#39;CPD&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+/
+├ Measurement_000
+  ---------------
+  ├ CPD_000
+    -------
+    ├ CPD
+    ├ CPD-SVD_000
+      -----------
+      ├ Position_Indices
+      ├ Position_Values
+      ├ Rebuilt_Data_000
+        ----------------
+        ├ Rebuilt_Data
+      ├ S
+      ├ Spectroscopic_Indices
+      ├ Spectroscopic_Values
+      ├ U
+      ├ V
+    ├ Position_Indices
+    ├ Position_Values
+    ├ Spectroscopic_Indices
+    ├ Spectroscopic_Values
+  ├ Channel_000
+    -----------
+    ├ F3R_Results_000
+      ---------------
+      ├ F3R_data
+      ├ F3R_data-Reshape_000
+        --------------------
+        ├ Position_Indices
+        ├ Position_Values
+        ├ Reshaped_Data
+        ├ Reshaped_Data-SVD_000
+          ---------------------
+          ├ Position_Indices
+          ├ Position_Values
+          ├ S
+          ├ Spectroscopic_Indices
+          ├ Spectroscopic_Values
+          ├ U
+          ├ V
+        ├ Spectroscopic_Indices
+        ├ Spectroscopic_Values
+      ├ Position_Indices
+      ├ Position_Values
+      ├ Spectroscopic_Indices
+      ├ Spectroscopic_Values
+    ├ Raw_Data
+    ├ Raw_Data-FFT_Filtering_000
+      --------------------------
+      ├ Composite_Filter
+      ├ Filtered_Data
+      ├ Filtered_Data-Reshape_000
+        -------------------------
+        ├ Position_Indices
+        ├ Position_Values
+        ├ Reshaped_Data
+        ├ Reshaped_Data-SVD_000
+          ---------------------
+          ├ Position_Indices
+          ├ Position_Values
+          ├ S
+          ├ Spectroscopic_Indices
+          ├ Spectroscopic_Values
+          ├ U
+          ├ V
+        ├ Spectroscopic_Indices
+        ├ Spectroscopic_Values
+      ├ Filtered_Data-Reshape_001
+        -------------------------
+        ├ Position_Indices
+        ├ Position_Values
+        ├ Reshaped_Data
+        ├ Spectroscopic_Indices
+        ├ Spectroscopic_Values
+      ├ Noise_Floors
+      ├ Noise_Spec_Indices
+      ├ Noise_Spec_Values
+  ├ Channel_001
+    -----------
+    ├ Raw_Data
+  ├ Position_Indices
+  ├ Position_Values
+  ├ Spectroscopic_Indices
+  ├ Spectroscopic_Values
+├ relaxation_fit
+</pre></div></div>
+</div>
+</section>
+<section id="Data-Visualization">
+<h4>Data Visualization<a class="headerlink" href="#Data-Visualization" title="Link to this heading">¶</a></h4>
+</section>
+</section>
+</section>
+<section id="Plot-single-point">
+<h2>Plot single point<a class="headerlink" href="#Plot-single-point" title="Link to this heading">¶</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">##########################################</span>
+<span class="c1">### Plot Single Point</span>
+<span class="c1">##########################################</span>
+
+<span class="n">test</span><span class="o">=</span><span class="n">CPD</span><span class="p">[</span><span class="mi">100</span><span class="p">,:]</span>
+<span class="n">time</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="n">pxl_time</span><span class="p">,</span><span class="n">num_periods</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="mi">5</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time</span><span class="o">*</span><span class="mi">1000</span><span class="p">,</span><span class="n">test</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Time (s)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;CPD (V)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="mi">5</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t_vec_pix</span><span class="p">,</span><span class="n">pulse_wave</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Time (s)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Pulse Wave (V)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">save_figure</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_filepath</span><span class="o">+</span><span class="s1">&#39;\CPD_vs_time.tif&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;tiff&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">(</span><span class="n">pad</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">w_pad</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">h_pad</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+<br/></pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/notebooks_gmode_GKPFM_base_notebook_39_0.png" src="../../_images/notebooks_gmode_GKPFM_base_notebook_39_0.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/notebooks_gmode_GKPFM_base_notebook_39_1.png" src="../../_images/notebooks_gmode_GKPFM_base_notebook_39_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[33]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">do_PCA_CPD</span><span class="o">=</span><span class="kc">True</span>
+<span class="k">if</span> <span class="n">do_PCA_CPD</span><span class="p">:</span> <span class="c1">#</span>
+    <span class="c1">##########################################</span>
+    <span class="c1">### DO PCA of CPD results</span>
+    <span class="c1">##########################################</span>
+
+    <span class="n">do_svd</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">processing</span><span class="o">.</span><span class="n">svd_utils</span><span class="o">.</span><span class="n">SVD</span><span class="p">(</span><span class="n">h5_CPD</span><span class="p">,</span> <span class="n">num_components</span><span class="o">=</span><span class="mi">256</span><span class="p">)</span>
+    <span class="n">h5_svd_group</span> <span class="o">=</span> <span class="n">do_svd</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">override</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">h5_u</span> <span class="o">=</span> <span class="n">h5_svd_group</span><span class="p">[</span><span class="s1">&#39;U&#39;</span><span class="p">]</span>
+    <span class="n">h5_v</span> <span class="o">=</span> <span class="n">h5_svd_group</span><span class="p">[</span><span class="s1">&#39;V&#39;</span><span class="p">]</span>
+    <span class="n">h5_s</span> <span class="o">=</span> <span class="n">h5_svd_group</span><span class="p">[</span><span class="s1">&#39;S&#39;</span><span class="p">]</span>
+
+    <span class="c1"># Since the two spatial dimensions (x, y) have been collapsed to one, we need to reshape the abundance maps:</span>
+    <span class="n">abun_maps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">h5_u</span><span class="p">[:,:</span><span class="mi">25</span><span class="p">],</span> <span class="p">(</span><span class="n">num_rows</span><span class="p">,</span> <span class="n">num_cols</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+
+    <span class="c1"># Visualize the variance / statistical importance of each component:</span>
+    <span class="n">px</span><span class="o">.</span><span class="n">plot_utils</span><span class="o">.</span><span class="n">plot_scree</span><span class="p">(</span><span class="n">h5_s</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Scree plot&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">save_figure</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_filepath</span><span class="o">+</span><span class="s1">&#39;\PCARaw_Scree_CPD.tif&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;tiff&#39;</span><span class="p">)</span>
+
+
+    <span class="c1"># Visualize the eigenvectors:</span>
+    <span class="n">first_evecs</span> <span class="o">=</span> <span class="n">h5_v</span><span class="p">[:</span><span class="mi">9</span><span class="p">,</span> <span class="p">:]</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plot_curves</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">first_evecs</span><span class="p">,</span> <span class="n">line_colors</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">],</span> <span class="n">x_label</span><span class="o">=</span><span class="s1">&#39;Voltage (V$_</span><span class="si">{ac}</span><span class="s1">$)&#39;</span><span class="p">,</span>
+                                                    <span class="n">y_label</span><span class="o">=</span><span class="s1">&#39;Displacement (a.u.)&#39;</span><span class="p">,</span> <span class="n">subtitle_prefix</span><span class="o">=</span><span class="s1">&#39;Col &#39;</span><span class="p">,</span> <span class="n">num_plots</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+                                                    <span class="n">title</span><span class="o">=</span><span class="s1">&#39;SVD Eigenvectors (F$^</span><span class="si">{3}</span><span class="s1">$R)&#39;</span><span class="p">,</span><span class="n">use_rainbow_plots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+    <span class="k">if</span> <span class="n">save_figure</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_filepath</span><span class="o">+</span><span class="s1">&#39;\PCARaw_Eig_CPD.tif&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;tiff&#39;</span><span class="p">)</span>
+
+
+    <span class="c1"># Visualize the abundance maps:</span>
+    <span class="n">plot_map_stack</span><span class="p">(</span><span class="n">abun_maps</span><span class="p">,</span> <span class="n">num_comps</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;SVD Abundance Maps&#39;</span><span class="p">,</span> <span class="n">reverse_dims</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                 <span class="n">color_bar_mode</span><span class="o">=</span><span class="s1">&#39;single&#39;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;inferno&#39;</span><span class="p">,</span> <span class="n">title_yoffset</span><span class="o">=</span><span class="mf">0.95</span><span class="p">)</span>
+
+
+    <span class="k">if</span> <span class="n">save_figure</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+    <span class="c1">#     fig.savefig(output_filepath+&#39;\PCARaw_Loading.eps&#39;, format=&#39;eps&#39;)</span>
+    <span class="c1">#     fig.savefig(output_filepath+&#39;\PCARaw_Loading.tif&#39;, format=&#39;tiff&#39;)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_filepath</span><span class="o">+</span><span class="s1">&#39;\PCARaw_Loading_CPD.tif&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;tiff&#39;</span><span class="p">)</span>
+        <span class="c1">#save_figure = False;</span>
+<br/></pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Consider calling test() to check results before calling compute() which computes on the entire dataset and writes back to the HDF5 file
+Note: SVD has already been performed PARTIALLY with the same parameters. compute() will resuming computation in the last group below. To choose a different group call use_patial_computation()Set override to True to force fresh computation or resume from a data group besides the last in the list.
+[&lt;HDF5 group &#34;/Measurement_000/CPD_000/CPD-SVD_000&#34; (9 members)&gt;]
+Took 3.3 sec to compute randomized SVD
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/notebooks_gmode_GKPFM_base_notebook_40_1.png" src="../../_images/notebooks_gmode_GKPFM_base_notebook_40_1.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/notebooks_gmode_GKPFM_base_notebook_40_2.png" src="../../_images/notebooks_gmode_GKPFM_base_notebook_40_2.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/notebooks_gmode_GKPFM_base_notebook_40_3.png" src="../../_images/notebooks_gmode_GKPFM_base_notebook_40_3.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[32]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># important! If choosing components, min is 3 or interprets as start/stop range of slice</span>
+<span class="n">clean_components</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span> <span class="c1"># np.append(range(5,9),(17,18))</span>
+<span class="c1">#num_components=len(clean_components)</span>
+
+<span class="n">test</span><span class="o">=</span><span class="n">px</span><span class="o">.</span><span class="n">processing</span><span class="o">.</span><span class="n">svd_utils</span><span class="o">.</span><span class="n">rebuild_svd</span><span class="p">(</span><span class="n">h5_CPD</span><span class="p">,</span> <span class="n">components</span><span class="o">=</span><span class="mi">256</span><span class="p">)</span>
+<span class="n">PCAcleandata</span><span class="o">=</span><span class="n">test</span><span class="p">[:,:]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">num_rows</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">PCAcleandata</span><span class="o">.</span><span class="n">shape</span>
+<span class="c1"># Since the two spatial dimensions (x, y) have been collapsed to one, we need to reshape the abundance maps:</span>
+<span class="n">PCAcleandata</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">PCAcleandata</span><span class="p">,</span> <span class="p">(</span><span class="n">num_rows</span><span class="o">*</span><span class="n">num_cols</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+<span class="n">CPD</span><span class="o">=</span><span class="n">PCAcleandata</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Reconstructing in batches of 1568 positions.
+Batchs should be 880.46875 Mb each.
+Completed reconstruction of data from SVD results.  Writing to file.
+Done writing reconstructed data to file.
+</pre></div></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="General Mode" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Pycroscopy contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

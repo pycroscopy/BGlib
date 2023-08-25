@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BGlib.gmode.proc.signal_filter &mdash; BGlib 0.0.4 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/documentation_options.js?v=8c5712d9"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            BGlib
+          </a>
+              <div class="version">
+                0.0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">BGlib</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">BGlib</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="BGlib.html">BGlib</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/be/index.html">Band Excitation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/gmode/index.html">General Mode</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BGlib</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">BGlib.gmode.proc.signal_filter</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_autosummary/BGlib.gmode.proc.signal_filter.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="bglib-gmode-proc-signal-filter">
+<h1>BGlib.gmode.proc.signal_filter<a class="headerlink" href="#bglib-gmode-proc-signal-filter" title="Link to this heading">¶</a></h1>
+<p id="module-BGlib.gmode.proc.signal_filter">A class for FFT filtering General-mode spectroscopic imaging data as reported in:
+[Rapid mapping of polarization switching through complete information acquisition](<a class="reference external" href="http://www.nature.com/articles/ncomms13290">http://www.nature.com/articles/ncomms13290</a>)</p>
+<p>Created on Tue Nov 07 11:48:53 2017</p>
+<p>&#64;author: Suhas Somnath</p>
+<p class="rubric">Classes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="BGlib.gmode.proc.signal_filter.SignalFilter.html#BGlib.gmode.proc.signal_filter.SignalFilter" title="BGlib.gmode.proc.signal_filter.SignalFilter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SignalFilter</span></code></a></p></td>
+<td><p>Filters the entire h5 dataset with the given filtering parameters. :param h5_main: Dataset to process :type h5_main: h5py.Dataset object :param frequency_filters: Frequency (vertical) filters to apply to signal :type frequency_filters: (Optional) single or list of pycroscopy.fft.FrequencyFilter objects :param noise_threshold: Noise tolerance to apply to data. Value must be within (0, 1) :type noise_threshold: (Optional) float. Default - None :param write_filtered: Whether to write the filtered data to file :type write_filtered: (Optional) bool. Default - True :param write_condensed: Whether to write the condensed data in frequency space to file. Use this for datasets that are very                         large but sparse in frequency space. :type write_condensed: Optional) bool. Default - False :param num_pix: Number of pixels to use for filtering. More pixels means a lower noise floor and the ability to pick up                 weaker signals. Use only if absolutely necessary. This value must be a divisor of the number of pixels in                 the dataset :type num_pix: (Optional) uint. Default - 1 :param phase_rad: Degrees by which the output is rotated with respect to the input to compensate for phase lag. This feature has NOT yet been implemented. :type phase_rad: (Optional). float :param h5_target_group: Location where to look for existing results and to place newly                         computed results. Use this kwarg if the results need to be written                         to a different HDF5 file. By default, this value is set to the                         parent group containing <cite>h5_main</cite> :type h5_target_group: h5py.Group, optional. Default = None :param kwargs: Please see Process class for additional inputs :type kwargs: (Optional). dictionary.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Pycroscopy contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

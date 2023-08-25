@@ -1,0 +1,33 @@
+BGlib.gmode
+===========
+
+.. automodule:: BGlib.gmode
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. autosummary::
+   :toctree:
+      :template: custom-module-template.rst
+   :recursive:
+
+   BGlib.gmode.analysis
+   BGlib.gmode.proc
+   BGlib.gmode.translators
+   BGlib.gmode.viz
+

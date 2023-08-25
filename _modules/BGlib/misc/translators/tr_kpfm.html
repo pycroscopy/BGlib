@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BGlib.misc.translators.tr_kpfm &mdash; BGlib 0.0.4 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/documentation_options.js?v=8c5712d9"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../../../../about.html" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            BGlib
+          </a>
+              <div class="version">
+                0.0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">BGlib</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../about.html">BGlib</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../_autosummary/BGlib.html">BGlib</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../notebooks/be/index.html">Band Excitation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../notebooks/gmode/index.html">General Mode</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">BGlib</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">BGlib.misc.translators.tr_kpfm</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for BGlib.misc.translators.tr_kpfm</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Thursday July 27 2017</span>
+<span class="sd">@author: Rama Vasudevan, Suhas Somnath, Chris R. Smith</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">unicode_literals</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">path</span><span class="p">,</span> <span class="n">remove</span><span class="p">,</span> <span class="n">listdir</span>  <span class="c1"># File Path formatting</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>  <span class="c1"># For array operations</span>
+<span class="kn">import</span> <span class="nn">h5py</span>
+<span class="kn">from</span> <span class="nn">scipy.io</span> <span class="kn">import</span> <span class="n">loadmat</span>
+
+<span class="kn">from</span> <span class="nn">sidpy.sid</span> <span class="kn">import</span> <span class="n">Translator</span>
+<span class="kn">from</span> <span class="nn">sidpy.hdf.hdf_utils</span> <span class="kn">import</span> <span class="n">write_simple_attrs</span>
+
+<span class="kn">from</span> <span class="nn">pyUSID.io.dimension</span>  <span class="kn">import</span> <span class="n">Dimension</span>
+<span class="kn">from</span> <span class="nn">sidpy.hdf.prov_utils</span> <span class="kn">import</span> <span class="n">create_indexed_group</span>
+<span class="kn">from</span> <span class="nn">pyUSID.io.hdf_utils.model</span> <span class="kn">import</span> <span class="n">write_main_dataset</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="o">.</span><span class="n">major</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+    <span class="n">unicode</span> <span class="o">=</span> <span class="nb">str</span>
+
+
+<div class="viewcode-block" id="TRKPFMTranslator">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.misc.translators.tr_kpfm.TRKPFMTranslator.html#BGlib.misc.translators.tr_kpfm.TRKPFMTranslator">[docs]</a>
+<span class="k">class</span> <span class="nc">TRKPFMTranslator</span><span class="p">(</span><span class="n">Translator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Translates  trKPFM datasets from .mat and .dat files to .h5</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">TRKPFMTranslator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">raw_datasets</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="TRKPFMTranslator.is_valid_file">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.misc.translators.tr_kpfm.TRKPFMTranslator.html#BGlib.misc.translators.tr_kpfm.TRKPFMTranslator.is_valid_file">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">is_valid_file</span><span class="p">(</span><span class="n">data_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks whether the provided file can be read by this translator</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data_path : str</span>
+<span class="sd">            Path to folder or any data / parameter file within the folder</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        obj : str</span>
+<span class="sd">            Path to file that will be accepted by the translate() function if</span>
+<span class="sd">            this translator is indeed capable of translating the provided file.</span>
+<span class="sd">            Otherwise, None will be returned</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">get_chan_ind</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+            <span class="n">match_obj</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(.*)_ch(..).dat&#39;</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">M</span> <span class="o">|</span> <span class="n">re</span><span class="o">.</span><span class="n">I</span><span class="p">)</span>
+            <span class="n">type_list</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">match_obj</span><span class="p">:</span>
+                <span class="k">return</span> \
+                    <span class="p">[</span><span class="n">type_caster</span><span class="p">(</span><span class="n">match_obj</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="n">ind</span><span class="p">))</span> <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">type_caster</span> <span class="ow">in</span>
+                     <span class="nb">zip</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">type_list</span><span class="p">)),</span> <span class="n">type_list</span><span class="p">)][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">data_path</span><span class="p">):</span>
+            <span class="c1"># Assume that the file is amongst all other data files</span>
+            <span class="n">folder_path</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">folder_path</span> <span class="o">=</span> <span class="n">data_path</span>
+
+        <span class="c1">#  Now looking at the folder with  all necessary files:</span>
+        <span class="n">file_list</span> <span class="o">=</span> <span class="n">listdir</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">folder_path</span><span class="p">)</span>
+        <span class="n">parm_file_name</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">raw_data_paths</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">file_list</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;parm.mat&#39;</span><span class="p">):</span>
+                <span class="n">parm_file_name</span> <span class="o">=</span> <span class="n">item</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">get_chan_ind</span><span class="p">(</span><span class="n">item</span><span class="p">),</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="n">raw_data_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+        <span class="c1"># Both the parameter and data files MUST be found:</span>
+        <span class="k">if</span> <span class="n">parm_file_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">raw_data_paths</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Returning the path to the parameter file since this is what the translate() expects:</span>
+            <span class="k">return</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder_path</span><span class="p">,</span> <span class="n">parm_file_name</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_parse_file_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_path</span><span class="p">):</span>
+        <span class="n">folder_path</span><span class="p">,</span> <span class="n">base_name</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">input_path</span><span class="p">)</span>
+        <span class="n">base_name</span> <span class="o">=</span> <span class="n">base_name</span><span class="p">[:</span><span class="o">-</span><span class="mi">8</span><span class="p">]</span>
+
+        <span class="n">h5_path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder_path</span><span class="p">,</span> <span class="n">base_name</span> <span class="o">+</span> <span class="s1">&#39;.h5&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">h5_path</span><span class="p">):</span>
+            <span class="n">remove</span><span class="p">(</span><span class="n">h5_path</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_path</span> <span class="o">=</span> <span class="n">h5_path</span>
+        <span class="c1"># Until a better method is provided....</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">listdir</span><span class="p">(</span><span class="n">folder_path</span><span class="p">):</span>
+            <span class="k">if</span> <span class="s1">&#39;.dat&#39;</span> <span class="ow">in</span> <span class="n">file</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">file_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder_path</span><span class="p">,</span> <span class="n">file</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_list</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_list</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_parse_spectrogram_size</span><span class="p">(</span><span class="n">file_handle</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        file_handle</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        data_length: int, size of the spectrogram</span>
+<span class="sd">        count: int, number of pixels in dataset +1</span>
+<span class="sd">        &quot;&quot;&quot;</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+
+        <span class="n">f</span> <span class="o">=</span> <span class="n">file_handle</span>
+
+        <span class="n">cont_cond</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">data_lengths</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">while</span> <span class="n">cont_cond</span><span class="p">:</span>
+            <span class="c1">#print(count, f.tell())</span>
+            <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="n">data_length</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">data_length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">data_lengths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">data_length</span><span class="p">))</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">data_length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">cont_cond</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data_lengths</span><span class="p">)))</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Unequal data lengths! Cannot continue&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Equal data lengths&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">data_lengths</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">count</span>
+
+<div class="viewcode-block" id="TRKPFMTranslator.translate">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.misc.translators.tr_kpfm.TRKPFMTranslator.html#BGlib.misc.translators.tr_kpfm.TRKPFMTranslator.translate">[docs]</a>
+    <span class="k">def</span> <span class="nf">translate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parm_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The main function that translates the provided file into a .h5 file</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ------------</span>
+<span class="sd">        parm_path : string / unicode</span>
+<span class="sd">            Absolute file path of the parameters .mat file.</span>
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        h5_path : string / unicode</span>
+<span class="sd">            Absolute path of the translated h5 file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">parm_path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">parm_path</span><span class="p">)</span>
+        <span class="n">parm_dict</span><span class="p">,</span> <span class="n">excit_wfm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_parms</span><span class="p">(</span><span class="n">parm_path</span><span class="p">)</span>
+        <span class="n">excit_wfm</span> <span class="o">=</span> <span class="n">excit_wfm</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parse_file_path</span><span class="p">(</span><span class="n">parm_path</span><span class="p">)</span>
+
+        <span class="n">num_dat_files</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_list</span><span class="p">)</span>
+
+        <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_list</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span>
+        <span class="n">spectrogram_size</span><span class="p">,</span> <span class="n">count_vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_spectrogram_size</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Excitation waveform shape: &quot;</span><span class="p">,</span> <span class="n">excit_wfm</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;spectrogram size:&quot;</span><span class="p">,</span> <span class="n">spectrogram_size</span><span class="p">)</span>
+        <span class="n">num_pixels</span> <span class="o">=</span> <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;grid_num_rows&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;grid_num_cols&#39;</span><span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Number of pixels: &#39;</span><span class="p">,</span> <span class="n">num_pixels</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Count Values: &#39;</span><span class="p">,</span> <span class="n">count_vals</span><span class="p">)</span>
+        <span class="c1">#if (num_pixels + 1) != count_vals:</span>
+        <span class="c1">#    print(&quot;Data size does not match number of pixels expected. Cannot continue&quot;)</span>
+
+        <span class="c1">#Find how many channels we have to make</span>
+        <span class="n">num_ai_chans</span> <span class="o">=</span> <span class="n">num_dat_files</span> <span class="o">//</span> <span class="mi">2</span>  <span class="c1"># Division by 2 due to real/imaginary</span>
+
+        <span class="c1"># Now start creating datasets and populating:</span>
+        <span class="c1">#Start with getting an h5 file</span>
+        <span class="n">h5_file</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_path</span><span class="p">)</span>
+
+        <span class="c1">#First create a measurement group</span>
+        <span class="n">h5_meas_group</span> <span class="o">=</span> <span class="n">create_indexed_group</span><span class="p">(</span><span class="n">h5_file</span><span class="p">,</span> <span class="s1">&#39;Measurement&#39;</span><span class="p">)</span>
+
+        <span class="c1">#Set up some parameters that will be written as attributes to this Measurement group</span>
+        <span class="n">global_parms</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">global_parms</span><span class="p">[</span><span class="s1">&#39;data_type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;trKPFM&#39;</span>
+        <span class="n">global_parms</span><span class="p">[</span><span class="s1">&#39;translator&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;trKPFM&#39;</span>
+        <span class="n">write_simple_attrs</span><span class="p">(</span><span class="n">h5_meas_group</span><span class="p">,</span> <span class="n">global_parms</span><span class="p">)</span>
+        <span class="n">write_simple_attrs</span><span class="p">(</span><span class="n">h5_meas_group</span><span class="p">,</span> <span class="n">parm_dict</span><span class="p">)</span>
+
+        <span class="c1">#Now start building the position and spectroscopic dimension containers</span>
+        <span class="c1">#There&#39;s only one spectroscpoic dimension and two position dimensions</span>
+
+        <span class="c1">#The excit_wfm only has the DC values without any information on cycles, time, etc.</span>
+        <span class="c1">#What we really need is to add the time component. For every DC step there are some time steps.</span>
+
+        <span class="n">num_time_steps</span> <span class="o">=</span> <span class="p">(</span><span class="n">spectrogram_size</span><span class="o">-</span><span class="mi">5</span><span class="p">)</span> <span class="o">//</span><span class="n">excit_wfm</span><span class="o">.</span><span class="n">size</span> <span class="o">//</span><span class="mi">2</span> <span class="c1">#Need to divide by 2 because it considers on and off field</span>
+
+        <span class="c1">#There should be three spectroscopic axes</span>
+        <span class="c1">#In order of fastest to slowest varying, we have</span>
+        <span class="c1">#time, voltage, field</span>
+
+        <span class="n">time_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;IO_time&#39;</span><span class="p">],</span> <span class="n">num_time_steps</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Num time steps: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">num_time_steps</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;DC Vec size: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">excit_wfm</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Spectrogram size: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">spectrogram_size</span><span class="p">))</span>
+
+        <span class="n">field_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">spec_dims</span> <span class="o">=</span> <span class="p">[</span><span class="n">Dimension</span> <span class="p">(</span><span class="s1">&#39;Time&#39;</span><span class="p">,</span> <span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="n">time_vec</span><span class="p">),</span><span class="n">Dimension</span><span class="p">(</span><span class="s1">&#39;Field&#39;</span><span class="p">,</span> <span class="s1">&#39;Binary&#39;</span><span class="p">,</span> <span class="n">field_vec</span><span class="p">),</span>
+                     <span class="n">Dimension</span><span class="p">(</span><span class="s1">&#39;Bias&#39;</span><span class="p">,</span> <span class="s1">&#39;V&#39;</span><span class="p">,</span> <span class="n">excit_wfm</span><span class="p">)]</span>
+
+        <span class="n">pos_dims</span> <span class="o">=</span> <span class="p">[</span><span class="n">Dimension</span><span class="p">(</span><span class="s1">&#39;Cols&#39;</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;grid_num_cols&#39;</span><span class="p">])),</span>
+                    <span class="n">Dimension</span><span class="p">(</span><span class="s1">&#39;Rows&#39;</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;grid_num_rows&#39;</span><span class="p">]))]</span>
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">raw_datasets</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">chan_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_ai_chans</span><span class="p">):</span>
+            <span class="n">chan_grp</span> <span class="o">=</span> <span class="n">create_indexed_group</span><span class="p">(</span><span class="n">h5_meas_group</span><span class="p">,</span><span class="s1">&#39;Channel&#39;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">chan_index</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">write_simple_attrs</span><span class="p">(</span><span class="n">chan_grp</span><span class="p">,{</span><span class="s1">&#39;Harmonic&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">write_simple_attrs</span><span class="p">(</span><span class="n">chan_grp</span><span class="p">,{</span><span class="s1">&#39;Harmonic&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">})</span>
+
+            <span class="n">h5_raw</span> <span class="o">=</span> <span class="n">write_main_dataset</span><span class="p">(</span><span class="n">chan_grp</span><span class="p">,</span>  <span class="c1"># parent HDF5 group</span>
+                                        <span class="p">(</span><span class="n">num_pixels</span><span class="p">,</span> <span class="n">spectrogram_size</span> <span class="o">-</span> <span class="mi">5</span><span class="p">),</span>
+                                        <span class="c1"># shape of Main dataset</span>
+                                        <span class="s1">&#39;Raw_Data&#39;</span><span class="p">,</span>  <span class="c1"># Name of main dataset</span>
+                                        <span class="s1">&#39;Deflection&#39;</span><span class="p">,</span>  <span class="c1"># Physical quantity contained in Main dataset</span>
+                                        <span class="s1">&#39;V&#39;</span><span class="p">,</span>  <span class="c1"># Units for the physical quantity</span>
+                                        <span class="n">pos_dims</span><span class="p">,</span>  <span class="c1"># Position dimensions</span>
+                                        <span class="n">spec_dims</span><span class="p">,</span>  <span class="c1"># Spectroscopic dimensions</span>
+                                        <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex64</span><span class="p">,</span>  <span class="c1"># data type / precision</span>
+                                        <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;gzip&#39;</span><span class="p">,</span>
+                                        <span class="n">chunks</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">spectrogram_size</span> <span class="o">-</span> <span class="mi">5</span><span class="p">),</span>
+                                        <span class="n">main_dset_attrs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;quantity&#39;</span><span class="p">:</span> <span class="s1">&#39;Complex&#39;</span><span class="p">})</span>
+
+            <span class="c1">#h5_refs = hdf.write(chan_grp, print_log=False)</span>
+            <span class="c1">#h5_raw = get_h5_obj_refs([&#39;Raw_Data&#39;], h5_refs)[0]</span>
+            <span class="c1">#link_h5_objects_as_attrs(h5_raw, get_h5_obj_refs(aux_ds_names, h5_refs))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">raw_datasets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">h5_raw</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">raw_datasets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">h5_raw</span><span class="p">)</span>
+
+        <span class="c1"># Now that the N channels have been made, populate them with the actual data....</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_read_data</span><span class="p">(</span><span class="n">parm_dict</span><span class="p">,</span> <span class="n">parm_path</span><span class="p">,</span> <span class="n">spectrogram_size</span><span class="p">)</span>
+
+        <span class="n">h5_file</span><span class="o">.</span><span class="n">file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="c1">#hdf.close()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_path</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_read_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parm_dict</span><span class="p">,</span> <span class="n">parm_path</span><span class="p">,</span> <span class="n">data_length</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reads raw data and populates the h5 datasets</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        parm_dict : Dictionary</span>
+<span class="sd">            dictionary containing parameters for this data</span>
+<span class="sd">        folder_path : string / unicode</span>
+<span class="sd">            Absolute path of folder containing the data</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Determine number of pixels</span>
+        <span class="n">num_pixels</span> <span class="o">=</span> <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;grid_num_rows&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;grid_num_cols&#39;</span><span class="p">]</span>
+
+        <span class="c1"># The four files in TRKPFM are for real and imaginary parts for 1st, 2nd harmonic</span>
+        <span class="c1"># Create a list of [True,False,True,False] so files can be written to</span>
+        <span class="c1"># the appropraite channel</span>
+
+        <span class="n">real_imag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_list</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">real_imag</span><span class="p">[::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">real_cond</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">real_imag</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">entry</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">real_cond</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">real_cond</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Scan through all the .dat files available</span>
+        <span class="k">for</span> <span class="n">ifile</span><span class="p">,</span> <span class="n">file_path</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_list</span><span class="p">):</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span>
+            <span class="n">results_p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="n">data_length</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+            <span class="n">spectrogram_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">results_p</span><span class="p">[:])</span>
+            <span class="n">b_axis</span> <span class="o">=</span> <span class="n">spectrogram_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">c_axis</span> <span class="o">=</span> <span class="n">spectrogram_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="c1"># dall = np.transpose(spectrogram_matrix, (0, 2, 1)).reshape(num_pixels * c_axis, b_axis)</span>
+            <span class="n">dall</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">spectrogram_matrix</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">b_axis</span><span class="p">)</span>
+
+            <span class="n">_</span><span class="p">,</span> <span class="n">ia</span><span class="p">,</span> <span class="n">ic</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">dall</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">return_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">return_inverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">reprowind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">setdiff1d</span><span class="p">(</span><span class="n">ic</span><span class="p">,</span> <span class="n">ia</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">reprowind</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="n">dall</span><span class="p">[</span><span class="n">reprowind</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+            <span class="c1"># Write to the datasets</span>
+            <span class="n">h5_main</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_datasets</span><span class="p">[</span><span class="n">ifile</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">real_cond</span><span class="p">[</span><span class="n">ifile</span><span class="p">]:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Dall Size is: &#39;</span><span class="p">,</span> <span class="n">dall</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+                <span class="c1"># Do some error catching. In case the last pixel is absent, then just ignore it.</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">h5_main</span><span class="p">[:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">dall</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">h5_main</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="mi">0</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="n">h5_main</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">dall</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">h5_main</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">h5_main</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Error catching. In case the last pixel is absent, then just ignore it.</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">h5_main</span><span class="p">[:,</span> <span class="p">:]</span> <span class="o">+=</span> <span class="mi">0</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">dall</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">h5_main</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="n">h5_main</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">+=</span> <span class="mi">0</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">dall</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">h5_main</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">h5_main</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">h5_main</span><span class="o">.</span><span class="n">file</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">read_file</span><span class="p">(</span><span class="n">data_length</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+        <span class="n">start_point</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">count_vals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">start_point</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">cont_cond</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">results_p</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">while</span> <span class="n">cont_cond</span><span class="p">:</span>
+            <span class="n">count_vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
+            <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="n">data_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">data_length</span><span class="p">))</span>
+            <span class="n">data_vec1</span> <span class="o">=</span> <span class="n">data_vec</span><span class="p">[</span><span class="mi">5</span><span class="p">:</span><span class="nb">int</span><span class="p">(</span><span class="n">data_length</span><span class="p">)]</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_vec</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+
+                <span class="n">s1</span> <span class="o">=</span> <span class="n">data_vec</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+                <span class="n">s2</span> <span class="o">=</span> <span class="n">data_vec</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+                <span class="c1"># print(&#39;Data_mat and s1,s2:&#39;, data_vec1.shape, s1, s2)</span>
+                <span class="n">data_mat1</span> <span class="o">=</span> <span class="n">data_vec1</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">s2</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">s1</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+                <span class="n">results_p</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data_mat1</span><span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">cont_cond</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">results_p</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_read_parms</span><span class="p">(</span><span class="n">parm_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Copies experimental parameters from the .mat file to a dictionary</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        parm_path : string / unicode</span>
+<span class="sd">            Absolute path of the parameters file</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        parm_dict : dictionary</span>
+<span class="sd">            Dictionary containing all relevant parameters</span>
+<span class="sd">        excit_wfm : 1d numpy float array</span>
+<span class="sd">            Excitation waveform containing the full DC amplitude vector</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">h5_f</span> <span class="o">=</span> <span class="n">loadmat</span><span class="p">(</span><span class="n">parm_path</span><span class="p">)</span>
+        <span class="n">parm_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+        <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;IO_samp_rate_[Hz]&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">(</span><span class="n">h5_f</span><span class="p">[</span><span class="s1">&#39;IO_rate&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;IO_time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="n">h5_f</span><span class="p">[</span><span class="s1">&#39;IO_time&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">excit_wfm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">h5_f</span><span class="p">[</span><span class="s1">&#39;dc_amp_vec&#39;</span><span class="p">]))</span>
+
+        <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;grid_num_rows&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">(</span><span class="n">h5_f</span><span class="p">[</span><span class="s1">&#39;num_rows&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;grid_num_cols&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">(</span><span class="n">h5_f</span><span class="p">[</span><span class="s1">&#39;num_cols&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">parm_dict</span><span class="p">,</span> <span class="n">excit_wfm</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Pycroscopy contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

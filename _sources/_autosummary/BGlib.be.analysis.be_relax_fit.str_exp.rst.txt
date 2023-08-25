@@ -1,0 +1,6 @@
+BGlib.be.analysis.be\_relax\_fit.str\_exp
+=========================================
+
+.. currentmodule:: BGlib.be.analysis.be_relax_fit
+
+.. autofunction:: str_exp

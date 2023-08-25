@@ -1,0 +1,6 @@
+BGlib.gmode.proc.fft.get\_fft\_stack
+====================================
+
+.. currentmodule:: BGlib.gmode.proc.fft
+
+.. autofunction:: get_fft_stack

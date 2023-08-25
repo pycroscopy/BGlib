@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BGlib.gmode.proc.signal_filter &mdash; BGlib 0.0.4 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/documentation_options.js?v=8c5712d9"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../../../../about.html" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            BGlib
+          </a>
+              <div class="version">
+                0.0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">BGlib</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../about.html">BGlib</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../_autosummary/BGlib.html">BGlib</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../notebooks/be/index.html">Band Excitation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../notebooks/gmode/index.html">General Mode</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">BGlib</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">BGlib.gmode.proc.signal_filter</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for BGlib.gmode.proc.signal_filter</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">A class for FFT filtering General-mode spectroscopic imaging data as reported in:</span>
+<span class="sd">[Rapid mapping of polarization switching through complete information acquisition](http://www.nature.com/articles/ncomms13290)</span>
+
+<span class="sd">Created on Tue Nov 07 11:48:53 2017</span>
+
+<span class="sd">@author: Suhas Somnath</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">unicode_literals</span>
+<span class="kn">import</span> <span class="nn">h5py</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">Iterable</span>
+
+<span class="kn">from</span> <span class="nn">pyUSID.processing.comp_utils</span> <span class="kn">import</span> <span class="n">parallel_compute</span>
+<span class="kn">from</span> <span class="nn">sidpy.hdf.hdf_utils</span> <span class="kn">import</span> <span class="n">write_simple_attrs</span>
+
+<span class="kn">from</span> <span class="nn">pyUSID</span> <span class="kn">import</span> <span class="n">Dimension</span>
+<span class="kn">from</span> <span class="nn">pyUSID.io.hdf_utils</span> <span class="kn">import</span> <span class="n">create_results_group</span><span class="p">,</span> <span class="n">write_main_dataset</span><span class="p">,</span> <span class="n">create_empty_dataset</span><span class="p">,</span> \
+    <span class="n">write_ind_val_dsets</span>
+<span class="kn">from</span> <span class="nn">pyUSID.processing.process</span> <span class="kn">import</span> <span class="n">Process</span>
+
+<span class="kn">from</span> <span class="nn">.fft</span> <span class="kn">import</span> <span class="n">get_noise_floor</span><span class="p">,</span> <span class="n">are_compatible_filters</span><span class="p">,</span> <span class="n">build_composite_freq_filter</span>
+<span class="kn">from</span> <span class="nn">.gmode_utils</span> <span class="kn">import</span> <span class="n">test_filter</span>
+
+<span class="c1"># TODO: correct implementation of num_pix</span>
+
+
+<div class="viewcode-block" id="SignalFilter">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.gmode.proc.signal_filter.SignalFilter.html#BGlib.gmode.proc.signal_filter.SignalFilter">[docs]</a>
+<span class="k">class</span> <span class="nc">SignalFilter</span><span class="p">(</span><span class="n">Process</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h5_main</span><span class="p">,</span> <span class="n">frequency_filters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">noise_threshold</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">write_filtered</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">write_condensed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">num_pix</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">phase_rad</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Filters the entire h5 dataset with the given filtering parameters.</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        h5_main : h5py.Dataset object</span>
+<span class="sd">            Dataset to process</span>
+<span class="sd">        frequency_filters : (Optional) single or list of pycroscopy.fft.FrequencyFilter objects</span>
+<span class="sd">            Frequency (vertical) filters to apply to signal</span>
+<span class="sd">        noise_threshold : (Optional) float. Default - None</span>
+<span class="sd">            Noise tolerance to apply to data. Value must be within (0, 1)</span>
+<span class="sd">        write_filtered : (Optional) bool. Default - True</span>
+<span class="sd">            Whether to write the filtered data to file</span>
+<span class="sd">        write_condensed : Optional) bool. Default - False</span>
+<span class="sd">            Whether to write the condensed data in frequency space to file. Use this for datasets that are very</span>
+<span class="sd">            large but sparse in frequency space.</span>
+<span class="sd">        num_pix : (Optional) uint. Default - 1</span>
+<span class="sd">            Number of pixels to use for filtering. More pixels means a lower noise floor and the ability to pick up</span>
+<span class="sd">            weaker signals. Use only if absolutely necessary. This value must be a divisor of the number of pixels in</span>
+<span class="sd">            the dataset</span>
+<span class="sd">        phase_rad : (Optional). float</span>
+<span class="sd">            Degrees by which the output is rotated with respect to the input to compensate for phase lag.</span>
+<span class="sd">            This feature has NOT yet been implemented.</span>
+<span class="sd">        h5_target_group : h5py.Group, optional. Default = None</span>
+<span class="sd">            Location where to look for existing results and to place newly</span>
+<span class="sd">            computed results. Use this kwarg if the results need to be written</span>
+<span class="sd">            to a different HDF5 file. By default, this value is set to the</span>
+<span class="sd">            parent group containing `h5_main`</span>
+<span class="sd">        kwargs : (Optional). dictionary</span>
+<span class="sd">            Please see Process class for additional inputs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">SignalFilter</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">h5_main</span><span class="p">,</span> <span class="s1">&#39;FFT_Filtering&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">frequency_filters</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">noise_threshold</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Need to specify at least some noise thresholding / frequency filter&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">noise_threshold</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">noise_threshold</span> <span class="o">&gt;=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">noise_threshold</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Noise threshold must be within (0 1)&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">composite_filter</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">frequency_filters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">frequency_filters</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">):</span>
+                <span class="n">frequency_filters</span> <span class="o">=</span> <span class="p">[</span><span class="n">frequency_filters</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">are_compatible_filters</span><span class="p">(</span><span class="n">frequency_filters</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;frequency filters must be a single or list of FrequencyFilter objects&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">composite_filter</span> <span class="o">=</span> <span class="n">build_composite_freq_filter</span><span class="p">(</span><span class="n">frequency_filters</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">write_condensed</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">write_filtered</span> <span class="ow">is</span> <span class="kc">False</span> <span class="ow">and</span> <span class="n">write_condensed</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;You need to write the filtered and/or the condensed dataset to the file&#39;</span><span class="p">)</span>
+
+        <span class="n">num_effective_pix</span> <span class="o">=</span> <span class="n">h5_main</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">num_pix</span>
+        <span class="k">if</span> <span class="n">num_effective_pix</span> <span class="o">%</span> <span class="mi">1</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Number of pixels not divisible by the number of pixels to use for FFT filter&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_effective_pix</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_effective_pix</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phase_rad</span> <span class="o">=</span> <span class="n">phase_rad</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">noise_threshold</span> <span class="o">=</span> <span class="n">noise_threshold</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frequency_filters</span> <span class="o">=</span> <span class="n">frequency_filters</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">write_filtered</span> <span class="o">=</span> <span class="n">write_filtered</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write_condensed</span> <span class="o">=</span> <span class="n">write_condensed</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remember that the default number of pixels corresponds to only the raw data that can be held in memory</span>
+<span class="sd">        In the case of signal filtering, the datasets that will occupy space are:</span>
+<span class="sd">        1. Raw, 2. filtered (real + freq space copies), 3. Condensed (substantially lesser space)</span>
+<span class="sd">        The actual scaling of memory depends on options:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">scaling_factor</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">write_filtered</span> <span class="o">+</span> <span class="mf">0.25</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">write_condensed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_max_pos_per_read</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_max_pos_per_read</span> <span class="o">/</span> <span class="n">scaling_factor</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Allowed to read </span><span class="si">{}</span><span class="s1"> pixels per chunk&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_max_pos_per_read</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">parms_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">frequency_filters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="nb">filter</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">frequency_filters</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">parms_dict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">filter</span><span class="o">.</span><span class="n">get_parms</span><span class="p">())</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_threshold</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parms_dict</span><span class="p">[</span><span class="s1">&#39;noise_threshold&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_threshold</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parms_dict</span><span class="p">[</span><span class="s1">&#39;num_pix&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_effective_pix</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">duplicate_h5_groups</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">partial_h5_groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_for_duplicates</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filtered_data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">condensed_data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">noise_floors</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_filtered</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_condensed</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_noise_floors</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="SignalFilter.test">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.gmode.proc.signal_filter.SignalFilter.html#BGlib.gmode.proc.signal_filter.SignalFilter.test">[docs]</a>
+    <span class="k">def</span> <span class="nf">test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pix_ind</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">excit_wfm</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Tests the signal filter on a single pixel (randomly chosen unless manually specified) worth of data.</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pix_ind : int, optional. default = random</span>
+<span class="sd">            Index of the pixel whose data will be used for inference</span>
+<span class="sd">        excit_wfm : array-like, optional. default = None</span>
+<span class="sd">            Waveform against which the raw and filtered signals will be plotted. This waveform can be a fraction of the</span>
+<span class="sd">            length of a single pixel&#39;s data. For example, in the case of G-mode, where a single scan line is yet to be</span>
+<span class="sd">            broken down into pixels, the excitation waveform for a single pixel can br provided to automatically</span>
+<span class="sd">            break the raw and filtered responses also into chunks of the same size.</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        fig, axes</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="n">pix_ind</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">pix_ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">test_filter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="p">[</span><span class="n">pix_ind</span><span class="p">],</span> <span class="n">frequency_filters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">frequency_filters</span><span class="p">,</span> <span class="n">excit_wfm</span><span class="o">=</span><span class="n">excit_wfm</span><span class="p">,</span>
+                           <span class="n">noise_threshold</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">noise_threshold</span><span class="p">,</span> <span class="n">plot_title</span><span class="o">=</span><span class="s1">&#39;Pos #&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">pix_ind</span><span class="p">),</span> <span class="n">show_plots</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                           <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_create_results_datasets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates all the datasets necessary for holding all parameters + data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span> <span class="o">=</span> <span class="n">create_results_group</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">process_name</span><span class="p">,</span>
+                                                   <span class="n">h5_parent_group</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_h5_target_group</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">parms_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;last_pixel&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;algorithm&#39;</span><span class="p">:</span> <span class="s1">&#39;pycroscopy_SignalFilter&#39;</span><span class="p">})</span>
+
+        <span class="n">write_simple_attrs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parms_dict</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Group</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">composite_filter</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="n">h5_comp_filt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;Composite_Filter&#39;</span><span class="p">,</span>
+                                                              <span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">composite_filter</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Rank </span><span class="si">{}</span><span class="s1"> - Finished creating the Composite_Filter dataset&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span><span class="p">))</span>
+
+        <span class="c1"># First create the position datsets if the new indices are smaller...</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_effective_pix</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="c1"># TODO: Do this part correctly. See past solution:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            # need to make new position datasets by taking every n&#39;th index / value:</span>
+<span class="sd">                new_pos_vals = np.atleast_2d(h5_pos_vals[slice(0, None, self.num_effective_pix), :])</span>
+<span class="sd">                pos_descriptor = []</span>
+<span class="sd">                for name, units, leng in zip(h5_pos_inds.attrs[&#39;labels&#39;], h5_pos_inds.attrs[&#39;units&#39;],</span>
+<span class="sd">                                             [int(np.unique(h5_pos_inds[:, dim_ind]).size / self.num_effective_pix)</span>
+<span class="sd">                                              for dim_ind in range(h5_pos_inds.shape[1])]):</span>
+<span class="sd">                    pos_descriptor.append(Dimension(name, units, np.arange(leng)))</span>
+<span class="sd">                ds_pos_inds, ds_pos_vals = build_ind_val_dsets(pos_descriptor, is_spectral=False, verbose=self.verbose)</span>
+<span class="sd">                h5_pos_vals.data = np.atleast_2d(new_pos_vals)  # The data generated above varies linearly. Override.</span>
+
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">h5_pos_inds_new</span><span class="p">,</span> <span class="n">h5_pos_vals_new</span> <span class="o">=</span> <span class="n">write_ind_val_dsets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="p">,</span>
+                                                                   <span class="n">Dimension</span><span class="p">(</span><span class="s1">&#39;pixel&#39;</span><span class="p">,</span> <span class="s1">&#39;a.u.&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_effective_pix</span><span class="p">),</span>
+                                                                   <span class="n">is_spectral</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Rank </span><span class="si">{}</span><span class="s1"> - Created the new position ancillary dataset&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span><span class="p">))</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">h5_pos_inds_new</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="o">.</span><span class="n">h5_pos_inds</span>
+            <span class="n">h5_pos_vals_new</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="o">.</span><span class="n">h5_pos_vals</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Rank </span><span class="si">{}</span><span class="s1"> - Reusing source datasets position datasets&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_threshold</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">h5_noise_floors</span> <span class="o">=</span> <span class="n">write_main_dataset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_effective_pix</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="s1">&#39;Noise_Floors&#39;</span><span class="p">,</span>
+                                                      <span class="s1">&#39;Noise&#39;</span><span class="p">,</span> <span class="s1">&#39;a.u.&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Dimension</span><span class="p">(</span><span class="s1">&#39;arb&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+                                                      <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">aux_spec_prefix</span><span class="o">=</span><span class="s1">&#39;Noise_Spec_&#39;</span><span class="p">,</span>
+                                                      <span class="n">h5_pos_inds</span><span class="o">=</span><span class="n">h5_pos_inds_new</span><span class="p">,</span> <span class="n">h5_pos_vals</span><span class="o">=</span><span class="n">h5_pos_vals_new</span><span class="p">,</span>
+                                                      <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Rank </span><span class="si">{}</span><span class="s1"> - Finished creating the Noise_Floors dataset&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">write_filtered</span><span class="p">:</span>
+            <span class="c1"># Filtered data is identical to Main_Data in every way - just a duplicate</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">h5_filtered</span> <span class="o">=</span> <span class="n">create_empty_dataset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="s1">&#39;Filtered_Data&#39;</span><span class="p">,</span>
+                                                    <span class="n">h5_group</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Rank </span><span class="si">{}</span><span class="s1"> - Finished creating the Filtered dataset&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">hot_inds</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">write_condensed</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hot_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">composite_filter</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hot_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hot_inds</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hot_inds</span><span class="p">)):])</span>  <span class="c1"># only need to keep half the data</span>
+            <span class="n">condensed_spec</span> <span class="o">=</span> <span class="n">Dimension</span><span class="p">(</span><span class="s1">&#39;hot_frequencies&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hot_inds</span><span class="p">)))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">h5_condensed</span> <span class="o">=</span> <span class="n">write_main_dataset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_effective_pix</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hot_inds</span><span class="p">)),</span>
+                                                   <span class="s1">&#39;Condensed_Data&#39;</span><span class="p">,</span> <span class="s1">&#39;Complex&#39;</span><span class="p">,</span> <span class="s1">&#39;a. u.&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">condensed_spec</span><span class="p">,</span>
+                                                   <span class="n">h5_pos_inds</span><span class="o">=</span><span class="n">h5_pos_inds_new</span><span class="p">,</span> <span class="n">h5_pos_vals</span><span class="o">=</span><span class="n">h5_pos_vals_new</span><span class="p">,</span>
+                                                   <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Rank </span><span class="si">{}</span><span class="s1"> - Finished creating the Condensed dataset&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpi_size</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mpi_comm</span><span class="o">.</span><span class="n">Barrier</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="o">.</span><span class="n">file</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_get_existing_datasets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extracts references to the existing datasets that hold the results</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">write_filtered</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">h5_filtered</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="p">[</span><span class="s1">&#39;Filtered_Data&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">write_condensed</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">h5_condensed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="p">[</span><span class="s1">&#39;Condensed_Data&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_threshold</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">h5_noise_floors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="p">[</span><span class="s1">&#39;Noise_Floors&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_write_results_chunk</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Writes data chunks back to the file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Get access to the private variable:</span>
+        <span class="n">pos_in_batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_pixels_in_current_batch</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">write_condensed</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">h5_condensed</span><span class="p">[</span><span class="n">pos_in_batch</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">condensed_data</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_threshold</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">h5_noise_floors</span><span class="p">[</span><span class="n">pos_in_batch</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">noise_floors</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">write_filtered</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">h5_filtered</span><span class="p">[</span><span class="n">pos_in_batch</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filtered_data</span>
+
+        <span class="c1"># Not responsible for checkpointing anymore. Process class handles this.</span>
+
+    <span class="k">def</span> <span class="nf">_unit_computation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Processing per chunk of the dataset</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        args : list</span>
+<span class="sd">            Not used</span>
+<span class="sd">        kwargs : dictionary</span>
+<span class="sd">            Not used</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># get FFT of the entire data chunk</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fftshift</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">axes</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_threshold</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">noise_floors</span> <span class="o">=</span> <span class="n">parallel_compute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">get_noise_floor</span><span class="p">,</span> <span class="n">cores</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cores</span><span class="p">,</span>
+                                                 <span class="n">func_args</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">noise_threshold</span><span class="p">],</span>
+                                                 <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">composite_filter</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="c1"># multiple fft of data with composite filter</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">composite_filter</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_threshold</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># apply thresholding</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">noise_floors</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span> <span class="o">=</span> <span class="mf">1E-16</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">write_condensed</span><span class="p">:</span>
+            <span class="c1"># set self.condensed_data here</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">condensed_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hot_inds</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">write_filtered</span><span class="p">:</span>
+            <span class="c1"># take inverse FFT</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">filtered_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifft</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifftshift</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">phase_rad</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># TODO: implement phase compensation</span>
+                <span class="c1"># do np.roll on data</span>
+                <span class="c1"># self.data = np.roll(self.data, 0, axis=1)</span>
+                <span class="k">pass</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Pycroscopy contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

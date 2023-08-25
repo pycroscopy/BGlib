@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BGlib.gmode.analysis.GIVBayesian &mdash; BGlib 0.0.4 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/documentation_options.js?v=8c5712d9"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            BGlib
+          </a>
+              <div class="version">
+                0.0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">BGlib</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">BGlib</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../BGlib.html">BGlib</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../notebooks/be/index.html">Band Excitation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../notebooks/gmode/index.html">General Mode</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BGlib</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">BGlib.gmode.analysis.GIVBayesian</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/_autosummary/_autosummary/BGlib.gmode.analysis.GIVBayesian.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="bglib-gmode-analysis-givbayesian">
+<h1>BGlib.gmode.analysis.GIVBayesian<a class="headerlink" href="#bglib-gmode-analysis-givbayesian" title="Link to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="BGlib.gmode.analysis.GIVBayesian">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">BGlib.gmode.analysis.</span></span><span class="sig-name descname"><span class="pre">GIVBayesian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h5_main</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ex_freq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_x_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">250</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_extra</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">110</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/BGlib/gmode/analysis/giv_bayesian.html#GIVBayesian"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BGlib.gmode.analysis.GIVBayesian" title="Link to this definition">¶</a></dt>
+<dd><p>A class that performs Bayesian inference to decouple spurious hysteresis signals from current-voltage spectroscopy
+signals in General mode I-V data</p>
+<p>Applies Bayesian Inference to General Mode IV (G-IV) data to extract the true current</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>h5_main</strong> (<em>h5py.Dataset object</em>) – Dataset to process</p></li>
+<li><p><strong>ex_freq</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Frequency of the excitation waveform</p></li>
+<li><p><strong>gain</strong> (<em>uint</em>) – Gain setting on current amplifier (typically 7-9)</p></li>
+<li><p><strong>num_x_steps</strong> (<em>uint</em><em> (</em><em>Optional</em><em>, </em><em>default = 250</em><em>)</em>) – Number of steps for the inferred results. Note: this may be end up being slightly different from specified.</p></li>
+<li><p><strong>r_extra</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em> (</em><em>Optional</em><em>, </em><em>default = 110</em><em> [</em><em>Ohms</em><em>]</em><em>)</em>) – Extra resistance in the RC circuit that will provide correct current and resistance values</p></li>
+<li><p><strong>h5_target_group</strong> (<a class="reference external" href="https://docs.h5py.org/en/latest/high/group.html#h5py.Group" title="(in h5py v3.9)"><em>h5py.Group</em></a><em>, </em><em>optional. Default = None</em>) – Location where to look for existing results and to place newly
+computed results. Use this kwarg if the results need to be written
+to a different HDF5 file. By default, this value is set to the
+parent group containing <cite>h5_main</cite></p></li>
+<li><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>) – Other parameters specific to the Process class and nuanced bayesian_inference parameters</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="BGlib.gmode.analysis.GIVBayesian.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h5_main</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ex_freq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_x_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">250</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_extra</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">110</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/BGlib/gmode/analysis/giv_bayesian.html#GIVBayesian.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BGlib.gmode.analysis.GIVBayesian.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Applies Bayesian Inference to General Mode IV (G-IV) data to extract the true current</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>h5_main</strong> (<em>h5py.Dataset object</em>) – Dataset to process</p></li>
+<li><p><strong>ex_freq</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Frequency of the excitation waveform</p></li>
+<li><p><strong>gain</strong> (<em>uint</em>) – Gain setting on current amplifier (typically 7-9)</p></li>
+<li><p><strong>num_x_steps</strong> (<em>uint</em><em> (</em><em>Optional</em><em>, </em><em>default = 250</em><em>)</em>) – Number of steps for the inferred results. Note: this may be end up being slightly different from specified.</p></li>
+<li><p><strong>r_extra</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em> (</em><em>Optional</em><em>, </em><em>default = 110</em><em> [</em><em>Ohms</em><em>]</em><em>)</em>) – Extra resistance in the RC circuit that will provide correct current and resistance values</p></li>
+<li><p><strong>h5_target_group</strong> (<a class="reference external" href="https://docs.h5py.org/en/latest/high/group.html#h5py.Group" title="(in h5py v3.9)"><em>h5py.Group</em></a><em>, </em><em>optional. Default = None</em>) – Location where to look for existing results and to place newly
+computed results. Use this kwarg if the results need to be written
+to a different HDF5 file. By default, this value is set to the
+parent group containing <cite>h5_main</cite></p></li>
+<li><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>) – Other parameters specific to the Process class and nuanced bayesian_inference parameters</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/BGlib.gmode.analysis.GIVBayesian.html#BGlib.gmode.analysis.GIVBayesian.__init__" title="BGlib.gmode.analysis.GIVBayesian.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(h5_main, ex_freq, gain[, ...])</p></td>
+<td><p>Applies Bayesian Inference to General Mode IV (G-IV) data to extract the true current</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute</span></code>([override])</p></td>
+<td><p>Creates placeholders for the results, applies the inference to the data, and writes the output to the file.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">test</span></code>([pix_ind, show_plots])</p></td>
+<td><p>Tests the inference on a single pixel (randomly chosen unless manually specified) worth of data.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">use_partial_computation</span></code>([h5_partial_group])</p></td>
+<td><p>Extracts the necessary parameters from the provided h5 group to resume computation</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">parms_dict</span></code></p></td>
+<td><p>The name of the HDF5 dataset that should be present to signify which positions have already been computed This is NOT a fully private variable so that multiple processes can be run within a single group - Eg Fitter In the case of Fitter - this name can be changed from 'completed_guesses' to 'completed_fits' check_for_duplicates will be called by the Child class where they have the opportunity to change this variable before checking for duplicates</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Pycroscopy contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

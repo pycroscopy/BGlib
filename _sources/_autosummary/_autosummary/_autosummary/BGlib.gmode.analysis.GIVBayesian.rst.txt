@@ -1,0 +1,31 @@
+BGlib.gmode.analysis.GIVBayesian
+================================
+
+.. currentmodule:: BGlib.gmode.analysis
+
+.. autoclass:: GIVBayesian
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~GIVBayesian.__init__
+      ~GIVBayesian.compute
+      ~GIVBayesian.test
+      ~GIVBayesian.use_partial_computation
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~GIVBayesian.parms_dict
+   
+   

@@ -1,0 +1,6 @@
+BGlib.be.translators.df\_utils.beps\_gen\_utils.get\_noise\_vec
+===============================================================
+
+.. currentmodule:: BGlib.be.translators.df_utils.beps_gen_utils
+
+.. autofunction:: get_noise_vec

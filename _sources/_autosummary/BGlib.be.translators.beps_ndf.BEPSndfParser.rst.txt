@@ -1,0 +1,28 @@
+BGlib.be.translators.beps\_ndf.BEPSndfParser
+============================================
+
+.. currentmodule:: BGlib.be.translators.beps_ndf
+
+.. autoclass:: BEPSndfParser
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~BEPSndfParser.get_num_pixels
+      ~BEPSndfParser.get_spatial_pixels
+      ~BEPSndfParser.get_wave_type
+      ~BEPSndfParser.read_pixel
+   
+   
+
+   
+   
+   

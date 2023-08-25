@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BGlib.be.translators.df_utils.be_utils.createSpecVals &mdash; BGlib 0.0.4 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/documentation_options.js?v=8c5712d9"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            BGlib
+          </a>
+              <div class="version">
+                0.0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">BGlib</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">BGlib</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="BGlib.html">BGlib</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/be/index.html">Band Excitation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/gmode/index.html">General Mode</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BGlib</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">BGlib.be.translators.df_utils.be_utils.createSpecVals</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_autosummary/BGlib.be.translators.df_utils.be_utils.createSpecVals.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="bglib-be-translators-df-utils-be-utils-createspecvals">
+<h1>BGlib.be.translators.df_utils.be_utils.createSpecVals<a class="headerlink" href="#bglib-be-translators-df-utils-be-utils-createspecvals" title="Link to this heading">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="BGlib.be.translators.df_utils.be_utils.createSpecVals">
+<span class="sig-prename descclassname"><span class="pre">BGlib.be.translators.df_utils.be_utils.</span></span><span class="sig-name descname"><span class="pre">createSpecVals</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">udvs_mat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spec_inds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bin_freqs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bin_wfm_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parm_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">udvs_labs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">udvs_units</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/BGlib/be/translators/df_utils/be_utils.html#createSpecVals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BGlib.be.translators.df_utils.be_utils.createSpecVals" title="Link to this definition">¶</a></dt>
+<dd><p>This function will determine the proper Spectroscopic Value array for the
+dataset</p>
+<p>Chris Smith – <a class="reference external" href="mailto:csmith55&#37;&#52;&#48;utk&#46;edu">csmith55<span>&#64;</span>utk<span>&#46;</span>edu</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>udvs_mat</strong> (<em>numpy array</em>) – UDVS table from dataset</p></li>
+<li><p><strong>spec_inds</strong> (<em>numpy array</em>) – Spectroscopic Indices table from dataset</p></li>
+<li><p><strong>bin_freqs</strong> (<em>numpy array</em>) – Bin frequencies</p></li>
+<li><p><strong>bin_wfm_type</strong> (<em>numpy array</em>) – waveform type for each frequency index</p></li>
+<li><p><strong>parm_dict</strong> (<em>dictionary</em>) – parameters for dataset</p></li>
+<li><p><strong>udvs_labs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a><em> of </em><em>strings</em>) – labels for the columns of the UDVS matrix</p></li>
+<li><p><strong>udvs_units</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a><em> of </em><em>strings</em>) – units for the columns of the UDVS matrix</p></li>
+<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional. Default = False</em>) – Whether or not to print debugging print statements</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>ds_spec_val_mat</strong> (<em>numpy array</em>) – Spectroscopic Values table</p></li>
+<li><p><strong>ds_spec_val_labs</strong> (<em>list of strings</em>) – names of the columns of the Spectroscopic Values table</p></li>
+<li><p><strong>ds_spec_val_units</strong> (<em>list of strings</em>) – units of the columns of the Spectroscopic Values table</p></li>
+<li><p><strong>ds_spec_val_labs_names</strong> (<em>list of Strings</em>) – labels with the names of their parameters</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Pycroscopy contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

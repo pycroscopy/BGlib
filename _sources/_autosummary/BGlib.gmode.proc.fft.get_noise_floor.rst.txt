@@ -1,0 +1,6 @@
+BGlib.gmode.proc.fft.get\_noise\_floor
+======================================
+
+.. currentmodule:: BGlib.gmode.proc.fft
+
+.. autofunction:: get_noise_floor

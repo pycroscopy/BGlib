@@ -1,0 +1,33 @@
+BGlib.be.translators.df\_utils.beps\_gen\_utils
+===============================================
+
+.. automodule:: BGlib.be.translators.df_utils.beps_gen_utils
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      build_loop_from_mat
+      combine_in_out_field_loops
+      get_noise_vec
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

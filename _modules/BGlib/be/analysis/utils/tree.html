@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BGlib.be.analysis.utils.tree &mdash; BGlib 0.0.4 documentation</title>
+      <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../_static/documentation_options.js?v=8c5712d9"></script>
+        <script src="../../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../../../../../about.html" />
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            BGlib
+          </a>
+              <div class="version">
+                0.0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">BGlib</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../about.html">BGlib</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../_autosummary/BGlib.html">BGlib</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../notebooks/be/index.html">Band Excitation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../notebooks/gmode/index.html">General Mode</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">BGlib</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">BGlib.be.analysis.utils.tree</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for BGlib.be.analysis.utils.tree</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">utilities that facilitate the propagation of hierarchical information (for example endmembers from clustering)</span>
+
+<span class="sd">Created on Wed Aug 31 17:03:29 2016</span>
+
+<span class="sd">@author: Suhas Somnath</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">unicode_literals</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<span class="c1"># TODO: Test and debug node and clusterTree classes for agglomerative clustering etc</span>
+
+<div class="viewcode-block" id="Node">
+<a class="viewcode-back" href="../../../../../_autosummary/BGlib.be.analysis.utils.tree.Node.html#BGlib.be.analysis.utils.tree.Node">[docs]</a>
+<span class="k">class</span> <span class="nc">Node</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Basic unit of a tree - a node. Keeps track of its value, labels, parent, children, level in the tree etc.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dist</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">children</span><span class="o">=</span><span class="p">[],</span> <span class="n">compute_mean</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name : (Optional) unsigned int</span>
+<span class="sd">            ID of this node</span>
+<span class="sd">        value : (Optional) 1D numpy array</span>
+<span class="sd">            Response corresponding to this Node.</span>
+<span class="sd">        parent : (Optional) unsigned int or Node object</span>
+<span class="sd">            Parent for this Node.</span>
+<span class="sd">        dist : (Optional) float</span>
+<span class="sd">            Distance between the children nodes</span>
+<span class="sd">        labels : (Optional) list or 1D numpy array of unsigned integers</span>
+<span class="sd">            Positions / instances in a main dataset within this cluster</span>
+<span class="sd">        children : (Optional) list of Node objects</span>
+<span class="sd">            Children for this node</span>
+<span class="sd">        compute_mean : (Optional) Boolean</span>
+<span class="sd">            Whether or not to compute the value attribute from the provided children</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="n">children</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="n">parent</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dist</span> <span class="o">=</span> <span class="n">dist</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># Assign this node as the parent for all its children</span>
+        <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">children</span><span class="p">:</span>
+            <span class="n">child</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="bp">self</span>
+
+        <span class="c1"># If labels were not provided (tree node), get from children</span>
+        <span class="k">if</span> <span class="n">labels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">temp_labels</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Child #</span><span class="si">{}</span><span class="s1"> had the following labels:&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">child</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="n">child</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>
+                <span class="n">temp_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">child</span><span class="o">.</span><span class="n">labels</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Labels (unsorted) derived from children for node #</span><span class="si">{}</span><span class="s1">:&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">temp_labels</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">temp_labels</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Labels for leaf node #</span><span class="si">{}</span><span class="s1">:&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">)</span>
+
+        <span class="c1"># Compute the level for this node along with the number of children below it</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_nodes</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">num_nodes</span> <span class="o">+=</span> <span class="n">child</span><span class="o">.</span><span class="n">num_nodes</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="p">,</span> <span class="n">child</span><span class="o">.</span><span class="n">level</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># because this node has to be one higher level than its highest children</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_nodes</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Parent node:&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="s1">&#39;has&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_nodes</span><span class="p">),</span> <span class="s1">&#39;children&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span> <span class="n">compute_mean</span><span class="p">]):</span>
+            <span class="n">resp</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">children</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;       Child node&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">child</span><span class="o">.</span><span class="n">name</span><span class="p">),</span> <span class="s1">&#39;has&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">child</span><span class="o">.</span><span class="n">num_nodes</span><span class="p">),</span> <span class="s1">&#39;children&#39;</span><span class="p">)</span>
+                <span class="c1"># primitive method of equal bias mean: resp.append(child.value)</span>
+                <span class="c1"># weighted mean:</span>
+                <span class="n">resp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">child</span><span class="o">.</span><span class="n">value</span> <span class="o">*</span> <span class="n">child</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">size</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+                <span class="c1"># self.value = np.mean(np.array(resp), axis=0)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">resp</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;(</span><span class="si">{}</span><span class="s1">) --&gt; </span><span class="si">{}</span><span class="s1">,</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="ClusterTree">
+<a class="viewcode-back" href="../../../../../_autosummary/BGlib.be.analysis.utils.tree.ClusterTree.html#BGlib.be.analysis.utils.tree.ClusterTree">[docs]</a>
+<span class="k">class</span> <span class="nc">ClusterTree</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates a tree representation from the provided linkage pairing. Useful for clustering</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">linkage_pairing</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">distances</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">centroids</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        linkage_pairing : 2D unsigned int numpy array or list</span>
+<span class="sd">            Linkage pairing that describes a tree structure. The matrix should result in a single tree apex.</span>
+<span class="sd">        labels : 1D unsigned int numpy array or list</span>
+<span class="sd">            Labels assigned to each of the positions in the main dataset. Eg. Labels from clustering</span>
+<span class="sd">        distances : (Optional) 1D numpy float array or list</span>
+<span class="sd">            Distances between clusters</span>
+<span class="sd">        centroids : (Optional) 2D numpy array</span>
+<span class="sd">            Mean responses for each of the clusters. These will be propagated up</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_leaves</span> <span class="o">=</span> <span class="n">linkage_pairing</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linkage</span> <span class="o">=</span> <span class="n">linkage_pairing</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">centroids</span> <span class="o">=</span> <span class="n">centroids</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; this list maintains pointers to the nodes pertaining to that cluster id for quick look-ups</span>
+<span class="sd">        By default this lookup table just contains the number indices of these clusters.</span>
+<span class="sd">        They will be replaced with node objects as and when the objects are created&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+
+        <span class="c1"># now the labels is a giant list of labels assigned for each of the positions.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; the labels for the leaf nodes need to be calculated manually from the provided labels</span>
+<span class="sd">        Populate the lowest level nodes / leaves first:&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">clust_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_leaves</span><span class="p">):</span>
+            <span class="n">which_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">==</span> <span class="n">clust_id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">centroids</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Node</span><span class="p">(</span><span class="n">clust_id</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">centroids</span><span class="p">[</span><span class="n">clust_id</span><span class="p">],</span> <span class="n">labels</span><span class="o">=</span><span class="n">which_pos</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Node</span><span class="p">(</span><span class="n">clust_id</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">which_pos</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">linkage_pairing</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;print &#39;working on&#39;, linkage_pairing[row]</span>
+<span class="sd">            we already have each of these children in our look-up table&quot;&quot;&quot;</span>
+            <span class="n">childs</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># this is an empty list that will hold all the children corresponding to this node</span>
+            <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">linkage_pairing</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+<span class="w">                </span><span class="sd">&quot;&quot;&quot; look at each child in this row</span>
+<span class="sd">                look up the node object corresponding to this label &quot;&quot;&quot;</span>
+                <span class="n">childs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">linkage_pairing</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">])])</span>
+                <span class="c1"># Now this row results in a new node. That is what we create here and assign the children to this node</span>
+            <span class="n">new_node</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">row</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_leaves</span><span class="p">,</span> <span class="n">children</span><span class="o">=</span><span class="n">childs</span><span class="p">,</span> <span class="n">compute_mean</span><span class="o">=</span><span class="n">centroids</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="c1"># If distances are provided, add the distances attribute to this node.</span>
+            <span class="c1"># This is the distance between the children</span>
+            <span class="k">if</span> <span class="n">distances</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">new_node</span><span class="o">.</span><span class="n">dist</span> <span class="o">=</span> <span class="n">distances</span><span class="p">[</span><span class="n">row</span><span class="p">]</span>
+                <span class="c1"># add this node to the look-up table:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_node</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">tree</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+<div class="viewcode-block" id="ClusterTree.__str__">
+<a class="viewcode-back" href="../../../../../_autosummary/BGlib.be.analysis.utils.tree.ClusterTree.html#BGlib.be.analysis.utils.tree.ClusterTree.__str__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Overrides the to string representation. Prints the names of the node and its children.</span>
+<span class="sd">        Not very useful for large trees</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">        String representation of the tree structure</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tree</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Pycroscopy contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

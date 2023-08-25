@@ -1,0 +1,26 @@
+BGlib.gmode.proc.fft.NoiseBandFilter
+====================================
+
+.. currentmodule:: BGlib.gmode.proc.fft
+
+.. autoclass:: NoiseBandFilter
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~NoiseBandFilter.get_parms
+      ~NoiseBandFilter.is_compatible
+   
+   
+
+   
+   
+   

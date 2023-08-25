@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BGlib.be.analysis.be_relax_fit.BERelaxFit &mdash; BGlib 0.0.4 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/documentation_options.js?v=8c5712d9"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            BGlib
+          </a>
+              <div class="version">
+                0.0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">BGlib</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">BGlib</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="BGlib.html">BGlib</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/be/index.html">Band Excitation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/gmode/index.html">General Mode</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BGlib</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">BGlib.be.analysis.be_relax_fit.BERelaxFit</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_autosummary/BGlib.be.analysis.be_relax_fit.BERelaxFit.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="bglib-be-analysis-be-relax-fit-berelaxfit">
+<h1>BGlib.be.analysis.be_relax_fit.BERelaxFit<a class="headerlink" href="#bglib-be-analysis-be-relax-fit-berelaxfit" title="Link to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="BGlib.be.analysis.be_relax_fit.BERelaxFit">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">BGlib.be.analysis.be_relax_fit.</span></span><span class="sig-name descname"><span class="pre">BERelaxFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h5_main</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variables</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Exponential'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phase_off</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">starts_with</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'write'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/BGlib/be/analysis/be_relax_fit.html#BERelaxFit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BGlib.be.analysis.be_relax_fit.BERelaxFit" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Process</span></code></p>
+<p>This instantiation reads and calculates parameters in the data file necessary for reading, writing, analyzing,
+and visualizing the data. It writes these parameters to attributes to be referenced.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>h5_main</strong> – h5py.Dataset object from pycroscopy.analysis.BESHOfitter</p></li>
+<li><p><strong>variables</strong> – list(string), Default [‘Frequency’]</p></li>
+</ul>
+</dd>
+</dl>
+<p>Lists of attributes that h5_main should possess so that it may be analyzed by Model.
+:param fit_method: fit_method for berelaxfit fit, can be ‘Exponential’, ‘Double_Exp’, ‘Str_Exp’ or ‘Logistic’
+:param sens: tip sensitivity in pm/V. Default: 1, the data are not scaled
+:param phase_off: to apply to phase data. Default: 0, the data are not offset.
+:param starts_with: ‘write’ or ‘read’ , depending on whether the first step is a read or write step. Default:
+‘write’</p>
+<p><a href="#id1"><span class="problematic" id="id2">**</span></a>Currently, the BE software does not consistently encode whether spectra start with a read or write step</p>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#BGlib.be.analysis.be_relax_fit.BERelaxFit.compute" title="BGlib.be.analysis.be_relax_fit.BERelaxFit.compute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute</span></code></a></p></td>
+<td><p>Creates placeholders for the results, applies the <code class="xref py py-meth docutils literal notranslate"><span class="pre">_unit_computation()</span></code> to chunks of the dataset</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#BGlib.be.analysis.be_relax_fit.BERelaxFit.test" title="BGlib.be.analysis.be_relax_fit.BERelaxFit.test"><code class="xref py py-obj docutils literal notranslate"><span class="pre">test</span></code></a></p></td>
+<td><p>This function manipulates the data within one pixel as defined by _map_function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#BGlib.be.analysis.be_relax_fit.BERelaxFit.use_partial_computation" title="BGlib.be.analysis.be_relax_fit.BERelaxFit.use_partial_computation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">use_partial_computation</span></code></a></p></td>
+<td><p>Extracts the necessary parameters from the provided h5 group to resume computation</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#BGlib.be.analysis.be_relax_fit.BERelaxFit.parms_dict" title="BGlib.be.analysis.be_relax_fit.BERelaxFit.parms_dict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parms_dict</span></code></a></p></td>
+<td><p>The name of the HDF5 dataset that should be present to signify which positions have already been computed This is NOT a fully private variable so that multiple processes can be run within a single group - Eg Fitter In the case of Fitter - this name can be changed from 'completed_guesses' to 'completed_fits' check_for_duplicates will be called by the Child class where they have the opportunity to change this variable before checking for duplicates</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="BGlib.be.analysis.be_relax_fit.BERelaxFit.compute">
+<span class="sig-name descname"><span class="pre">compute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">override</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BGlib.be.analysis.be_relax_fit.BERelaxFit.compute" title="Link to this definition">¶</a></dt>
+<dd><p>Creates placeholders for the results, applies the <code class="xref py py-meth docutils literal notranslate"><span class="pre">_unit_computation()</span></code>
+to chunks of the dataset</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>override</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional. default = False</em>) – By default, compute will simply return duplicate results to avoid recomputing or resume computation on a
+group with partial results. Set to True to force fresh computation.</p></li>
+<li><p><strong>args</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>) – arguments to the mapped function in the correct order</p></li>
+<li><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>) – keyword arguments to the mapped function</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>h5_results_grp</strong> – Group containing all the results</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.h5py.org/en/latest/high/group.html#h5py.Group" title="(in h5py v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">h5py.Group</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="BGlib.be.analysis.be_relax_fit.BERelaxFit.parms_dict">
+<span class="sig-name descname"><span class="pre">parms_dict</span></span><a class="headerlink" href="#BGlib.be.analysis.be_relax_fit.BERelaxFit.parms_dict" title="Link to this definition">¶</a></dt>
+<dd><p>The name of the HDF5 dataset that should be present to signify which positions have already been computed
+This is NOT a fully private variable so that multiple processes can be run within a single group - Eg Fitter
+In the case of Fitter - this name can be changed from ‘completed_guesses’ to ‘completed_fits’
+check_for_duplicates will be called by the Child class where they have the opportunity to change this
+variable before checking for duplicates</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BGlib.be.analysis.be_relax_fit.BERelaxFit.test">
+<span class="sig-name descname"><span class="pre">test</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pixel_ind</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/BGlib/be/analysis/be_relax_fit.html#BERelaxFit.test"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BGlib.be.analysis.be_relax_fit.BERelaxFit.test" title="Link to this definition">¶</a></dt>
+<dd><p>This function manipulates the data within one pixel as defined by _map_function.
+:param pixel_ind: pixel index of the data we wish to test
+:return: array from fit of data to self.fit_method</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BGlib.be.analysis.be_relax_fit.BERelaxFit.use_partial_computation">
+<span class="sig-name descname"><span class="pre">use_partial_computation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h5_partial_group</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BGlib.be.analysis.be_relax_fit.BERelaxFit.use_partial_computation" title="Link to this definition">¶</a></dt>
+<dd><p>Extracts the necessary parameters from the provided h5 group to resume computation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>h5_partial_group</strong> (<a class="reference external" href="https://docs.h5py.org/en/latest/high/group.html#h5py.Group" title="(in h5py v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">h5py.Group</span></code></a>) – Group containing partially computed results</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Pycroscopy contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

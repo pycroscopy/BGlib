@@ -1,0 +1,35 @@
+BGlib.be.analysis.Fitter
+========================
+
+.. currentmodule:: BGlib.be.analysis
+
+.. autoclass:: Fitter
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Fitter.__init__
+      ~Fitter.compute
+      ~Fitter.do_fit
+      ~Fitter.do_guess
+      ~Fitter.set_up_fit
+      ~Fitter.set_up_guess
+      ~Fitter.test
+      ~Fitter.use_partial_computation
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Fitter.parms_dict
+   
+   

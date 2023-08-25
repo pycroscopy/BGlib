@@ -1,0 +1,26 @@
+BGlib.gmode.proc.fft.HarmonicPassFilter
+=======================================
+
+.. currentmodule:: BGlib.gmode.proc.fft
+
+.. autoclass:: HarmonicPassFilter
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~HarmonicPassFilter.get_parms
+      ~HarmonicPassFilter.is_compatible
+   
+   
+
+   
+   
+   

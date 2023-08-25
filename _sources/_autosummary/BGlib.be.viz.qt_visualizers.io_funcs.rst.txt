@@ -1,0 +1,35 @@
+BGlib.be.viz.qt\_visualizers.io\_funcs
+======================================
+
+.. automodule:: BGlib.be.viz.qt_visualizers.io_funcs
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      getSpectralData
+      loadDataFunc
+      readACData
+      readDCData
+      readData
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

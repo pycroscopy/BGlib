@@ -1,0 +1,6 @@
+BGlib.be.analysis.be\_loop\_fitter.shift\_vdc
+=============================================
+
+.. currentmodule:: BGlib.be.analysis.be_loop_fitter
+
+.. autofunction:: shift_vdc

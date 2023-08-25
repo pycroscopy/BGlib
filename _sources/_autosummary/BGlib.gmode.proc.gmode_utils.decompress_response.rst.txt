@@ -1,0 +1,6 @@
+BGlib.gmode.proc.gmode\_utils.decompress\_response
+==================================================
+
+.. currentmodule:: BGlib.gmode.proc.gmode_utils
+
+.. autofunction:: decompress_response

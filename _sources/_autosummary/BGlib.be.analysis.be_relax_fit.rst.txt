@@ -1,0 +1,47 @@
+BGlib.be.analysis.be\_relax\_fit
+================================
+
+.. automodule:: BGlib.be.analysis.be_relax_fit
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      double_exp
+      exp
+      fit_double_exp
+      fit_exp_curve
+      fit_sigmoid
+      fit_str_exp
+      sigmoid
+      str_exp
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :nosignatures:
+   
+      BERelaxFit
+   
+   
+
+   
+   
+   
+
+
+

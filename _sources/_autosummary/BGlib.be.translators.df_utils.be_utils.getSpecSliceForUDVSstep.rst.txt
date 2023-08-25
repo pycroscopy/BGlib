@@ -1,0 +1,6 @@
+BGlib.be.translators.df\_utils.be\_utils.getSpecSliceForUDVSstep
+================================================================
+
+.. currentmodule:: BGlib.be.translators.df_utils.be_utils
+
+.. autofunction:: getSpecSliceForUDVSstep

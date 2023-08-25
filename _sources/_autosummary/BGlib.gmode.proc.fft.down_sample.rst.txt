@@ -1,0 +1,6 @@
+BGlib.gmode.proc.fft.down\_sample
+=================================
+
+.. currentmodule:: BGlib.gmode.proc.fft
+
+.. autofunction:: down_sample

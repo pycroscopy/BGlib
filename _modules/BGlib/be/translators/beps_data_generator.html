@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BGlib.be.translators.beps_data_generator &mdash; BGlib 0.0.4 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/documentation_options.js?v=8c5712d9"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../../../../about.html" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            BGlib
+          </a>
+              <div class="version">
+                0.0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">BGlib</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../about.html">BGlib</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../_autosummary/BGlib.html">BGlib</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../notebooks/be/index.html">Band Excitation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../notebooks/gmode/index.html">General Mode</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">BGlib</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">BGlib.be.translators.beps_data_generator</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for BGlib.be.translators.beps_data_generator</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Utility functions for the Fake BEPS generator</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">h5py</span>
+<span class="kn">from</span> <span class="nn">sklearn.utils</span> <span class="kn">import</span> <span class="n">gen_batches</span>
+<span class="kn">from</span> <span class="nn">pyUSID.processing.comp_utils</span> <span class="kn">import</span> <span class="n">get_available_memory</span>
+<span class="kn">from</span> <span class="nn">skimage.measure</span> <span class="kn">import</span> <span class="n">block_reduce</span>
+<span class="c1"># Pycroscopy imports</span>
+<span class="kn">from</span> <span class="nn">sidpy.hdf.hdf_utils</span> <span class="kn">import</span> <span class="n">get_attr</span><span class="p">,</span> <span class="n">write_simple_attrs</span>
+<span class="kn">from</span> <span class="nn">sidpy.hdf.dtype_utils</span> <span class="kn">import</span> <span class="n">stack_real_to_compound</span>
+<span class="kn">from</span> <span class="nn">sidpy.sid</span> <span class="kn">import</span> <span class="n">Translator</span>
+<span class="kn">from</span> <span class="nn">pyUSID.io.hdf_utils</span> <span class="kn">import</span> <span class="n">link_as_main</span><span class="p">,</span> <span class="n">copy_dataset</span><span class="p">,</span> \
+    <span class="n">write_main_dataset</span><span class="p">,</span> <span class="n">create_indexed_group</span><span class="p">,</span> <span class="n">create_results_group</span><span class="p">,</span> \
+    <span class="n">write_reduced_anc_dsets</span>
+<span class="kn">from</span> <span class="nn">sidpy.hdf.reg_ref</span> <span class="kn">import</span> <span class="n">copy_all_region_refs</span> <span class="p">,</span> <span class="n">write_region_references</span>
+
+<span class="kn">from</span> <span class="nn">pyUSID</span> <span class="kn">import</span> <span class="n">Dimension</span>
+<span class="kn">from</span> <span class="nn">pyUSID.io.anc_build_utils</span> <span class="kn">import</span> <span class="n">Dimension</span><span class="p">,</span> <span class="n">calc_chunks</span>
+<span class="kn">from</span> <span class="nn">pyUSID.io.image</span> <span class="kn">import</span> <span class="n">read_image</span>
+
+<span class="kn">from</span> <span class="nn">..analysis.utils.be_loop</span> <span class="kn">import</span> <span class="n">loop_fit_function</span>
+<span class="kn">from</span> <span class="nn">..analysis.utils.be_sho</span> <span class="kn">import</span> <span class="n">SHOfunc</span>
+<span class="kn">from</span> <span class="nn">..analysis.be_sho_fitter</span> <span class="kn">import</span> <span class="n">sho32</span>
+<span class="kn">from</span> <span class="nn">..analysis.be_loop_fitter</span> <span class="kn">import</span> <span class="n">loop_fit32</span>
+<span class="kn">from</span> <span class="nn">.df_utils.beps_gen_utils</span> <span class="kn">import</span> <span class="n">get_noise_vec</span><span class="p">,</span> <span class="n">beps_image_folder</span>
+
+
+<div class="viewcode-block" id="FakeBEPSGenerator">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.translators.beps_data_generator.FakeBEPSGenerator.html#BGlib.be.translators.beps_data_generator.FakeBEPSGenerator">[docs]</a>
+<span class="k">class</span> <span class="nc">FakeBEPSGenerator</span><span class="p">(</span><span class="n">Translator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># TODO: Add other cycle fractions</span>
+    <span class="c1"># TODO: Add support for other VS_modes</span>
+    <span class="c1"># TODO: Add support for other field modes</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">FakeBEPSGenerator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">N_x</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">N_y</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_steps</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_bins</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_freq</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">end_freq</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_cycles</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forc_cycles</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forc_repeats</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loop_a</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loop_b</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_type</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">field_mode</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_pixels</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_loops</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_sho_bins</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_spec_bins</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_fields</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">binning_func</span> <span class="o">=</span> <span class="n">FakeBEPSGenerator</span><span class="o">.</span><span class="n">no_bin</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cycle_fraction</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_path</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_ext</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rebin</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bin_factor</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bin_func</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1">#self.max_ram = 1024**8</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">no_bin</span><span class="p">(</span><span class="n">image</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">image</span>
+
+    <span class="k">def</span> <span class="nf">_read_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">folder</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;In folder </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">folder</span><span class="p">))</span>
+        <span class="n">file_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_file_path</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_ext</span><span class="p">)</span>
+
+        <span class="n">images</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">image_file</span> <span class="ow">in</span> <span class="n">file_list</span><span class="p">:</span>
+            <span class="n">image_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">image_file</span><span class="p">)</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">read_image</span><span class="p">(</span><span class="n">image_path</span><span class="p">,</span> <span class="n">as_grayscale</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">binning_func</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bin_factor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bin_func</span><span class="p">)</span>
+            <span class="n">images</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">N_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N_y</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_pixels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">N_x</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">N_y</span>
+
+        <span class="k">return</span> <span class="n">images</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_parse_file_path</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">ftype</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a list of all files in the directory given by path</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ---------------</span>
+<span class="sd">        path : string / unicode</span>
+<span class="sd">            absolute path to directory containing files</span>
+<span class="sd">        ftype : this file types to return in file_list. (optional. Default is all)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        file_list : list of strings</span>
+<span class="sd">            names of all files in directory located at path</span>
+<span class="sd">        numfiles : unsigned int</span>
+<span class="sd">            number of files in file_list</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Make sure we have a proper path to the images to use</span>
+        <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s1">&#39;df_utils/beps_data_gen_images&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+        <span class="c1"># Get all files in directory</span>
+        <span class="n">file_list</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+        <span class="c1"># If no file type specified, return full list</span>
+        <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="s1">&#39;all&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">file_list</span>
+
+        <span class="c1"># Remove files of type other than the request ftype from the list</span>
+        <span class="n">new_file_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">this_thing</span> <span class="ow">in</span> <span class="n">file_list</span><span class="p">:</span>
+            <span class="c1"># Make sure it&#39;s really a file</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">this_thing</span><span class="p">)):</span>
+                <span class="k">continue</span>
+
+            <span class="n">split</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">this_thing</span><span class="p">)</span>
+            <span class="n">ext</span> <span class="o">=</span> <span class="n">split</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">ext</span> <span class="o">==</span> <span class="n">ftype</span><span class="p">:</span>
+                <span class="n">new_file_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">this_thing</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">new_file_list</span>
+
+<div class="viewcode-block" id="FakeBEPSGenerator.translate">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.translators.beps_data_generator.FakeBEPSGenerator.html#BGlib.be.translators.beps_data_generator.FakeBEPSGenerator.translate">[docs]</a>
+    <span class="k">def</span> <span class="nf">translate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h5_path</span><span class="p">,</span> <span class="n">n_steps</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">n_bins</span><span class="o">=</span><span class="mi">37</span><span class="p">,</span> <span class="n">start_freq</span><span class="o">=</span><span class="mf">300E+3</span><span class="p">,</span> <span class="n">end_freq</span><span class="o">=</span><span class="mf">350E+3</span><span class="p">,</span>
+                  <span class="n">data_type</span><span class="o">=</span><span class="s1">&#39;BEPSData&#39;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;DC modulation mode&#39;</span><span class="p">,</span> <span class="n">field_mode</span><span class="o">=</span><span class="s1">&#39;in and out-of-field&#39;</span><span class="p">,</span>
+                  <span class="n">n_cycles</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">FORC_cycles</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">FORC_repeats</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">loop_a</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">loop_b</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                  <span class="n">cycle_frac</span><span class="o">=</span><span class="s1">&#39;full&#39;</span><span class="p">,</span> <span class="n">image_folder</span><span class="o">=</span><span class="n">beps_image_folder</span><span class="p">,</span> <span class="n">bin_factor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                  <span class="n">bin_func</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span> <span class="n">image_type</span><span class="o">=</span><span class="s1">&#39;.tif&#39;</span><span class="p">,</span> <span class="n">simple_coefs</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        h5_path : str</span>
+<span class="sd">            Desired path to write the new HDF5 file</span>
+<span class="sd">        n_steps : uint, optional</span>
+<span class="sd">            Number of voltage steps</span>
+<span class="sd">            Default - 32</span>
+<span class="sd">        n_bins : uint, optional</span>
+<span class="sd">            Number of frequency bins</span>
+<span class="sd">            Default - 37</span>
+<span class="sd">        start_freq : float, optional</span>
+<span class="sd">            Starting frequency in Hz</span>
+<span class="sd">            Default - 300E+3</span>
+<span class="sd">        end_freq : float, optional</span>
+<span class="sd">            Final freqency in Hz</span>
+<span class="sd">            Default - 350E+3</span>
+<span class="sd">        data_type : str, optional</span>
+<span class="sd">            Type of data to generate</span>
+<span class="sd">            Options -  &#39;BEPSData&#39;, &#39;BELineData&#39;</span>
+<span class="sd">            Default - &#39;BEPSData&#39;</span>
+<span class="sd">        mode  : str, optional</span>
+<span class="sd">            Modulation mode to use when generating the data.</span>
+<span class="sd">            Options - &#39;DC modulation mode&#39;, &#39;AC modulation mode&#39;</span>
+<span class="sd">            Default - &#39;DC modulation mode&#39;</span>
+<span class="sd">        field_mode : str, optional</span>
+<span class="sd">            Field mode</span>
+<span class="sd">            Options - &#39;in-field&#39;, &#39;out-of-field&#39;, &#39;in and out-of-field&#39;</span>
+<span class="sd">            Default - &#39;in and out-of-field&#39;</span>
+<span class="sd">        n_cycles : uint, optional</span>
+<span class="sd">            Number of cycles</span>
+<span class="sd">            Default - 1</span>
+<span class="sd">        FORC_cycles : uint, optional</span>
+<span class="sd">            Number of FORC cycles</span>
+<span class="sd">            Default - 1</span>
+<span class="sd">        FORC_repeats : uint, optional</span>
+<span class="sd">            Number of FORC repeats</span>
+<span class="sd">            Default - 1</span>
+<span class="sd">        loop_a : float, optional</span>
+<span class="sd">            Loop coefficient a</span>
+<span class="sd">            Default - 1</span>
+<span class="sd">        loop_b : float, optional</span>
+<span class="sd">            Loop coefficient b</span>
+<span class="sd">        cycle_frac : str</span>
+<span class="sd">            Cycle fraction parameter.</span>
+<span class="sd">            Default - &#39;full&#39;</span>
+<span class="sd">        image_folder : str</span>
+<span class="sd">            Path to the images that will be used to generate the loop coefficients.  There must be 11 images named</span>
+<span class="sd">            &#39;1.tif&#39;, &#39;2.tif&#39;, ..., &#39;11.tif&#39;</span>
+<span class="sd">            Default - pycroscopy.io.translators.df_utils.beps_gen_utils.beps_image_folder</span>
+<span class="sd">        bin_factor : array_like of uint, optional</span>
+<span class="sd">            Downsampling factor for each dimension.  Default is None.</span>
+<span class="sd">        bin_func : callable, optional</span>
+<span class="sd">            Function which will be called to calculate the return value</span>
+<span class="sd">            of each block.  Function must implement an axis parameter,</span>
+<span class="sd">            i.e. numpy.mean.  Ignored if bin_factor is None.  Default is</span>
+<span class="sd">            numpy.mean.</span>
+<span class="sd">        image_type : str</span>
+<span class="sd">            File extension of images to be read.  Default &#39;.tif&#39;</span>
+<span class="sd">        simple_coefs : bool</span>
+<span class="sd">            Should a simpler coefficient generation be used.  Ensures loops, but all loops are identical.</span>
+<span class="sd">            Default False</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Setup shared parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_steps</span> <span class="o">=</span> <span class="n">n_steps</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_bins</span> <span class="o">=</span> <span class="n">n_bins</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_freq</span> <span class="o">=</span> <span class="n">start_freq</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">end_freq</span> <span class="o">=</span> <span class="n">end_freq</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_cycles</span> <span class="o">=</span> <span class="n">n_cycles</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forc_cycles</span> <span class="o">=</span> <span class="n">FORC_cycles</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forc_repeats</span> <span class="o">=</span> <span class="n">FORC_repeats</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loop_a</span> <span class="o">=</span> <span class="n">loop_a</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loop_b</span> <span class="o">=</span> <span class="n">loop_b</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_type</span> <span class="o">=</span> <span class="n">data_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">field_mode</span> <span class="o">=</span> <span class="n">field_mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cycle_fraction</span> <span class="o">=</span> <span class="n">cycle_frac</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bin_factor</span> <span class="o">=</span> <span class="n">bin_factor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bin_func</span> <span class="o">=</span> <span class="n">bin_func</span>
+        <span class="k">if</span> <span class="n">field_mode</span> <span class="o">==</span> <span class="s1">&#39;in and out-of-field&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_fields</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_fields</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_loops</span> <span class="o">=</span> <span class="n">FORC_cycles</span> <span class="o">*</span> <span class="n">FORC_repeats</span> <span class="o">*</span> <span class="n">n_cycles</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_fields</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_sho_bins</span> <span class="o">=</span> <span class="n">n_steps</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_loops</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_spec_bins</span> <span class="o">=</span> <span class="n">n_bins</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_sho_bins</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_path</span> <span class="o">=</span> <span class="n">h5_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_ext</span> <span class="o">=</span> <span class="n">image_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simple_coefs</span> <span class="o">=</span> <span class="n">simple_coefs</span>
+
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Check if a bin_factor is given.  Set up binning objects if it is.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">bin_factor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rebin</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bin_factor</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bin_factor</span> <span class="o">=</span> <span class="p">(</span><span class="n">bin_factor</span><span class="p">,</span> <span class="n">bin_factor</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">bin_factor</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bin_factor</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">bin_factor</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Input parameter `bin_factor` must be a length 2 array_like or an integer.</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span>
+                                 <span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> was given.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bin_factor</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">binning_func</span> <span class="o">=</span> <span class="n">block_reduce</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bin_func</span> <span class="o">=</span> <span class="n">bin_func</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Image folder is </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">image_folder</span><span class="p">))</span>
+        <span class="n">images</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_data</span><span class="p">(</span><span class="n">image_folder</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">images</span> <span class="o">=</span> <span class="n">images</span>
+        <span class="n">data_gen_parms</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;N_x&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">N_x</span><span class="p">,</span> <span class="s1">&#39;N_y&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">N_y</span><span class="p">,</span> <span class="s1">&#39;n_steps;:&#39;</span><span class="p">:</span> <span class="n">n_steps</span><span class="p">,</span>
+                          <span class="s1">&#39;n_bins&#39;</span><span class="p">:</span> <span class="n">n_bins</span><span class="p">,</span> <span class="s1">&#39;start_freq&#39;</span><span class="p">:</span> <span class="n">start_freq</span><span class="p">,</span>
+                          <span class="s1">&#39;end_freq&#39;</span><span class="p">:</span> <span class="n">end_freq</span><span class="p">,</span> <span class="s1">&#39;n_cycles&#39;</span><span class="p">:</span> <span class="n">n_cycles</span><span class="p">,</span>
+                          <span class="s1">&#39;forc_cycles&#39;</span><span class="p">:</span> <span class="n">FORC_cycles</span><span class="p">,</span> <span class="s1">&#39;forc_repeats&#39;</span><span class="p">:</span> <span class="n">FORC_repeats</span><span class="p">,</span>
+                          <span class="s1">&#39;loop_a&#39;</span><span class="p">:</span> <span class="n">loop_a</span><span class="p">,</span> <span class="s1">&#39;loop_b&#39;</span><span class="p">:</span> <span class="n">loop_b</span><span class="p">,</span> <span class="s1">&#39;data_type&#39;</span><span class="p">:</span> <span class="n">data_type</span><span class="p">,</span>
+                          <span class="s1">&#39;VS_mode&#39;</span><span class="p">:</span> <span class="n">mode</span><span class="p">,</span> <span class="s1">&#39;field_mode&#39;</span><span class="p">:</span> <span class="n">field_mode</span><span class="p">,</span> <span class="s1">&#39;num_udvs_steps&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_spec_bins</span><span class="p">,</span>
+                          <span class="s1">&#39;VS_cycle_fraction&#39;</span><span class="p">:</span> <span class="n">cycle_frac</span><span class="p">}</span>
+
+        <span class="c1"># Build the hdf5 file and get the datasets to write the data to</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_setup_h5</span><span class="p">(</span><span class="n">data_gen_parms</span><span class="p">)</span>
+
+        <span class="c1"># Calculate the loop parameters</span>
+        <span class="n">coef_mat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_loop_coef_mat</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
+
+        <span class="c1"># In-and-out of field coefficients</span>
+        <span class="k">if</span> <span class="n">field_mode</span> <span class="o">!=</span> <span class="s1">&#39;in-field&#39;</span><span class="p">:</span>
+            <span class="n">coef_OF_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">coef_mat</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">field_mode</span> <span class="o">!=</span> <span class="s1">&#39;out-of-field&#39;</span><span class="p">:</span>
+            <span class="n">coef_IF_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">coef_mat</span><span class="p">)</span>
+            <span class="n">coef_IF_mat</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">-=</span> <span class="mf">0.05</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">coef_mat</span> <span class="o">=</span> <span class="n">coef_mat</span>
+        <span class="c1"># Calculate the SHO fit and guess from the loop coefficients</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_calc_sho</span><span class="p">(</span><span class="n">coef_OF_mat</span><span class="p">,</span> <span class="n">coef_IF_mat</span><span class="p">)</span>
+
+        <span class="c1"># Save the loop guess and fit to file</span>
+        <span class="n">coef_OF_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">coef_OF_mat</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">9</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="n">coef_OF_mat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">])))</span>
+        <span class="n">coef_IF_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">coef_IF_mat</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">9</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="n">coef_IF_mat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">])))</span>
+
+        <span class="n">coef_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">coef_IF_mat</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:],</span> <span class="n">coef_OF_mat</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]])</span>
+        <span class="n">coef_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rollaxis</span><span class="p">(</span><span class="n">coef_mat</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">coef_mat</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="n">coef_mat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_loop_fit</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">stack_real_to_compound</span><span class="p">(</span><span class="n">coef_mat</span><span class="p">,</span> <span class="n">loop_fit32</span><span class="p">),</span>
+                                      <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_loops</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_fields</span><span class="p">)])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_loop_guess</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">stack_real_to_compound</span><span class="p">(</span><span class="n">coef_mat</span> <span class="o">*</span> <span class="n">get_noise_vec</span><span class="p">(</span><span class="n">coef_mat</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">),</span>
+                                                               <span class="n">loop_fit32</span><span class="p">),</span>
+                                        <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_loops</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_fields</span><span class="p">)])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_file</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_calc_raw</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_file</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_path</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_build_ancillary_datasets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        None</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ds_pos_inds : VirtualDataset</span>
+<span class="sd">            Position Indices</span>
+<span class="sd">        ds_pos_vals : VirtualDataset</span>
+<span class="sd">            Position Values</span>
+<span class="sd">        ds_spec_inds : VirtualDataset</span>
+<span class="sd">            Spectrosocpic Indices</span>
+<span class="sd">        ds_spec_vals : VirtualDataset</span>
+<span class="sd">            Spectroscopic Values</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># create spectrogram at each pixel from the coefficients</span>
+        <span class="n">spec_step</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_steps</span><span class="p">)</span>
+        <span class="n">V_vec</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">arcsin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_fields</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">spec_step</span><span class="p">))</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+
+        <span class="c1"># build DC vector for typical BEPS</span>
+        <span class="n">Vdc_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">V_vec</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">V_vec</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)))</span>  <span class="c1"># Add out-of-field values</span>
+        <span class="n">IF_vec</span> <span class="o">=</span> <span class="n">Vdc_mat</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>  <span class="c1"># Base DC vector</span>
+        <span class="n">IF_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">IF_vec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_cycles</span><span class="p">)</span>  <span class="c1"># Now with Cycles</span>
+        <span class="n">IF_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">forc_cycles</span><span class="p">)[:,</span> <span class="kc">None</span><span class="p">],</span> <span class="n">IF_vec</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:])</span>  <span class="c1"># Do a single FORC</span>
+        <span class="n">IF_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">IF_vec</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">forc_repeats</span><span class="p">)</span>  <span class="c1"># Repeat the FORC</span>
+
+        <span class="n">IF_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">IF_vec</span><span class="p">))</span>
+
+        <span class="n">Vdc_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">IF_inds</span><span class="p">,</span> <span class="n">IF_vec</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># build AC vector</span>
+        <span class="n">Vac_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">Vdc_vec</span><span class="p">))</span>
+
+        <span class="c1"># Build the Spectroscopic Values matrix</span>
+        <span class="n">spec_dims</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">n_fields</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_steps</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_cycles</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">forc_cycles</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">forc_repeats</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_bins</span><span class="p">]</span>
+        <span class="n">spec_labs</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Field&#39;</span><span class="p">,</span> <span class="s1">&#39;DC_Offset&#39;</span><span class="p">,</span> <span class="s1">&#39;Cycle&#39;</span><span class="p">,</span> <span class="s1">&#39;FORC&#39;</span><span class="p">,</span> <span class="s1">&#39;FORC_repeat&#39;</span><span class="p">,</span> <span class="s1">&#39;Frequency&#39;</span><span class="p">]</span>
+        <span class="n">spec_units</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;V&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;Hz&#39;</span><span class="p">]</span>
+        <span class="n">spec_start</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_freq</span><span class="p">]</span>
+        <span class="n">spec_steps</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">end_freq</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_freq</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_bins</span><span class="p">]</span>
+
+        <span class="c1"># Remove dimensions with single values</span>
+        <span class="n">real_dims</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">spec_dims</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+        <span class="n">spec_dims</span> <span class="o">=</span> <span class="p">[</span><span class="n">spec_dims</span><span class="p">[</span><span class="n">idim</span><span class="p">]</span> <span class="k">for</span> <span class="n">idim</span> <span class="ow">in</span> <span class="n">real_dims</span><span class="p">]</span>
+        <span class="n">spec_labs</span> <span class="o">=</span> <span class="p">[</span><span class="n">spec_labs</span><span class="p">[</span><span class="n">idim</span><span class="p">]</span> <span class="k">for</span> <span class="n">idim</span> <span class="ow">in</span> <span class="n">real_dims</span><span class="p">]</span>
+        <span class="n">spec_units</span> <span class="o">=</span> <span class="p">[</span><span class="n">spec_units</span><span class="p">[</span><span class="n">idim</span><span class="p">]</span> <span class="k">for</span> <span class="n">idim</span> <span class="ow">in</span> <span class="n">real_dims</span><span class="p">]</span>
+        <span class="n">spec_start</span> <span class="o">=</span> <span class="p">[</span><span class="n">spec_start</span><span class="p">[</span><span class="n">idim</span><span class="p">]</span> <span class="k">for</span> <span class="n">idim</span> <span class="ow">in</span> <span class="n">real_dims</span><span class="p">]</span>
+        <span class="n">spec_steps</span> <span class="o">=</span> <span class="p">[</span><span class="n">spec_steps</span><span class="p">[</span><span class="n">idim</span><span class="p">]</span> <span class="k">for</span> <span class="n">idim</span> <span class="ow">in</span> <span class="n">real_dims</span><span class="p">]</span>
+
+        <span class="c1"># Correct the DC Offset dimension</span>
+        <span class="n">spec_dims_corrected</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">dim_size</span><span class="p">,</span> <span class="n">dim_name</span><span class="p">,</span> <span class="n">dim_units</span><span class="p">,</span> <span class="n">step_size</span><span class="p">,</span> <span class="n">init_val</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">spec_dims</span><span class="p">,</span>
+                                                                      <span class="n">spec_labs</span><span class="p">,</span> <span class="n">spec_units</span><span class="p">,</span> <span class="n">spec_steps</span><span class="p">,</span> <span class="n">spec_start</span><span class="p">):</span>
+
+            <span class="k">if</span> <span class="n">dim_name</span> <span class="o">==</span> <span class="s1">&#39;DC_Offset&#39;</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">Vdc_vec</span><span class="p">[::</span><span class="mi">2</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">dim_size</span><span class="p">)</span> <span class="o">*</span> <span class="n">step_size</span> <span class="o">+</span> <span class="n">init_val</span>
+            <span class="n">spec_dims_corrected</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Dimension</span><span class="p">(</span><span class="n">dim_name</span><span class="p">,</span> <span class="n">dim_units</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+
+        <span class="n">pos_dims</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">dim_size</span><span class="p">,</span> <span class="n">dim_name</span><span class="p">,</span> <span class="n">dim_units</span><span class="p">,</span> <span class="n">step_size</span><span class="p">,</span> <span class="n">init_val</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">N_y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N_x</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;Y&#39;</span><span class="p">,</span> <span class="s1">&#39;X&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;um&#39;</span><span class="p">,</span> <span class="s1">&#39;um&#39;</span><span class="p">],</span>
+                                                                      <span class="p">[</span><span class="mi">10</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">N_y</span><span class="p">,</span> <span class="mi">10</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">N_x</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">]):</span>
+            <span class="n">pos_dims</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Dimension</span><span class="p">(</span><span class="n">dim_name</span><span class="p">,</span> <span class="n">dim_units</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">dim_size</span><span class="p">)</span> <span class="o">*</span> <span class="n">step_size</span> <span class="o">+</span> <span class="n">init_val</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">pos_dims</span><span class="p">,</span> <span class="n">spec_dims_corrected</span>
+
+    <span class="k">def</span> <span class="nf">_setup_h5</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_gen_parms</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Setups up the hdf5 file structure before doing the actual generation</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data_gen_parms : dict</span>
+<span class="sd">            Dictionary containing the parameters to write to the Measurement Group as attributes</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Build the group structure down to the channel group</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="c1"># Set up the basic group structure</span>
+        <span class="n">root_parms</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">root_parms</span><span class="p">[</span><span class="s1">&#39;translator&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;FAKEBEPS&#39;</span>
+        <span class="n">root_parms</span><span class="p">[</span><span class="s1">&#39;data_type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_gen_parms</span><span class="p">[</span><span class="s1">&#39;data_type&#39;</span><span class="p">]</span>
+
+        <span class="c1"># Write the file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_f</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+        <span class="n">write_simple_attrs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_f</span><span class="p">,</span> <span class="n">root_parms</span><span class="p">)</span>
+
+        <span class="n">meas_grp</span> <span class="o">=</span> <span class="n">create_indexed_group</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_f</span><span class="p">,</span> <span class="s1">&#39;Measurement&#39;</span><span class="p">)</span>
+        <span class="n">chan_grp</span> <span class="o">=</span> <span class="n">create_indexed_group</span><span class="p">(</span><span class="n">meas_grp</span><span class="p">,</span> <span class="s1">&#39;Channel&#39;</span><span class="p">)</span>
+
+        <span class="n">write_simple_attrs</span><span class="p">(</span><span class="n">meas_grp</span><span class="p">,</span> <span class="n">data_gen_parms</span><span class="p">)</span>
+
+        <span class="c1"># Create the Position and Spectroscopic datasets for the Raw Data</span>
+        <span class="n">h5_pos_dims</span><span class="p">,</span> <span class="n">h5_spec_dims</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_ancillary_datasets</span><span class="p">()</span>
+
+        <span class="n">h5_raw_data</span> <span class="o">=</span> <span class="n">write_main_dataset</span><span class="p">(</span><span class="n">chan_grp</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_pixels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_spec_bins</span><span class="p">),</span>
+                                                        <span class="s1">&#39;Raw_Data&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;Deflection&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;Volts&#39;</span><span class="p">,</span>
+                                                        <span class="n">h5_pos_dims</span><span class="p">,</span> <span class="n">h5_spec_dims</span><span class="p">,</span>
+                                                        <span class="n">slow_to_fast</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                                        <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex64</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Build the SHO Group</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">sho_grp</span> <span class="o">=</span> <span class="n">create_results_group</span><span class="p">(</span><span class="n">h5_raw_data</span><span class="p">,</span> <span class="s1">&#39;SHO_Fit&#39;</span><span class="p">)</span>
+
+
+        <span class="c1"># Build the Spectroscopic datasets for the SHO Guess and Fit</span>
+        <span class="n">h5_sho_spec_inds</span><span class="p">,</span> <span class="n">h5_sho_spec_vals</span> <span class="o">=</span> <span class="n">write_reduced_anc_dsets</span><span class="p">(</span>
+            <span class="n">sho_grp</span><span class="p">,</span> <span class="n">h5_raw_data</span><span class="o">.</span><span class="n">h5_spec_inds</span><span class="p">,</span> <span class="n">h5_raw_data</span><span class="o">.</span><span class="n">h5_spec_vals</span><span class="p">,</span> <span class="s1">&#39;Frequency&#39;</span><span class="p">,</span> <span class="n">is_spec</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">h5_sho_fit</span> <span class="o">=</span> <span class="n">write_main_dataset</span><span class="p">(</span><span class="n">sho_grp</span><span class="p">,</span>
+                                                       <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_pixels</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_spec_bins</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_bins</span><span class="p">)),</span>
+                                                       <span class="s1">&#39;Fit&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;SHO Parameters&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;a.u.&#39;</span><span class="p">,</span>
+                                                       <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span>
+                                                       <span class="n">h5_pos_inds</span><span class="o">=</span><span class="n">h5_raw_data</span><span class="o">.</span><span class="n">h5_pos_inds</span><span class="p">,</span>
+                                                       <span class="n">h5_pos_vals</span><span class="o">=</span><span class="n">h5_raw_data</span><span class="o">.</span><span class="n">h5_pos_vals</span><span class="p">,</span>
+                                                       <span class="n">h5_spec_inds</span><span class="o">=</span><span class="n">h5_sho_spec_inds</span><span class="p">,</span>
+                                                       <span class="n">h5_spec_vals</span><span class="o">=</span><span class="n">h5_sho_spec_vals</span><span class="p">,</span>
+                                                       <span class="n">slow_to_fast</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">sho32</span><span class="p">)</span>
+
+        <span class="n">h5_sho_guess</span> <span class="o">=</span> <span class="n">copy_dataset</span><span class="p">(</span><span class="n">h5_sho_fit</span><span class="p">,</span> <span class="n">sho_grp</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s1">&#39;Guess&#39;</span><span class="p">)</span>
+
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Build the loop group</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="n">loop_grp</span> <span class="o">=</span> <span class="n">create_results_group</span><span class="p">(</span><span class="n">h5_sho_fit</span><span class="p">,</span> <span class="s1">&#39;Loop_Fit&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Build the Spectroscopic datasets for the loops</span>
+
+        <span class="n">h5_loop_spec_inds</span><span class="p">,</span> <span class="n">h5_loop_spec_vals</span> <span class="o">=</span> <span class="n">write_reduced_anc_dsets</span><span class="p">(</span>
+            <span class="n">loop_grp</span><span class="p">,</span> <span class="n">h5_sho_fit</span><span class="o">.</span><span class="n">h5_spec_inds</span><span class="p">,</span> <span class="n">h5_sho_fit</span><span class="o">.</span><span class="n">h5_spec_vals</span><span class="p">,</span>
+            <span class="s1">&#39;DC_Offset&#39;</span><span class="p">,</span> <span class="n">is_spec</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">h5_loop_fit</span> <span class="o">=</span> <span class="n">write_main_dataset</span><span class="p">(</span><span class="n">loop_grp</span><span class="p">,</span>
+                                                        <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_pixels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_loops</span><span class="p">),</span>
+                                                        <span class="s1">&#39;Fit&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;Loop Fitting Parameters&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;a.u.&#39;</span><span class="p">,</span>
+                                                        <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span>
+                                                        <span class="n">h5_pos_inds</span><span class="o">=</span><span class="n">h5_raw_data</span><span class="o">.</span><span class="n">h5_pos_inds</span><span class="p">,</span>
+                                                        <span class="n">h5_pos_vals</span><span class="o">=</span><span class="n">h5_raw_data</span><span class="o">.</span><span class="n">h5_pos_vals</span><span class="p">,</span>
+                                                        <span class="n">h5_spec_inds</span><span class="o">=</span><span class="n">h5_loop_spec_inds</span><span class="p">,</span>
+                                                        <span class="n">h5_spec_vals</span><span class="o">=</span><span class="n">h5_loop_spec_vals</span><span class="p">,</span>
+                                                        <span class="n">slow_to_fast</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">loop_fit32</span><span class="p">)</span>
+
+        <span class="n">h5_loop_guess</span> <span class="o">=</span> <span class="n">copy_dataset</span><span class="p">(</span><span class="n">h5_loop_fit</span><span class="p">,</span> <span class="n">loop_grp</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s1">&#39;Guess&#39;</span><span class="p">)</span>
+        <span class="n">copy_all_region_refs</span><span class="p">(</span><span class="n">h5_loop_guess</span><span class="p">,</span> <span class="n">h5_loop_fit</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_raw</span> <span class="o">=</span> <span class="n">h5_raw_data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_sho_guess</span> <span class="o">=</span> <span class="n">h5_sho_guess</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_sho_fit</span> <span class="o">=</span> <span class="n">h5_sho_fit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_loop_guess</span> <span class="o">=</span> <span class="n">h5_loop_guess</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_loop_fit</span> <span class="o">=</span> <span class="n">h5_loop_fit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_spec_vals</span> <span class="o">=</span> <span class="n">h5_raw_data</span><span class="o">.</span><span class="n">h5_spec_vals</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_spec_inds</span> <span class="o">=</span> <span class="n">h5_raw_data</span><span class="o">.</span><span class="n">h5_spec_inds</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_sho_spec_inds</span> <span class="o">=</span> <span class="n">h5_sho_fit</span><span class="o">.</span><span class="n">h5_spec_inds</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_sho_spec_vals</span> <span class="o">=</span> <span class="n">h5_sho_fit</span><span class="o">.</span><span class="n">h5_spec_vals</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_loop_spec_inds</span> <span class="o">=</span> <span class="n">h5_loop_fit</span><span class="o">.</span><span class="n">h5_spec_inds</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_loop_spec_vals</span> <span class="o">=</span> <span class="n">h5_loop_fit</span><span class="o">.</span><span class="n">h5_spec_vals</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_file</span> <span class="o">=</span> <span class="n">h5_raw_data</span><span class="o">.</span><span class="n">file</span>
+
+        <span class="k">return</span>
+
+<div class="viewcode-block" id="FakeBEPSGenerator.calc_loop_coef_mat">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.translators.beps_data_generator.FakeBEPSGenerator.html#BGlib.be.translators.beps_data_generator.FakeBEPSGenerator.calc_loop_coef_mat">[docs]</a>
+    <span class="k">def</span> <span class="nf">calc_loop_coef_mat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_list</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Build the loop coefficient matrix</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        image_list : list of numpy.ndarray</span>
+<span class="sd">            Images that will be used to generate the coefficients</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        coef_mat : numpy.ndarray</span>
+<span class="sd">            Array of loop coefficients</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Setup the limits on the coefficients</span>
+        <span class="c1"># Redoing coefficient limits</span>
+
+        <span class="n">coef_limits</span> <span class="o">=</span> <span class="p">[[</span><span class="o">-</span><span class="mf">6.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">3.0</span><span class="p">],</span>  <span class="c1"># 0 - loop bottom edge</span>
+                       <span class="p">[</span><span class="mf">15.0</span><span class="p">,</span> <span class="mf">25.0</span><span class="p">],</span>  <span class="c1"># 1 - loop height</span>
+                       <span class="p">[</span><span class="o">-</span><span class="mf">5.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.5</span><span class="p">],</span>  <span class="c1"># 2 - loop crossing 1</span>
+                       <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">],</span>  <span class="c1"># 3 - loop crossing 2</span>
+                       <span class="p">[</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>  <span class="c1"># 4 - loop slope</span>
+                       <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>  <span class="c1"># 5 - loop corner sharpness 1</span>
+                       <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>  <span class="c1"># 6 - loop corner shaprness 2</span>
+                       <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>  <span class="c1"># 7 - loop corner sharpness 3</span>
+                       <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span>  <span class="c1"># 8 - loop corner sharpness 4</span>
+                       <span class="p">[</span><span class="mf">315E3</span><span class="p">,</span> <span class="mf">325E3</span><span class="p">],</span>  <span class="c1"># 9 - resonant frequency</span>
+                       <span class="p">[</span><span class="mf">80.0</span><span class="p">,</span> <span class="mf">180.0</span><span class="p">]]</span>  <span class="c1"># 10 - Q factor&#39;&#39;&#39;</span>
+
+        <span class="c1"># build loop coef matrix</span>
+        <span class="n">coef_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">n_pixels</span><span class="p">,</span> <span class="mi">11</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">coef_ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">11</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">simple_coefs</span><span class="p">:</span>
+                <span class="n">coef_img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">coef_limits</span><span class="p">[</span><span class="n">coef_ind</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">coef_img</span> <span class="o">=</span> <span class="n">image_list</span><span class="p">[</span><span class="n">coef_ind</span><span class="p">]</span>
+                <span class="n">coef_img</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float32&#39;</span><span class="p">)</span>
+                <span class="n">coef_img</span> <span class="o">=</span> <span class="p">(</span><span class="n">coef_img</span> <span class="o">-</span> <span class="n">coef_img</span><span class="o">.</span><span class="n">min</span><span class="p">())</span> <span class="o">/</span> <span class="p">(</span><span class="n">coef_img</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">coef_img</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
+                <span class="n">coef_min</span> <span class="o">=</span> <span class="n">coef_limits</span><span class="p">[</span><span class="n">coef_ind</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">coef_max</span> <span class="o">=</span> <span class="n">coef_limits</span><span class="p">[</span><span class="n">coef_ind</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">coef_img</span> <span class="o">=</span> <span class="n">coef_img</span> <span class="o">*</span> <span class="p">(</span><span class="n">coef_max</span> <span class="o">-</span> <span class="n">coef_min</span><span class="p">)</span> <span class="o">+</span> <span class="n">coef_min</span>
+
+            <span class="n">coef_mat</span><span class="p">[:,</span> <span class="n">coef_ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">coef_img</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">coef_mat</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_calc_sho</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coef_OF_mat</span><span class="p">,</span> <span class="n">coef_IF_mat</span><span class="p">,</span> <span class="n">amp_noise</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">phase_noise</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">q_noise</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">resp_noise</span><span class="o">=</span><span class="mf">0.01</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Build the SHO dataset from the coefficient matrices</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        coef_OF_mat : numpy.ndarray</span>
+<span class="sd">            Out-of-field coefficients</span>
+<span class="sd">        coef_IF_mat : numpy.ndarray</span>
+<span class="sd">            In-field coefficients</span>
+<span class="sd">        amp_noise : float</span>
+<span class="sd">            Noise factor for amplitude parameter</span>
+<span class="sd">        phase_noise : float</span>
+<span class="sd">            Noise factor for phase parameter</span>
+<span class="sd">        q_noise : float</span>
+<span class="sd">            Noise factor for Q-value parameter</span>
+<span class="sd">        resp_noise : float</span>
+<span class="sd">            Noide factor for w0 parameter</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_sho_spec_vals</span><span class="o">.</span><span class="n">attrs</span><span class="p">))</span>
+        <span class="n">vdc_vec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_sho_spec_vals</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_sho_fit</span><span class="o">.</span><span class="n">spec_dim_labels</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;DC_Offset&#39;</span><span class="p">)]</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+        <span class="n">sho_field</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_sho_spec_vals</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_sho_fit</span><span class="o">.</span><span class="n">spec_dim_labels</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;Field&#39;</span><span class="p">)]</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+        <span class="n">sho_of_inds</span> <span class="o">=</span> <span class="n">sho_field</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="n">sho_if_inds</span> <span class="o">=</span> <span class="n">sho_field</span> <span class="o">==</span> <span class="mi">1</span>
+
+        <span class="c1"># determine how many pixels can be read at once</span>
+        <span class="n">mem_per_pix</span> <span class="o">=</span> <span class="n">vdc_vec</span><span class="o">.</span><span class="n">size</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">itemsize</span>
+        <span class="c1">#free_mem = self.max_ram - vdc_vec.size * vdc_vec.dtype.itemsize * 6</span>
+        <span class="n">free_mem</span> <span class="o">=</span> <span class="mi">1024</span>
+        <span class="n">batch_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">free_mem</span> <span class="o">/</span> <span class="n">mem_per_pix</span><span class="p">)</span>
+        <span class="n">batches</span> <span class="o">=</span> <span class="n">gen_batches</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_pixels</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">)</span>
+
+        <span class="n">one_cycle_length</span> <span class="o">=</span> <span class="n">vdc_vec</span><span class="p">[</span><span class="n">sho_of_inds</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">pix_batch</span> <span class="ow">in</span> <span class="n">batches</span><span class="p">:</span>
+            <span class="n">roll_len</span> <span class="o">=</span> <span class="n">one_cycle_length</span> <span class="o">//</span> <span class="mi">4</span>
+            <span class="n">vdc_OF_rolled</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">vdc_vec</span><span class="p">[</span><span class="n">sho_of_inds</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">roll_len</span><span class="p">)</span>
+            <span class="n">vdc_IF_rolled</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">vdc_vec</span><span class="p">[</span><span class="n">sho_if_inds</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">roll_len</span><span class="p">)</span>
+
+            <span class="n">R_OF</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">loop_fit_function</span><span class="p">(</span><span class="n">vdc_OF_rolled</span><span class="p">,</span> <span class="n">coef</span><span class="p">),</span> <span class="n">roll_len</span><span class="p">)</span>
+                             <span class="k">for</span> <span class="n">coef</span> <span class="ow">in</span> <span class="n">coef_OF_mat</span><span class="p">[</span><span class="n">pix_batch</span><span class="p">]])</span>
+
+            <span class="n">R_OF</span> <span class="o">=</span> <span class="n">R_OF</span> <span class="o">-</span> <span class="n">R_OF</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+            <span class="n">R_IF</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">loop_fit_function</span><span class="p">(</span><span class="n">vdc_IF_rolled</span><span class="p">,</span> <span class="n">coef</span><span class="p">),</span> <span class="n">roll_len</span><span class="p">)</span>
+                             <span class="k">for</span> <span class="n">coef</span> <span class="ow">in</span> <span class="n">coef_IF_mat</span><span class="p">[</span><span class="n">pix_batch</span><span class="p">]])</span>
+
+            <span class="n">R_IF</span> <span class="o">=</span> <span class="n">R_IF</span> <span class="o">-</span> <span class="n">R_IF</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+            <span class="n">R_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">R_IF</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:],</span> <span class="n">R_OF</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]])</span>
+            <span class="n">R_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rollaxis</span><span class="p">(</span><span class="n">R_mat</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">R_mat</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">R_mat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="k">del</span> <span class="n">R_OF</span><span class="p">,</span> <span class="n">R_IF</span>
+
+            <span class="n">amp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">R_mat</span><span class="p">)</span>
+            <span class="n">resp</span> <span class="o">=</span> <span class="n">coef_OF_mat</span><span class="p">[</span><span class="n">pix_batch</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">R_mat</span><span class="p">)</span>
+            <span class="n">q_val</span> <span class="o">=</span> <span class="n">coef_OF_mat</span><span class="p">[</span><span class="n">pix_batch</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">R_mat</span><span class="p">)</span> <span class="o">*</span> <span class="mi">10</span>
+            <span class="n">phase</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">R_mat</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">h5_sho_fit</span><span class="p">[</span><span class="n">pix_batch</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">stack_real_to_compound</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">amp</span><span class="p">,</span>
+                                                                              <span class="n">resp</span><span class="p">,</span>
+                                                                              <span class="n">q_val</span><span class="p">,</span>
+                                                                              <span class="n">phase</span><span class="p">,</span>
+                                                                              <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">R_mat</span><span class="p">)]),</span>
+                                                                   <span class="n">sho32</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">h5_sho_guess</span><span class="p">[</span><span class="n">pix_batch</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">stack_real_to_compound</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">amp</span> <span class="o">*</span> <span class="n">get_noise_vec</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_sho_bins</span><span class="p">,</span>
+                                                                                                    <span class="n">amp_noise</span><span class="p">),</span>
+                                                                                <span class="n">resp</span> <span class="o">*</span> <span class="n">get_noise_vec</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_sho_bins</span><span class="p">,</span>
+                                                                                                     <span class="n">resp_noise</span><span class="p">),</span>
+                                                                                <span class="n">q_val</span> <span class="o">*</span> <span class="n">get_noise_vec</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_sho_bins</span><span class="p">,</span>
+                                                                                                      <span class="n">q_noise</span><span class="p">),</span>
+                                                                                <span class="n">phase</span> <span class="o">*</span> <span class="n">get_noise_vec</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_sho_bins</span><span class="p">,</span>
+                                                                                                      <span class="n">phase_noise</span><span class="p">),</span>
+                                                                                <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">R_mat</span><span class="p">)]),</span>
+                                                                     <span class="n">sho32</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">h5_file</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+        <span class="k">return</span>
+
+    <span class="k">def</span> <span class="nf">_calc_raw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mem_per_pix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_sho_bins</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_sho_fit</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">itemsize</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_spec_bins</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_raw</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">itemsize</span>
+
+        <span class="n">free_mem</span> <span class="o">=</span> <span class="n">get_available_memory</span><span class="p">()</span>
+        <span class="n">batch_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">free_mem</span> <span class="o">/</span> <span class="n">mem_per_pix</span><span class="p">)</span>
+        <span class="n">batches</span> <span class="o">=</span> <span class="n">gen_batches</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_pixels</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">)</span>
+
+        <span class="n">w_vec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_spec_vals</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_raw</span><span class="o">.</span><span class="n">spec_dim_labels</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;Frequency&#39;</span><span class="p">)]</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+        <span class="n">w_vec</span> <span class="o">=</span> <span class="n">w_vec</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">n_bins</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">pix_batch</span> <span class="ow">in</span> <span class="n">batches</span><span class="p">:</span>
+            <span class="n">sho_chunk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_sho_fit</span><span class="p">[</span><span class="n">pix_batch</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+            <span class="n">raw_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">sho_chunk</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_bins</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex64</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">iparm</span><span class="p">,</span> <span class="n">sho_parms</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sho_chunk</span><span class="p">):</span>
+                <span class="n">raw_data</span><span class="p">[</span><span class="n">iparm</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">SHOfunc</span><span class="p">(</span><span class="n">sho_parms</span><span class="p">,</span> <span class="n">w_vec</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">h5_raw</span><span class="p">[</span><span class="n">pix_batch</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">raw_data</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_spec_bins</span><span class="p">])</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">h5_file</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+        <span class="k">return</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Pycroscopy contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

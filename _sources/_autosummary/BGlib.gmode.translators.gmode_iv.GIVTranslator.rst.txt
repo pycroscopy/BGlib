@@ -1,0 +1,26 @@
+BGlib.gmode.translators.gmode\_iv.GIVTranslator
+===============================================
+
+.. currentmodule:: BGlib.gmode.translators.gmode_iv
+
+.. autoclass:: GIVTranslator
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~GIVTranslator.is_valid_file
+      ~GIVTranslator.translate
+   
+   
+
+   
+   
+   

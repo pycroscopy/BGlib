@@ -1,0 +1,6 @@
+BGlib.be.translators.df\_utils.beps\_gen\_utils.build\_loop\_from\_mat
+======================================================================
+
+.. currentmodule:: BGlib.be.translators.df_utils.beps_gen_utils
+
+.. autofunction:: build_loop_from_mat

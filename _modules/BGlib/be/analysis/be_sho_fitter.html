@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BGlib.be.analysis.be_sho_fitter &mdash; BGlib 0.0.4 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/documentation_options.js?v=8c5712d9"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../../../../about.html" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            BGlib
+          </a>
+              <div class="version">
+                0.0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">BGlib</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../about.html">BGlib</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../_autosummary/BGlib.html">BGlib</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../notebooks/be/index.html">Band Excitation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../notebooks/gmode/index.html">General Mode</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">BGlib</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">BGlib.be.analysis.be_sho_fitter</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for BGlib.be.analysis.be_sho_fitter</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">:class:`~pycroscopy.analysis.be_sho_fitter.BESHOfitter` that fits band</span>
+<span class="sd">excitation cantilever vibration response to a Simple Harmonic Oscillator model</span>
+
+<span class="sd">Created on Thu Nov 20 11:48:53 2019</span>
+
+<span class="sd">@author: Suhas Somnath, Chris R. Smith</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">absolute_import</span><span class="p">,</span> \
+    <span class="n">unicode_literals</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">from</span> <span class="nn">sidpy.hdf.hdf_utils</span> <span class="kn">import</span> <span class="n">write_simple_attrs</span><span class="p">,</span> <span class="n">get_attr</span>
+<span class="kn">from</span> <span class="nn">pyUSID.io.hdf_utils</span> <span class="kn">import</span> <span class="n">create_results_group</span><span class="p">,</span> <span class="n">write_main_dataset</span><span class="p">,</span> \
+    <span class="n">write_reduced_anc_dsets</span><span class="p">,</span> <span class="n">create_empty_dataset</span>
+<span class="kn">from</span> <span class="nn">pyUSID.io.usi_data</span> <span class="kn">import</span> <span class="n">USIDataset</span>
+
+<span class="kn">from</span> <span class="nn">scipy.signal</span> <span class="kn">import</span> <span class="n">find_peaks_cwt</span>
+<span class="kn">from</span> <span class="nn">.utils.be_sho</span> <span class="kn">import</span> <span class="n">SHOestimateGuess</span><span class="p">,</span> <span class="n">SHOfunc</span>
+<span class="kn">from</span> <span class="nn">.fitter</span> <span class="kn">import</span> <span class="n">Fitter</span>
+
+
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Custom dtype for the datasets created during fitting.</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="n">_field_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Amplitude [V]&#39;</span><span class="p">,</span> <span class="s1">&#39;Frequency [Hz]&#39;</span><span class="p">,</span> <span class="s1">&#39;Quality Factor&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;Phase [rad]&#39;</span><span class="p">,</span> <span class="s1">&#39;R2 Criterion&#39;</span><span class="p">]</span>
+<span class="n">sho32</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">({</span><span class="s1">&#39;names&#39;</span><span class="p">:</span> <span class="n">_field_names</span><span class="p">,</span>
+                  <span class="s1">&#39;formats&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_field_names</span><span class="p">]})</span>
+
+
+<div class="viewcode-block" id="SHOGuessFunc">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.analysis.be_sho_fitter.SHOGuessFunc.html#BGlib.be.analysis.be_sho_fitter.SHOGuessFunc">[docs]</a>
+<span class="k">class</span> <span class="nc">SHOGuessFunc</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="n">complex_gaussian</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">wavelet_peaks</span> <span class="o">=</span> <span class="mi">1</span></div>
+
+
+
+<div class="viewcode-block" id="SHOFitFunc">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.analysis.be_sho_fitter.SHOFitFunc.html#BGlib.be.analysis.be_sho_fitter.SHOFitFunc">[docs]</a>
+<span class="k">class</span> <span class="nc">SHOFitFunc</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="n">least_squares</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+
+
+<div class="viewcode-block" id="BESHOfitter">
+<a class="viewcode-back" href="../../../../_autosummary/_autosummary/_autosummary/BGlib.be.analysis.BESHOfitter.html#BGlib.be.analysis.be_sho_fitter.BESHOfitter">[docs]</a>
+<span class="k">class</span> <span class="nc">BESHOfitter</span><span class="p">(</span><span class="n">Fitter</span><span class="p">):</span>
+
+<div class="viewcode-block" id="BESHOfitter.__init__">
+<a class="viewcode-back" href="../../../../_autosummary/_autosummary/_autosummary/BGlib.be.analysis.BESHOfitter.html#BGlib.be.analysis.be_sho_fitter.BESHOfitter.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h5_main</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates an instance of the BESHOFitter class</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        h5_main : pyUSID.io.USIDataset</span>
+<span class="sd">            Main dataset containing band excitation measurement</span>
+<span class="sd">        h5_target_group : h5py.Group, optional. Default = None</span>
+<span class="sd">            Location where to look for existing results and to place newly</span>
+<span class="sd">            computed results. Use this kwarg if the results need to be written</span>
+<span class="sd">            to a different HDF5 file. By default, this value is set to the</span>
+<span class="sd">            parent group containing `h5_main`</span>
+<span class="sd">        kwargs : dict, optional</span>
+<span class="sd">            Keyword arguments such as &quot;verbose&quot; and &quot;cores&quot; that will be</span>
+<span class="sd">            passed onto :class:`~pyUSID.processing.process.Process`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">BESHOfitter</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">h5_main</span><span class="p">,</span> <span class="s2">&quot;SHO_Fit&quot;</span><span class="p">,</span>
+                                          <span class="n">variables</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Frequency&#39;</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">parms_dict</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fit_dim_name</span> <span class="o">=</span> <span class="s1">&#39;Frequency&#39;</span>
+
+        <span class="c1"># Extract some basic parameters that are necessary for either the guess</span>
+        <span class="c1"># or fit</span>
+        <span class="n">freq_dim_ind</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="o">.</span><span class="n">spec_dim_labels</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;Frequency&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">step_start_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="o">.</span><span class="n">h5_spec_inds</span><span class="p">[</span><span class="n">freq_dim_ind</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_udvs_steps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">step_start_inds</span><span class="p">)</span>
+
+        <span class="c1"># find the frequency vector and hold in memory</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">freq_vec</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_get_frequency_vector</span><span class="p">()</span>
+
+        <span class="c1"># This is almost always True but think of this more as a sanity check.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_reshapable</span> <span class="o">=</span> <span class="n">_is_reshapable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_start_inds</span><span class="p">)</span>
+
+        <span class="c1"># accounting for memory copies</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_max_raw_pos_per_read</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_pos_per_read</span>
+        <span class="c1"># set limits in the set up functions</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">results_pix_byte_size</span> <span class="o">=</span> <span class="n">sho32</span><span class="o">.</span><span class="n">itemsize</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_udvs_steps</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_get_frequency_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reads the frequency vector from the Spectroscopic_Values dataset.</span>
+<span class="sd">        This assumes that the data is reshape-able.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">h5_spec_vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="o">.</span><span class="n">h5_spec_vals</span>
+        <span class="n">freq_dim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="s1">&#39;Frequency&#39;</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="o">.</span><span class="n">spec_dim_labels</span><span class="p">))</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">step_start_inds</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># BE-Line</span>
+            <span class="n">end_ind</span> <span class="o">=</span> <span class="n">h5_spec_vals</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># BEPS</span>
+            <span class="n">end_ind</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_start_inds</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">freq_vec</span> <span class="o">=</span> <span class="n">h5_spec_vals</span><span class="p">[</span><span class="n">freq_dim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_start_inds</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">end_ind</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_create_guess_datasets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates the h5 group, guess dataset, corresponding spectroscopic datasets and also</span>
+<span class="sd">        links the guess dataset to the spectroscopic datasets.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span> <span class="o">=</span> <span class="n">create_results_group</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="p">,</span>
+                                                   <span class="bp">self</span><span class="o">.</span><span class="n">process_name</span><span class="p">,</span>
+                                                   <span class="n">h5_parent_group</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_h5_target_group</span><span class="p">)</span>
+        <span class="n">write_simple_attrs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parms_dict</span><span class="p">)</span>
+
+        <span class="c1"># If writing to a new HDF5 file:</span>
+        <span class="c1"># Add back the data_type attribute - still being used in the visualizer</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="o">.</span><span class="n">file</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="o">.</span><span class="n">file</span><span class="p">:</span>
+            <span class="n">write_simple_attrs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="o">.</span><span class="n">file</span><span class="p">,</span>
+                               <span class="p">{</span><span class="s1">&#39;data_type&#39;</span><span class="p">:</span> <span class="n">get_attr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="o">.</span><span class="n">file</span><span class="p">,</span>
+                                                      <span class="s1">&#39;data_type&#39;</span><span class="p">)})</span>
+
+        <span class="n">ret_vals</span> <span class="o">=</span> <span class="n">write_reduced_anc_dsets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="p">,</span>
+                                           <span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="o">.</span><span class="n">h5_spec_inds</span><span class="p">,</span>
+                                           <span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="o">.</span><span class="n">h5_spec_vals</span><span class="p">,</span>
+                                           <span class="bp">self</span><span class="o">.</span><span class="n">_fit_dim_name</span><span class="p">,</span>
+                                           <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">)</span>
+
+        <span class="n">h5_sho_inds</span><span class="p">,</span> <span class="n">h5_sho_vals</span> <span class="o">=</span> <span class="n">ret_vals</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_h5_guess</span> <span class="o">=</span> <span class="n">write_main_dataset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="p">,</span>
+                                            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                             <span class="bp">self</span><span class="o">.</span><span class="n">num_udvs_steps</span><span class="p">),</span>
+                                            <span class="s1">&#39;Guess&#39;</span><span class="p">,</span> <span class="s1">&#39;SHO&#39;</span><span class="p">,</span> <span class="s1">&#39;compound&#39;</span><span class="p">,</span>
+                                            <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span>
+                                            <span class="n">h5_pos_inds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="o">.</span><span class="n">h5_pos_inds</span><span class="p">,</span>
+                                            <span class="n">h5_pos_vals</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="o">.</span><span class="n">h5_pos_vals</span><span class="p">,</span>
+                                            <span class="n">h5_spec_inds</span><span class="o">=</span><span class="n">h5_sho_inds</span><span class="p">,</span>
+                                            <span class="n">h5_spec_vals</span><span class="o">=</span><span class="n">h5_sho_vals</span><span class="p">,</span>
+                                            <span class="n">chunks</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_udvs_steps</span><span class="p">),</span>
+                                            <span class="n">dtype</span><span class="o">=</span><span class="n">sho32</span><span class="p">,</span>
+                                            <span class="n">main_dset_attrs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parms_dict</span><span class="p">,</span>
+                                            <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">)</span>
+
+        <span class="c1"># Does not make sense to propagate region refs - nobody uses them</span>
+        <span class="c1"># copy_region_refs(self.h5_main, self._h5_guess)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_h5_guess</span><span class="o">.</span><span class="n">file</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Finished creating Guess dataset&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_create_fit_datasets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates the HDF5 fit dataset. pycroscopy requires that the h5 group, guess dataset,</span>
+<span class="sd">        corresponding spectroscopic and position datasets be created and populated at this point.</span>
+<span class="sd">        This function will create the HDF5 dataset for the fit and link it to same ancillary datasets as the guess.</span>
+<span class="sd">        The fit dataset will NOT be populated here but will instead be populated using the __setData function</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_h5_guess</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Need to guess before fitting!&#39;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Once the guess is complete, the last_pixel attribute will be set to complete for the group.</span>
+<span class="sd">        Once the fit is initiated, during the creation of the status dataset, this last_pixel</span>
+<span class="sd">        attribute will be used and it wil make the fit look like it was already complete. Which is not the case.</span>
+<span class="sd">        This is a problem of doing two processes within the same group. </span>
+<span class="sd">        Until all legacy is removed, we will simply reset the last_pixel attribute.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;last_pixel&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">write_simple_attrs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parms_dict</span><span class="p">)</span>
+
+        <span class="c1"># Create the fit dataset as an empty dataset of the same size and dtype</span>
+        <span class="c1"># as the guess.</span>
+        <span class="c1"># Also automatically links in the ancillary datasets.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_h5_fit</span> <span class="o">=</span> <span class="n">USIDataset</span><span class="p">(</span><span class="n">create_empty_dataset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_h5_guess</span><span class="p">,</span>
+                                                       <span class="n">dtype</span><span class="o">=</span><span class="n">sho32</span><span class="p">,</span>
+                                                       <span class="n">dset_name</span><span class="o">=</span><span class="s1">&#39;Fit&#39;</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_h5_fit</span><span class="o">.</span><span class="n">file</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Finished creating Fit dataset&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_read_data_chunk</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the next chunk of data for the guess or the fit</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># The Fitter class should take care of all the basic reading</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">BESHOfitter</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_read_data_chunk</span><span class="p">()</span>
+
+        <span class="c1"># At this point the self.data object is the raw data that needs to be</span>
+        <span class="c1"># reshaped to a single UDVS step:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Got raw data of shape </span><span class="si">{}</span><span class="s1"> from super&#39;</span>
+                      <span class="s1">&#39;.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">_reshape_to_one_step</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_udvs_steps</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Reshaped raw data to shape </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_read_guess_chunk</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a chunk of guess dataset corresponding to the main dataset.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -----</span>
+<span class="sd">        None</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># The Fitter class should take care of all the basic reading</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">BESHOfitter</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_read_guess_chunk</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_guess</span> <span class="o">=</span> <span class="n">_reshape_to_one_step</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_guess</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_udvs_steps</span><span class="p">)</span>
+        <span class="c1"># bear in mind that this self._guess is a compound dataset. Convert to float32</span>
+        <span class="c1"># don&#39;t keep the R^2.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_guess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_guess</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_guess</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span> <span class="k">if</span> <span class="n">name</span> <span class="o">!=</span> <span class="s1">&#39;R2 Criterion&#39;</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_write_results_chunk</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Writes the provided chunk of data into the guess or fit datasets.</span>
+<span class="sd">        This method is responsible for any and all book-keeping.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="s1">&#39;guess&#39;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_guess</span> <span class="k">else</span> <span class="s1">&#39;fit&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reformat_results</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">,</span>
+                                               <span class="bp">self</span><span class="o">.</span><span class="n">parms_dict</span><span class="p">[</span><span class="n">prefix</span> <span class="o">+</span> <span class="s1">&#39;-algorithm&#39;</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_guess</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_guess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">))</span>
+            <span class="c1"># prepare to reshape:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_guess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_guess</span><span class="p">))</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Prepared guess of shape </span><span class="si">{}</span><span class="s1"> before reshaping&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_guess</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_guess</span> <span class="o">=</span> <span class="n">_reshape_to_n_steps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_guess</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_udvs_steps</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Reshaped guess to shape </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_guess</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fit</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fit</span> <span class="o">=</span> <span class="n">_reshape_to_n_steps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_udvs_steps</span><span class="p">)</span>
+
+        <span class="c1"># ask super to take care of the rest, which is a standardized operation</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">BESHOfitter</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_write_results_chunk</span><span class="p">()</span>
+
+<div class="viewcode-block" id="BESHOfitter.set_up_guess">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.analysis.be_sho_fitter.BESHOfitter.html#BGlib.be.analysis.be_sho_fitter.BESHOfitter.set_up_guess">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_up_guess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">guess_func</span><span class="o">=</span><span class="n">SHOGuessFunc</span><span class="o">.</span><span class="n">complex_gaussian</span><span class="p">,</span>
+                     <span class="n">h5_partial_guess</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">func_args</span><span class="p">,</span> <span class="o">**</span><span class="n">func_kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Need this because during the set up, we won&#39;t know which strategy is being used.</span>
+<span class="sd">        Should Guess be its own Process class in that case? If so, it would end up having</span>
+<span class="sd">        its own group etc.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -----</span>
+<span class="sd">        guess_func : SHOGuessFunc, optional</span>
+<span class="sd">            Which guess method to use. Default is complex gaussian</span>
+<span class="sd">        h5_partial_guess : h5py.Dataset, optional</span>
+<span class="sd">            Partial guess results dataset to continue computing on</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parms_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;guess-method&#39;</span><span class="p">:</span> <span class="s2">&quot;pycroscopy BESHO&quot;</span><span class="p">}</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">guess_func</span><span class="p">,</span> <span class="n">SHOGuessFunc</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Please supply SHOGuessFunc.complex_gaussian or SHOGuessFunc.wavelet_peaks for the guess_func&#39;</span><span class="p">)</span>
+
+        <span class="n">partial_func</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">guess_func</span> <span class="o">==</span> <span class="n">SHOGuessFunc</span><span class="o">.</span><span class="n">complex_gaussian</span><span class="p">:</span>
+
+            <span class="n">num_points</span><span class="o">=</span><span class="n">func_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;num_points&#39;</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">parms_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;guess-algorithm&#39;</span><span class="p">:</span> <span class="s1">&#39;complex_gaussian&#39;</span><span class="p">,</span>
+                                    <span class="s1">&#39;guess-complex_gaussian-num_points&#39;</span><span class="p">:</span> <span class="n">num_points</span><span class="p">})</span>
+
+            <span class="n">partial_func</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">complex_gaussian</span><span class="p">,</span> <span class="n">w_vec</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">freq_vec</span><span class="p">,</span>
+                                   <span class="n">num_points</span><span class="o">=</span><span class="n">num_points</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">guess_func</span> <span class="o">==</span> <span class="n">SHOGuessFunc</span><span class="o">.</span><span class="n">wavelet_peaks</span><span class="p">:</span>
+
+            <span class="n">peak_width_bounds</span> <span class="o">=</span> <span class="n">func_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;peak_width_bounds&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">200</span><span class="p">])</span>
+            <span class="n">peak_width_step</span> <span class="o">=</span> <span class="n">func_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;peak_width_step&#39;</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">func_args</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># Assume that the first argument is what we are looking for</span>
+                <span class="n">peak_width_bounds</span> <span class="o">=</span> <span class="n">func_args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">parms_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;guess_algorithm&#39;</span><span class="p">:</span> <span class="s1">&#39;wavelet_peaks&#39;</span><span class="p">,</span>
+                                    <span class="s1">&#39;guess-wavelet_peaks-peak_width_bounds&#39;</span><span class="p">:</span> <span class="n">peak_width_bounds</span><span class="p">,</span>
+                                    <span class="s1">&#39;guess-wavelet_peaks-peak_width_step&#39;</span><span class="p">:</span> <span class="n">peak_width_step</span><span class="p">})</span>
+
+            <span class="n">partial_func</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">wavelet_peaks</span><span class="p">,</span> <span class="n">peak_width_bounds</span><span class="o">=</span><span class="n">peak_width_bounds</span><span class="p">,</span>
+                                   <span class="n">peak_width_step</span><span class="o">=</span><span class="n">peak_width_step</span><span class="p">,</span> <span class="o">**</span><span class="n">func_kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_map_function</span> <span class="o">=</span> <span class="n">partial_func</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_max_pos_per_read</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_raw_pos_per_read</span> <span class="o">//</span> <span class="mf">1.5</span>
+
+        <span class="c1"># ask super to take care of the rest, which is a standardized operation</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">BESHOfitter</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">set_up_guess</span><span class="p">(</span><span class="n">h5_partial_guess</span><span class="o">=</span><span class="n">h5_partial_guess</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BESHOfitter.set_up_fit">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.analysis.be_sho_fitter.BESHOfitter.html#BGlib.be.analysis.be_sho_fitter.BESHOfitter.set_up_fit">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_up_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fit_func</span><span class="o">=</span><span class="n">SHOFitFunc</span><span class="o">.</span><span class="n">least_squares</span><span class="p">,</span>
+                   <span class="o">*</span><span class="n">func_args</span><span class="p">,</span> <span class="n">h5_partial_fit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">h5_guess</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">func_kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Need this because during the set up, we won&#39;t know which strategy is being used.</span>
+<span class="sd">        Should Guess be its own Process class in that case? If so, it would end up having</span>
+<span class="sd">        its own group etc.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parms_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;fit-method&#39;</span><span class="p">:</span> <span class="s2">&quot;pycroscopy BESHO&quot;</span><span class="p">}</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fit_func</span><span class="p">,</span> <span class="n">SHOFitFunc</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Please supply SHOFitFunc.least_squares for the fit_func&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">fit_func</span> <span class="o">==</span> <span class="n">SHOFitFunc</span><span class="o">.</span><span class="n">least_squares</span><span class="p">:</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">parms_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;fit-algorithm&#39;</span><span class="p">:</span> <span class="s1">&#39;least_squares&#39;</span><span class="p">})</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_max_pos_per_read</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_raw_pos_per_read</span> <span class="o">//</span> <span class="mf">1.75</span>
+
+        <span class="c1"># ask super to take care of the rest, which is a standardized operation</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">BESHOfitter</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">set_up_fit</span><span class="p">(</span><span class="n">h5_partial_fit</span><span class="o">=</span><span class="n">h5_partial_fit</span><span class="p">,</span>
+                                            <span class="n">h5_guess</span><span class="o">=</span><span class="n">h5_guess</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_unit_compute_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Punts unit computation on a chunk of data to Process</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">BESHOfitter</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_unit_compute_fit</span><span class="p">(</span><span class="n">_sho_error</span><span class="p">,</span>
+                                                   <span class="n">obj_func_args</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">freq_vec</span><span class="p">],</span>
+                                                   <span class="n">solver_options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;jac&#39;</span><span class="p">:</span> <span class="s1">&#39;cs&#39;</span><span class="p">})</span>
+
+    <span class="k">def</span> <span class="nf">_reformat_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">strategy</span><span class="o">=</span><span class="s1">&#39;wavelet_peaks&#39;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Model specific calculation and or reformatting of the raw guess or fit results</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        results : array-like</span>
+<span class="sd">            Results to be formatted for writing</span>
+<span class="sd">        strategy : str</span>
+<span class="sd">            The strategy used in the fit.  Determines how the results will be reformatted.</span>
+<span class="sd">            Default &#39;wavelet_peaks&#39;</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        sho_vec : numpy.ndarray</span>
+<span class="sd">            The reformatted array of parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Strategy to use for reformatting results: &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">strategy</span><span class="p">))</span>
+        <span class="c1"># Create an empty array to store the guess parameters</span>
+        <span class="n">sho_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">sho32</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Raw results and compound SHO vector of shape </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)))</span>
+
+        <span class="c1"># Extracting and reshaping the remaining parameters for SHO</span>
+        <span class="k">if</span> <span class="n">strategy</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;wavelet_peaks&#39;</span><span class="p">,</span> <span class="s1">&#39;relative_maximum&#39;</span><span class="p">,</span> <span class="s1">&#39;absolute_maximum&#39;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                  <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Reformatting results from a peak-position-finding algorithm&#39;</span><span class="p">)</span>
+            <span class="c1"># wavelet_peaks sometimes finds 0, 1, 2, or more peaks. Need to handle that:</span>
+            <span class="c1"># peak_inds = np.array([pixel[0] for pixel in results])</span>
+            <span class="n">peak_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">pix_ind</span><span class="p">,</span> <span class="n">pixel</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">results</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pixel</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># majority of cases - one peak found</span>
+                    <span class="n">peak_inds</span><span class="p">[</span><span class="n">pix_ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">pixel</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">pixel</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># no peak found</span>
+                    <span class="n">peak_inds</span><span class="p">[</span><span class="n">pix_ind</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.5</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>  <span class="c1"># set to center of band</span>
+                <span class="k">else</span><span class="p">:</span>  <span class="c1"># more than one peak found</span>
+                    <span class="n">dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pixel</span><span class="p">)</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.5</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+                    <span class="n">peak_inds</span><span class="p">[</span><span class="n">pix_ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">pixel</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">dist</span><span class="p">)]</span>  <span class="c1"># set to peak closest to center of band</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Peak positions of shape </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">peak_inds</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+            <span class="c1"># First get the value (from the raw data) at these positions:</span>
+            <span class="n">comp_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">pixel_ind</span><span class="p">,</span> <span class="n">peak_inds</span><span class="p">[</span><span class="n">pixel_ind</span><span class="p">]]</span> <span class="k">for</span> <span class="n">pixel_ind</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">peak_inds</span><span class="o">.</span><span class="n">size</span><span class="p">)])</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Complex values at peak positions of shape </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">comp_vals</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+            <span class="n">sho_vec</span><span class="p">[</span><span class="s1">&#39;Amplitude [V]&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">comp_vals</span><span class="p">)</span>  <span class="c1"># Amplitude</span>
+            <span class="n">sho_vec</span><span class="p">[</span><span class="s1">&#39;Phase [rad]&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">comp_vals</span><span class="p">)</span>  <span class="c1"># Phase in radians</span>
+            <span class="n">sho_vec</span><span class="p">[</span><span class="s1">&#39;Frequency [Hz]&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">freq_vec</span><span class="p">[</span><span class="n">peak_inds</span><span class="p">]</span>  <span class="c1"># Frequency</span>
+            <span class="n">sho_vec</span><span class="p">[</span><span class="s1">&#39;Quality Factor&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">comp_vals</span><span class="p">)</span> <span class="o">*</span> <span class="mi">10</span>  <span class="c1"># Quality factor</span>
+            <span class="c1"># Add something here for the R^2</span>
+            <span class="n">sho_vec</span><span class="p">[</span><span class="s1">&#39;R2 Criterion&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">r_square</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sho_func</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">freq_vec</span><span class="p">,</span> <span class="n">sho_parms</span><span class="p">)</span>
+                                                <span class="k">for</span> <span class="n">sho_parms</span> <span class="ow">in</span> <span class="n">sho_vec</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="n">strategy</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;complex_gaussian&#39;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Reformatting results from the SHO Guess algorithm&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">iresult</span><span class="p">,</span> <span class="n">result</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">results</span><span class="p">):</span>
+                <span class="n">sho_vec</span><span class="p">[</span><span class="s1">&#39;Amplitude [V]&#39;</span><span class="p">][</span><span class="n">iresult</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">sho_vec</span><span class="p">[</span><span class="s1">&#39;Frequency [Hz]&#39;</span><span class="p">][</span><span class="n">iresult</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">sho_vec</span><span class="p">[</span><span class="s1">&#39;Quality Factor&#39;</span><span class="p">][</span><span class="n">iresult</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                <span class="n">sho_vec</span><span class="p">[</span><span class="s1">&#39;Phase [rad]&#39;</span><span class="p">][</span><span class="n">iresult</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+                <span class="n">sho_vec</span><span class="p">[</span><span class="s1">&#39;R2 Criterion&#39;</span><span class="p">][</span><span class="n">iresult</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">strategy</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;least_squares&#39;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Reformatting results from a list of least_squares result objects&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">iresult</span><span class="p">,</span> <span class="n">result</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">results</span><span class="p">):</span>
+                <span class="n">sho_vec</span><span class="p">[</span><span class="s1">&#39;Amplitude [V]&#39;</span><span class="p">][</span><span class="n">iresult</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">sho_vec</span><span class="p">[</span><span class="s1">&#39;Frequency [Hz]&#39;</span><span class="p">][</span><span class="n">iresult</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">sho_vec</span><span class="p">[</span><span class="s1">&#39;Quality Factor&#39;</span><span class="p">][</span><span class="n">iresult</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                <span class="n">sho_vec</span><span class="p">[</span><span class="s1">&#39;Phase [rad]&#39;</span><span class="p">][</span><span class="n">iresult</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+                <span class="n">sho_vec</span><span class="p">[</span><span class="s1">&#39;R2 Criterion&#39;</span><span class="p">][</span><span class="n">iresult</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="o">-</span><span class="n">result</span><span class="o">.</span><span class="n">fun</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                  <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;_reformat_results() will not reformat results since the provided algorithm: </span><span class="si">{}</span><span class="s1"> does not match anything that this function can handle.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">strategy</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">sho_vec</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_reshape_to_one_step</span><span class="p">(</span><span class="n">raw_mat</span><span class="p">,</span> <span class="n">num_steps</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reshapes provided data from (pos, step * bin) to (pos * step, bin).</span>
+<span class="sd">    This is useful when unraveling data for parallel processing.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    -------------</span>
+<span class="sd">    raw_mat : 2D numpy array</span>
+<span class="sd">        Data organized as (positions, step * bins)</span>
+<span class="sd">    num_steps : unsigned int</span>
+<span class="sd">        Number of spectroscopic steps per pixel (eg - UDVS steps)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    --------------</span>
+<span class="sd">    two_d : 2D numpy array</span>
+<span class="sd">        Data rearranged as (positions * step, bin)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">num_pos</span> <span class="o">=</span> <span class="n">raw_mat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">num_bins</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">raw_mat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">num_steps</span><span class="p">)</span>
+    <span class="n">one_d</span> <span class="o">=</span> <span class="n">raw_mat</span>
+    <span class="n">one_d</span> <span class="o">=</span> <span class="n">one_d</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">num_bins</span> <span class="o">*</span> <span class="n">num_steps</span> <span class="o">*</span> <span class="n">num_pos</span><span class="p">))</span>
+    <span class="n">two_d</span> <span class="o">=</span> <span class="n">one_d</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">num_steps</span> <span class="o">*</span> <span class="n">num_pos</span><span class="p">,</span> <span class="n">num_bins</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">two_d</span>
+
+
+<span class="k">def</span> <span class="nf">_reshape_to_n_steps</span><span class="p">(</span><span class="n">raw_mat</span><span class="p">,</span> <span class="n">num_steps</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reshapes provided data from (positions * step, bin) to (positions, step * bin).</span>
+<span class="sd">    Use this to restructure data back to its original form after parallel computing</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    --------------</span>
+<span class="sd">    raw_mat : 2D numpy array</span>
+<span class="sd">        Data organized as (positions * step, bin)</span>
+<span class="sd">    num_steps : unsigned int</span>
+<span class="sd">         Number of spectroscopic steps per pixel (eg - UDVS steps)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    ---------------</span>
+<span class="sd">    two_d : 2D numpy array</span>
+<span class="sd">        Data rearranged as (positions, step * bin)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">num_bins</span> <span class="o">=</span> <span class="n">raw_mat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">num_pos</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">raw_mat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">num_steps</span><span class="p">)</span>
+    <span class="n">one_d</span> <span class="o">=</span> <span class="n">raw_mat</span>
+    <span class="n">one_d</span> <span class="o">=</span> <span class="n">one_d</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">num_bins</span> <span class="o">*</span> <span class="n">num_steps</span> <span class="o">*</span> <span class="n">num_pos</span><span class="p">)</span>
+    <span class="n">two_d</span> <span class="o">=</span> <span class="n">one_d</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">num_pos</span><span class="p">,</span> <span class="n">num_steps</span> <span class="o">*</span> <span class="n">num_bins</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">two_d</span>
+
+
+<span class="k">def</span> <span class="nf">_is_reshapable</span><span class="p">(</span><span class="n">h5_main</span><span class="p">,</span> <span class="n">step_start_inds</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A BE dataset is said to be reshape-able if the number of bins per steps is constant. Even if the dataset contains</span>
+<span class="sd">    multiple excitation waveforms (harmonics), We know that the measurement is always at the resonance peak, so the</span>
+<span class="sd">    frequency vector should not change.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    h5_main : h5py.Dataset object</span>
+<span class="sd">        Reference to the main dataset</span>
+<span class="sd">    step_start_inds : list or 1D array</span>
+<span class="sd">        Indices that correspond to the start of each BE pulse / UDVS step</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    ---------</span>
+<span class="sd">    reshapable : Boolean</span>
+<span class="sd">        Whether or not the number of bins per step are constant in this dataset</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">h5_main</span> <span class="o">=</span> <span class="n">USIDataset</span><span class="p">(</span><span class="n">h5_main</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">step_start_inds</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">step_start_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">h5_main</span><span class="o">.</span><span class="n">h5_spec_inds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="c1"># Adding the size of the main dataset as the last (virtual) step</span>
+    <span class="n">step_start_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">step_start_inds</span><span class="p">,</span> <span class="n">h5_main</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="n">num_bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">step_start_inds</span><span class="p">)</span>
+    <span class="n">step_types</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">num_bins</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">step_types</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+
+
+<span class="k">def</span> <span class="nf">_r_square</span><span class="p">(</span><span class="n">data_vec</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    R-square for estimation of the fitting quality</span>
+<span class="sd">    Typical result is in the range (0,1), where 1 is the best fitting</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data_vec : array_like</span>
+<span class="sd">        Measured data points</span>
+<span class="sd">    func : callable function</span>
+<span class="sd">        Should return a numpy.ndarray of the same shape as data_vec</span>
+<span class="sd">    args :</span>
+<span class="sd">        Parameters to be pased to func</span>
+<span class="sd">    kwargs :</span>
+<span class="sd">        Keyword parameters to be pased to func</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    r_squared : float</span>
+<span class="sd">        The R^2 value for the current data_vec and parameters</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">data_vec</span><span class="p">)</span>
+    <span class="n">ss_tot</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">data_vec</span> <span class="o">-</span> <span class="n">data_mean</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">ss_res</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">data_vec</span> <span class="o">-</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">r_squared</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">ss_res</span> <span class="o">/</span> <span class="n">ss_tot</span> <span class="k">if</span> <span class="n">ss_tot</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+
+    <span class="k">return</span> <span class="n">r_squared</span>
+
+
+<div class="viewcode-block" id="wavelet_peaks">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.analysis.be_sho_fitter.wavelet_peaks.html#BGlib.be.analysis.be_sho_fitter.wavelet_peaks">[docs]</a>
+<span class="k">def</span> <span class="nf">wavelet_peaks</span><span class="p">(</span><span class="n">vector</span><span class="p">,</span> <span class="n">peak_width_bounds</span><span class="p">,</span> <span class="n">peak_width_step</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This is the function that will be mapped by multiprocess. This is a wrapper around the scipy function.</span>
+<span class="sd">    It uses a parameter - wavelet_widths that is configured outside this function.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    vector : 1D numpy array</span>
+<span class="sd">        Feature vector containing peaks</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    peak_indices : list</span>
+<span class="sd">        List of indices of peaks within the prescribed peak widths</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># The below numpy array is used to configure the returned function wpeaks</span>
+    <span class="n">wavelet_widths</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">peak_width_bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">peak_width_bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                                 <span class="n">peak_width_step</span><span class="p">)</span>
+
+    <span class="n">peak_indices</span> <span class="o">=</span> <span class="n">find_peaks_cwt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">vector</span><span class="p">),</span> <span class="n">wavelet_widths</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">peak_indices</span></div>
+
+
+
+<div class="viewcode-block" id="complex_gaussian">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.analysis.be_sho_fitter.complex_gaussian.html#BGlib.be.analysis.be_sho_fitter.complex_gaussian">[docs]</a>
+<span class="k">def</span> <span class="nf">complex_gaussian</span><span class="p">(</span><span class="n">resp_vec</span><span class="p">,</span> <span class="n">w_vec</span><span class="p">,</span> <span class="n">num_points</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Sets up the needed parameters for the analytic approximation for the</span>
+<span class="sd">    Gaussian fit of complex data.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    resp_vec : numpy.ndarray</span>
+<span class="sd">        Data vector to be fit.</span>
+<span class="sd">    args: numpy arrays.</span>
+
+<span class="sd">    kwargs: Passed to SHOEstimateFit().</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    sho_guess: callable function.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">guess</span> <span class="o">=</span> <span class="n">SHOestimateGuess</span><span class="p">(</span><span class="n">resp_vec</span><span class="p">,</span> <span class="n">w_vec</span><span class="p">,</span> <span class="n">num_points</span><span class="p">)</span>
+
+    <span class="c1"># Calculate the error and append it.</span>
+    <span class="n">guess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">guess</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">_r_square</span><span class="p">(</span><span class="n">resp_vec</span><span class="p">,</span> <span class="n">SHOfunc</span><span class="p">,</span> <span class="n">guess</span><span class="p">,</span> <span class="n">w_vec</span><span class="p">))])</span>
+
+    <span class="k">return</span> <span class="n">guess</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_sho_error</span><span class="p">(</span><span class="n">guess</span><span class="p">,</span> <span class="n">data_vec</span><span class="p">,</span> <span class="n">freq_vector</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates the single Harmonic Oscillator response over the given vector</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    guess : array-like</span>
+<span class="sd">        The set of guess parameters (Amp,w0,Q,phi) to be tested</span>
+<span class="sd">    data_vec : numpy.ndarray</span>
+<span class="sd">        The data vector to compare the current guess against</span>
+<span class="sd">    freq_vector : numpy.ndarray</span>
+<span class="sd">        The frequencies that correspond to each data point in `data_vec`</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Amp: amplitude</span>
+<span class="sd">    w0: resonant frequency</span>
+<span class="sd">    Q: Quality Factor</span>
+<span class="sd">    phi: Phase</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    fitness : float</span>
+<span class="sd">        The 1-r^2 value for the current set of SHO coefficients</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">guess</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s1">&#39;Error: The Single Harmonic Oscillator requires 4 parameter guesses!&#39;</span><span class="p">)</span>
+
+    <span class="n">Amp</span><span class="p">,</span> <span class="n">w_0</span><span class="p">,</span> <span class="n">Q</span><span class="p">,</span> <span class="n">phi</span> <span class="o">=</span> <span class="n">guess</span><span class="p">[:</span><span class="mi">4</span><span class="p">]</span>
+    <span class="n">guess_vec</span> <span class="o">=</span> <span class="n">Amp</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mf">1.</span><span class="n">j</span> <span class="o">*</span> <span class="n">phi</span><span class="p">)</span> <span class="o">*</span> <span class="n">w_0</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="p">(</span>
+                <span class="n">freq_vector</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">freq_vector</span> <span class="o">*</span> <span class="n">w_0</span> <span class="o">/</span> <span class="n">Q</span> <span class="o">-</span> <span class="n">w_0</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">data_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">data_vec</span><span class="p">)</span>
+
+    <span class="n">ss_tot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">data_vec</span> <span class="o">-</span> <span class="n">data_mean</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">ss_res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">data_vec</span> <span class="o">-</span> <span class="n">guess_vec</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">r_squared</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">ss_res</span> <span class="o">/</span> <span class="n">ss_tot</span> <span class="k">if</span> <span class="n">ss_tot</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+
+    <span class="c1"># print(&#39;tot: {}\tres: {}\tr2: {}&#39;.format(ss_tot, ss_res, r_squared))</span>
+
+    <span class="k">return</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">r_squared</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Pycroscopy contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,26 @@
+BGlib.be.translators.forc\_iv.ForcIVTranslator
+==============================================
+
+.. currentmodule:: BGlib.be.translators.forc_iv
+
+.. autoclass:: ForcIVTranslator
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~ForcIVTranslator.is_valid_file
+      ~ForcIVTranslator.translate
+   
+   
+
+   
+   
+   

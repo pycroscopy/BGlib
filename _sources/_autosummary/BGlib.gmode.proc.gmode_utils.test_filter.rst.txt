@@ -1,0 +1,6 @@
+BGlib.gmode.proc.gmode\_utils.test\_filter
+==========================================
+
+.. currentmodule:: BGlib.gmode.proc.gmode_utils
+
+.. autofunction:: test_filter

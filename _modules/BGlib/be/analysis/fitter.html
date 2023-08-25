@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BGlib.be.analysis.fitter &mdash; BGlib 0.0.4 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/documentation_options.js?v=8c5712d9"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../../../../about.html" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            BGlib
+          </a>
+              <div class="version">
+                0.0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">BGlib</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../about.html">BGlib</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../_autosummary/BGlib.html">BGlib</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../notebooks/be/index.html">Band Excitation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../notebooks/gmode/index.html">General Mode</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">BGlib</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">BGlib.be.analysis.fitter</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for BGlib.be.analysis.fitter</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">:class:`~pycroscopy.analysis.fitter.Fitter` - Abstract class that provides the</span>
+<span class="sd">framework for building application-specific children classes</span>
+
+<span class="sd">Created on Thu Aug 15 11:48:53 2019</span>
+
+<span class="sd">@author: Suhas Somnath</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">absolute_import</span><span class="p">,</span> \
+    <span class="n">unicode_literals</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+<span class="kn">import</span> <span class="nn">joblib</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">least_squares</span>
+
+<span class="kn">from</span> <span class="nn">pyUSID.processing.comp_utils</span> <span class="kn">import</span> <span class="n">recommend_cpu_cores</span>
+<span class="kn">from</span> <span class="nn">pyUSID.processing.process</span> <span class="kn">import</span> <span class="n">Process</span>
+<span class="kn">from</span> <span class="nn">pyUSID.io.usi_data</span> <span class="kn">import</span> <span class="n">USIDataset</span>
+
+<span class="c1"># TODO: All reading, holding operations should use Dask arrays</span>
+
+
+<div class="viewcode-block" id="Fitter">
+<a class="viewcode-back" href="../../../../_autosummary/_autosummary/_autosummary/BGlib.be.analysis.Fitter.html#BGlib.be.analysis.fitter.Fitter">[docs]</a>
+<span class="k">class</span> <span class="nc">Fitter</span><span class="p">(</span><span class="n">Process</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Fitter.__init__">
+<a class="viewcode-back" href="../../../../_autosummary/_autosummary/_autosummary/BGlib.be.analysis.Fitter.html#BGlib.be.analysis.fitter.Fitter.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h5_main</span><span class="p">,</span> <span class="n">proc_name</span><span class="p">,</span> <span class="n">variables</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a new instance of the abstract Fitter class</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        h5_main : h5py.Dataset or pyUSID.io.USIDataset object</span>
+<span class="sd">            Main datasets whose one or dimensions will be reduced</span>
+<span class="sd">        proc_name : str or unicode</span>
+<span class="sd">            Name of the child process</span>
+<span class="sd">        variables : str or list, optional</span>
+<span class="sd">            List of spectroscopic dimension names that will be reduced</span>
+<span class="sd">        h5_target_group : h5py.Group, optional. Default = None</span>
+<span class="sd">            Location where to look for existing results and to place newly</span>
+<span class="sd">            computed results. Use this kwarg if the results need to be written</span>
+<span class="sd">            to a different HDF5 file. By default, this value is set to the</span>
+<span class="sd">            parent group containing `h5_main`</span>
+<span class="sd">        kwargs : dict</span>
+<span class="sd">            Keyword arguments that will be passed on to</span>
+<span class="sd">            pyUSID.processing.process.Process</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">Fitter</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">h5_main</span><span class="p">,</span> <span class="n">proc_name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Validate other arguments / kwargs here:</span>
+        <span class="k">if</span> <span class="n">variables</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">variables</span> <span class="o">=</span> <span class="p">[</span><span class="n">variables</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;variables should be a string / list or tuple&#39;</span>
+                                <span class="s1">&#39;of strings. Provided object was of type: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                                <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">variables</span><span class="p">)))</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="n">dim</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="o">.</span><span class="n">spec_dim_labels</span> <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">]):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Provided dataset does not appear to have the&#39;</span>
+                                 <span class="s1">&#39; spectroscopic dimension(s): </span><span class="si">{}</span><span class="s1"> that need &#39;</span>
+                                 <span class="s1">&#39;to be fitted: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_main</span><span class="o">.</span><span class="n">spec_dim_labels</span><span class="p">,</span>
+                                           <span class="n">variables</span><span class="p">))</span>
+
+        <span class="c1"># Variables specific to Fitter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_guess</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fit</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_guess</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_h5_guess</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_h5_fit</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__set_up_called</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># Variables from Process:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compute</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_up_guess</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_unit_computation</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">Fitter</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_unit_computation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_create_results_datasets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_guess_datasets</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_map_function</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_read_guess_chunk</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a chunk of guess dataset corresponding to the same pixels of</span>
+<span class="sd">        the main dataset.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">curr_pixels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_pixels_in_current_batch</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_guess</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_h5_guess</span><span class="p">[</span><span class="n">curr_pixels</span><span class="p">,</span> <span class="p">:]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Guess of shape: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_guess</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_write_results_chunk</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Writes the guess or fit results into appropriate HDF5 datasets.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_guess</span><span class="p">:</span>
+            <span class="n">targ_dset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_h5_guess</span>
+            <span class="n">source_dset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_guess</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">targ_dset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_h5_fit</span>
+            <span class="n">source_dset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit</span>
+
+        <span class="n">curr_pixels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_pixels_in_current_batch</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Writing data of shape: </span><span class="si">{}</span><span class="s1"> and dtype: </span><span class="si">{}</span><span class="s1"> to position range: &#39;</span>
+                  <span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> in HDF5 dataset:</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">source_dset</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                                                 <span class="n">source_dset</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+                                              <span class="p">[</span><span class="n">curr_pixels</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">curr_pixels</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]],</span>
+                                                 <span class="n">targ_dset</span><span class="p">))</span>
+        <span class="n">targ_dset</span><span class="p">[</span><span class="n">curr_pixels</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">source_dset</span>
+
+    <span class="k">def</span> <span class="nf">_create_guess_datasets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Model specific call that will create the h5 group, empty guess dataset,</span>
+<span class="sd">        corresponding spectroscopic datasets and also link the guess dataset</span>
+<span class="sd">        to the spectroscopic datasets.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Please override the _create_guess_datasets &#39;</span>
+                                  <span class="s1">&#39;specific to your model&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_create_fit_datasets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Model specific call that will create the (empty) fit dataset, and</span>
+<span class="sd">        link the fit dataset to the spectroscopic datasets.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Please override the _create_fit_datasets &#39;</span>
+                                  <span class="s1">&#39;specific to your model&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_existing_datasets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets existing Guess, Fit, status datasets, from the HDF5 group.</span>
+
+<span class="sd">        All other domain-specific datasets should be loaded in the classes that</span>
+<span class="sd">        extend this class</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_h5_guess</span> <span class="o">=</span> <span class="n">USIDataset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="p">[</span><span class="s1">&#39;Guess&#39;</span><span class="p">])</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_h5_status_dset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_status_dset_name</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;status dataset not created yet&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_h5_status_dset</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_h5_fit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="p">[</span><span class="s1">&#39;Fit&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_h5_fit</span> <span class="o">=</span> <span class="n">USIDataset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_h5_fit</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_h5_fit</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_guess</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_create_fit_datasets</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Fitter.do_guess">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.analysis.fitter.Fitter.html#BGlib.be.analysis.fitter.Fitter.do_guess">[docs]</a>
+    <span class="k">def</span> <span class="nf">do_guess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">override</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes the Guess</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        args : list, optional</span>
+<span class="sd">            List of arguments</span>
+<span class="sd">        override : bool, optional</span>
+<span class="sd">            If True, computes a fresh guess even if existing Guess was found</span>
+<span class="sd">            Else, returns existing Guess dataset. Default = False</span>
+<span class="sd">        kwargs : dict, optional</span>
+<span class="sd">            Keyword arguments</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        USIDataset</span>
+<span class="sd">            HDF5 dataset with the Guesses computed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__set_up_called</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Please call set_up_guess() before calling &#39;</span>
+                             <span class="s1">&#39;do_guess()&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">Fitter</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">override</span><span class="o">=</span><span class="n">override</span><span class="p">)</span>
+        <span class="c1"># to be on the safe side, expect setup again</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__set_up_called</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="n">USIDataset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="p">[</span><span class="s1">&#39;Guess&#39;</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="Fitter.do_fit">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.analysis.fitter.Fitter.html#BGlib.be.analysis.fitter.Fitter.do_fit">[docs]</a>
+    <span class="k">def</span> <span class="nf">do_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">override</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes the Fit</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        args : list, optional</span>
+<span class="sd">            List of arguments</span>
+<span class="sd">        override : bool, optional</span>
+<span class="sd">            If True, computes a fresh guess even if existing Fit was found</span>
+<span class="sd">            Else, returns existing Fit dataset. Default = False</span>
+<span class="sd">        kwargs : dict, optional</span>
+<span class="sd">            Keyword arguments</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        USIDataset</span>
+<span class="sd">            HDF5 dataset with the Fit computed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__set_up_called</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Please call set_up_guess() before calling &#39;</span>
+                             <span class="s1">&#39;do_guess()&#39;</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Either delete or reset &#39;last_pixel&#39; attribute to 0</span>
+<span class="sd">        This value will be used for filling in the status dataset.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;last_pixel&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">Fitter</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">override</span><span class="o">=</span><span class="n">override</span><span class="p">)</span>
+        <span class="c1"># to be on the safe side, expect setup again</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__set_up_called</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="n">USIDataset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="p">[</span><span class="s1">&#39;Fit&#39;</span><span class="p">])</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_reformat_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">strategy</span><span class="o">=</span><span class="s1">&#39;wavelet_peaks&#39;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Model specific restructuring / reformatting of the parallel compute</span>
+<span class="sd">        results</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        results : list or array-like</span>
+<span class="sd">            Results to be formatted for writing</span>
+<span class="sd">        strategy : str</span>
+<span class="sd">            The strategy used in the fit.  Determines how the results will be</span>
+<span class="sd">            reformatted, if multiple strategies for guess / fit are available</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        results : numpy.ndarray</span>
+<span class="sd">            Formatted array that is ready to be writen to the HDF5 file</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Fitter.set_up_guess">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.analysis.fitter.Fitter.html#BGlib.be.analysis.fitter.Fitter.set_up_guess">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_up_guess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h5_partial_guess</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Performs necessary book-keeping before do_guess can be called</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        h5_partial_guess: h5py.Dataset or pyUSID.io.USIDataset, optional</span>
+<span class="sd">            HDF5 dataset containing partial Guess. Not implemented</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># TODO: h5_partial_guess needs to be utilized</span>
+        <span class="k">if</span> <span class="n">h5_partial_guess</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Provided h5_partial_guess cannot be &#39;</span>
+                                      <span class="s1">&#39;used yet. Ask developer to implement&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Set up the parms dict so everything necessary for checking previous</span>
+        <span class="c1"># guess / fit is ready</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_guess</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_status_dset_name</span> <span class="o">=</span> <span class="s1">&#39;completed_guess_positions&#39;</span>
+        <span class="n">ret_vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_for_duplicates</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">duplicate_h5_groups</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">partial_h5_groups</span> <span class="o">=</span> <span class="n">ret_vals</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Groups with Guess in:</span><span class="se">\n</span><span class="s1">Completed: </span><span class="si">{}</span><span class="se">\n</span><span class="s1">Partial:</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">duplicate_h5_groups</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">partial_h5_groups</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_unit_computation</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">Fitter</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_unit_computation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_create_results_datasets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_guess_datasets</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compute</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">do_guess</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__set_up_called</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="Fitter.set_up_fit">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.be.analysis.fitter.Fitter.html#BGlib.be.analysis.fitter.Fitter.set_up_fit">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_up_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h5_partial_fit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">h5_guess</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Performs necessary book-keeping before do_fit can be called</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        h5_partial_fit: h5py.Dataset or pyUSID.io.USIDataset, optional</span>
+<span class="sd">            HDF5 dataset containing partial Fit. Not implemented</span>
+<span class="sd">        h5_guess: h5py.Dataset or pyUSID.io.USIDataset, optional</span>
+<span class="sd">            HDF5 dataset containing completed Guess. Not implemented</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># TODO: h5_partial_guess needs to be utilized</span>
+        <span class="k">if</span> <span class="n">h5_partial_fit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">h5_guess</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Provided h5_partial_fit cannot be &#39;</span>
+                                      <span class="s1">&#39;used yet. Ask developer to implement&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_guess</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_map_function</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_unit_computation</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_create_results_datasets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_fit_datasets</span>
+
+        <span class="c1"># Case 1: Fit already complete or partially complete.</span>
+        <span class="c1"># This is similar to a partial process. Leave as is</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_status_dset_name</span> <span class="o">=</span> <span class="s1">&#39;completed_fit_positions&#39;</span>
+        <span class="n">ret_vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_for_duplicates</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">duplicate_h5_groups</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">partial_h5_groups</span> <span class="o">=</span> <span class="n">ret_vals</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Checking on partial / completed fit datasets&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="s1">&#39;Completed results groups:</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="s1">Partial results groups:</span><span class="se">\n</span><span class="s1">&#39;</span>
+                <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">duplicate_h5_groups</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">partial_h5_groups</span><span class="p">))</span>
+
+        <span class="c1"># Case 2: Fit neither partial / completed. Search for guess.</span>
+        <span class="c1"># Most popular scenario:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">duplicate_h5_groups</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">partial_h5_groups</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;No fit datasets found. Looking for Guess datasets&#39;</span><span class="p">)</span>
+            <span class="c1"># Change status dataset name back to guess to check for status</span>
+            <span class="c1"># on guesses:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_status_dset_name</span> <span class="o">=</span> <span class="s1">&#39;completed_guess_positions&#39;</span>
+            <span class="c1"># Note that check_for_duplicates() will be against fit&#39;s parm_dict.</span>
+            <span class="c1"># So make a backup of that</span>
+            <span class="n">fit_parms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parms_dict</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="c1"># Set parms_dict to an empty dict so that we can accept any Guess</span>
+            <span class="c1"># dataset:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parms_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+            <span class="n">ret_vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_for_duplicates</span><span class="p">()</span>
+            <span class="n">guess_complete_h5_grps</span><span class="p">,</span> <span class="n">guess_partial_h5_grps</span> <span class="o">=</span> <span class="n">ret_vals</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="s1">&#39;Guess datasets search resulted in:</span><span class="se">\n</span><span class="s1">Completed: </span><span class="si">{}</span><span class="se">\n</span><span class="s1">&#39;</span>
+                    <span class="s1">&#39;Partial:</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">guess_complete_h5_grps</span><span class="p">,</span>
+                                        <span class="n">guess_partial_h5_grps</span><span class="p">))</span>
+            <span class="c1"># Now put back the original parms_dict:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parms_dict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">fit_parms</span><span class="p">)</span>
+
+            <span class="c1"># Case 2.1: At least guess is completed:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">guess_complete_h5_grps</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># Just set the last group as the current results group</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span> <span class="o">=</span> <span class="n">guess_complete_h5_grps</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Guess found! Using Guess in:</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">h5_results_grp</span><span class="p">))</span>
+                <span class="c1"># It will grab the older status default unless we set the</span>
+                <span class="c1"># status dataset back to fit</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_status_dset_name</span> <span class="o">=</span> <span class="s1">&#39;completed_fit_positions&#39;</span>
+                <span class="c1"># Get handles to the guess dataset. Nothing else will be found</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_get_existing_datasets</span><span class="p">()</span>
+
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">guess_complete_h5_grps</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span>
+                    <span class="n">guess_partial_h5_grps</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="ne">FileNotFoundError</span><span class="p">(</span>
+                    <span class="s1">&#39;Guess not yet completed. Please complete guess first&#39;</span><span class="p">)</span>
+                <span class="k">return</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="ne">FileNotFoundError</span><span class="p">(</span>
+                    <span class="s1">&#39;No Guess found. Please complete guess first&#39;</span><span class="p">)</span>
+                <span class="k">return</span>
+
+        <span class="c1"># We want compute to call our own manual unit computation function:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_unit_computation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unit_compute_fit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compute</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">do_fit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__set_up_called</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_unit_compute_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj_func</span><span class="p">,</span> <span class="n">obj_func_args</span><span class="o">=</span><span class="p">[],</span>
+                          <span class="n">solver_options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;jac&#39;</span><span class="p">:</span> <span class="s1">&#39;cs&#39;</span><span class="p">}):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Performs least-squares fitting on self.data using self.guess for</span>
+<span class="sd">        initial conditions.</span>
+
+<span class="sd">        Results of the computation are captured in self._results</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        obj_func : callable</span>
+<span class="sd">            Objective function to minimize on</span>
+<span class="sd">        obj_func_args : list</span>
+<span class="sd">            Arguments required by obj_func following the guess parameters</span>
+<span class="sd">            (which should be the first argument)</span>
+<span class="sd">        solver_options : dict, optional</span>
+<span class="sd">            Keyword arguments passed onto scipy.optimize.least_squares</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># At this point data has been read in. Read in the guess as well:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_read_guess_chunk</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;_unit_compute_fit got:</span><span class="se">\n</span><span class="s1">obj_func: </span><span class="si">{}</span><span class="se">\n</span><span class="s1">obj_func_args: </span><span class="si">{}</span><span class="se">\n</span><span class="s1">&#39;</span>
+                  <span class="s1">&#39;solver_options: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">obj_func</span><span class="p">,</span> <span class="n">obj_func_args</span><span class="p">,</span>
+                                              <span class="n">solver_options</span><span class="p">))</span>
+
+        <span class="c1"># TODO: Generalize this bit. Use Parallel compute instead!</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpi_size</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Rank </span><span class="si">{}</span><span class="s1">: About to start serial computation&#39;</span>
+                      <span class="s1">&#39;.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span><span class="p">))</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_results</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">pulse_resp</span><span class="p">,</span> <span class="n">pulse_guess</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_guess</span><span class="p">):</span>
+                <span class="n">curr_results</span> <span class="o">=</span> <span class="n">least_squares</span><span class="p">(</span><span class="n">obj_func</span><span class="p">,</span> <span class="n">pulse_guess</span><span class="p">,</span>
+                                             <span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="n">pulse_resp</span><span class="p">]</span> <span class="o">+</span> <span class="n">obj_func_args</span><span class="p">,</span>
+                                             <span class="o">**</span><span class="n">solver_options</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">curr_results</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cores</span> <span class="o">=</span> <span class="n">recommend_cpu_cores</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                        <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Starting parallel fitting with </span><span class="si">{}</span><span class="s1"> cores&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cores</span><span class="p">))</span>
+
+            <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">joblib</span><span class="o">.</span><span class="n">delayed</span><span class="p">(</span><span class="n">least_squares</span><span class="p">)(</span><span class="n">obj_func</span><span class="p">,</span> <span class="n">pulse_guess</span><span class="p">,</span>
+                                                    <span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="n">pulse_resp</span><span class="p">]</span> <span class="o">+</span> <span class="n">obj_func_args</span><span class="p">,</span>
+                                                    <span class="o">**</span><span class="n">solver_options</span><span class="p">)</span> <span class="k">for</span>
+                      <span class="n">pulse_resp</span><span class="p">,</span> <span class="n">pulse_guess</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_guess</span><span class="p">)]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_results</span> <span class="o">=</span> <span class="n">joblib</span><span class="o">.</span><span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="n">cores</span><span class="p">)(</span><span class="n">values</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpi_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="s1">&#39;Finished computing fits on </span><span class="si">{}</span><span class="s1"> objects. Results of length: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                <span class="s1">&#39;.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">)))</span></div>
+
+
+        <span class="c1"># What least_squares returns is an object that needs to be extracted</span>
+        <span class="c1"># to get the coefficients. This is handled by the write function</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Pycroscopy contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

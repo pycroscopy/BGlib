@@ -1,0 +1,26 @@
+BGlib.gmode.proc.fft.FrequencyFilter
+====================================
+
+.. currentmodule:: BGlib.gmode.proc.fft
+
+.. autoclass:: FrequencyFilter
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~FrequencyFilter.get_parms
+      ~FrequencyFilter.is_compatible
+   
+   
+
+   
+   
+   

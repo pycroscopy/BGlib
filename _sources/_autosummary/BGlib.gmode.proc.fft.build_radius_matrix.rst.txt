@@ -1,0 +1,6 @@
+BGlib.gmode.proc.fft.build\_radius\_matrix
+==========================================
+
+.. currentmodule:: BGlib.gmode.proc.fft
+
+.. autofunction:: build_radius_matrix

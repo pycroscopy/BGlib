@@ -1,0 +1,6 @@
+BGlib.gmode.analysis.utils.giv\_utils.do\_bayesian\_inference
+=============================================================
+
+.. currentmodule:: BGlib.gmode.analysis.utils.giv_utils
+
+.. autofunction:: do_bayesian_inference

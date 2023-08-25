@@ -1,0 +1,37 @@
+BGlib.be.analysis.fitter.Fitter
+===============================
+
+.. currentmodule:: BGlib.be.analysis.fitter
+
+.. autoclass:: Fitter
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~Fitter.compute
+      ~Fitter.do_fit
+      ~Fitter.do_guess
+      ~Fitter.set_up_fit
+      ~Fitter.set_up_guess
+      ~Fitter.test
+      ~Fitter.use_partial_computation
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Fitter.parms_dict
+   
+   

@@ -1,0 +1,6 @@
+BGlib.be.translators.df\_utils.be\_utils.getSliceForExcWfm
+==========================================================
+
+.. currentmodule:: BGlib.be.translators.df_utils.be_utils
+
+.. autofunction:: getSliceForExcWfm

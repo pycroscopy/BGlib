@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BGlib.gmode.translators.gmode_line &mdash; BGlib 0.0.4 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/documentation_options.js?v=8c5712d9"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../../../../about.html" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            BGlib
+          </a>
+              <div class="version">
+                0.0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">BGlib</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../about.html">BGlib</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../_autosummary/BGlib.html">BGlib</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../notebooks/be/index.html">Band Excitation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../notebooks/gmode/index.html">General Mode</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">BGlib</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">BGlib.gmode.translators.gmode_line</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for BGlib.gmode.translators.gmode_line</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Sat Nov 07 15:21:46 2015</span>
+
+<span class="sd">@author: Suhas Somnath</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">unicode_literals</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">path</span><span class="p">,</span> <span class="n">listdir</span><span class="p">,</span> <span class="n">remove</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+<span class="kn">import</span> <span class="nn">h5py</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.io.matlab</span> <span class="kn">import</span> <span class="n">loadmat</span>  <span class="c1"># To load parameters stored in Matlab .mat file</span>
+
+<span class="kn">from</span> <span class="nn">sidpy.sid</span> <span class="kn">import</span> <span class="n">Translator</span>
+<span class="kn">from</span> <span class="nn">sidpy.hdf.hdf_utils</span> <span class="kn">import</span> <span class="n">write_simple_attrs</span>
+
+<span class="kn">from</span> <span class="nn">pyUSID</span> <span class="kn">import</span> <span class="n">Dimension</span>
+<span class="kn">from</span> <span class="nn">pyUSID.io.anc_build_utils</span> <span class="kn">import</span> <span class="n">VALUES_DTYPE</span>
+<span class="kn">from</span> <span class="nn">pyUSID.io.hdf_utils</span> <span class="kn">import</span> <span class="n">write_main_dataset</span><span class="p">,</span> <span class="n">create_indexed_group</span><span class="p">,</span> \
+    <span class="n">write_ind_val_dsets</span>
+
+<span class="kn">from</span> <span class="nn">...be.translators.df_utils.be_utils</span> <span class="kn">import</span> <span class="n">parmsToDict</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="o">.</span><span class="n">major</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+    <span class="n">unicode</span> <span class="o">=</span> <span class="nb">str</span>
+
+
+<div class="viewcode-block" id="GLineTranslator">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.gmode.translators.gmode_line.GLineTranslator.html#BGlib.gmode.translators.gmode_line.GLineTranslator">[docs]</a>
+<span class="k">class</span> <span class="nc">GLineTranslator</span><span class="p">(</span><span class="n">Translator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Translated G-mode line (bigtimedata.dat) files from actual BE line experiments to HDF5</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Translator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">points_per_pixel</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_rows</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__bytes_per_row__</span> <span class="o">=</span> <span class="mi">1</span>
+
+<div class="viewcode-block" id="GLineTranslator.is_valid_file">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.gmode.translators.gmode_line.GLineTranslator.html#BGlib.gmode.translators.gmode_line.GLineTranslator.is_valid_file">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">is_valid_file</span><span class="p">(</span><span class="n">data_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks whether the provided file can be read by this translator</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data_path : str</span>
+<span class="sd">            Path to raw data file</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        obj : str</span>
+<span class="sd">            Path to file that will be accepted by the translate() function if</span>
+<span class="sd">            this translator is indeed capable of translating the provided file.</span>
+<span class="sd">            Otherwise, None will be returned</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">data_path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span>
+
+        <span class="n">orig_path</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">data_path</span><span class="p">):</span>
+            <span class="n">ext</span> <span class="o">=</span> <span class="n">data_path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">ext</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;jpg&#39;</span><span class="p">,</span> <span class="s1">&#39;png&#39;</span><span class="p">,</span> <span class="s1">&#39;jpeg&#39;</span><span class="p">,</span> <span class="s1">&#39;tiff&#39;</span><span class="p">,</span> <span class="s1">&#39;mat&#39;</span><span class="p">,</span> <span class="s1">&#39;txt&#39;</span><span class="p">,</span>
+                                   <span class="s1">&#39;dat&#39;</span><span class="p">,</span> <span class="s1">&#39;xls&#39;</span><span class="p">,</span> <span class="s1">&#39;xlsx&#39;</span><span class="p">]:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+
+            <span class="c1"># we only care about the folder names at this point...</span>
+            <span class="n">orig_path</span> <span class="o">=</span> <span class="n">data_path</span>
+            <span class="c1"># Assume that the file is amongst all other data files</span>
+            <span class="n">folder_path</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">folder_path</span> <span class="o">=</span> <span class="n">data_path</span>
+
+        <span class="n">data_path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder_path</span><span class="p">,</span> <span class="n">listdir</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">folder_path</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">basename</span><span class="p">,</span> <span class="n">parm_paths</span><span class="p">,</span> <span class="n">data_paths</span> <span class="o">=</span> <span class="n">GLineTranslator</span><span class="o">.</span><span class="n">_parse_file_path</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span>
+
+        <span class="c1"># The provided file must either p</span>
+        <span class="k">if</span> <span class="n">orig_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">([</span><span class="n">orig_path</span> <span class="ow">in</span> <span class="n">sel_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">for</span> <span class="n">sel_dict</span> <span class="ow">in</span>
+                        <span class="p">[</span><span class="n">parm_paths</span><span class="p">,</span> <span class="n">data_paths</span><span class="p">]]):</span>
+                <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parm_paths</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_paths</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">parm_paths</span><span class="p">[</span><span class="s1">&#39;parm_txt&#39;</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="GLineTranslator.translate">
+<a class="viewcode-back" href="../../../../_autosummary/BGlib.gmode.translators.gmode_line.GLineTranslator.html#BGlib.gmode.translators.gmode_line.GLineTranslator.translate">[docs]</a>
+    <span class="k">def</span> <span class="nf">translate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The main function that translates the provided file into a .h5 file</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        file_path : String / unicode</span>
+<span class="sd">            Absolute path of any file in the directory</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        h5_path : String / unicode</span>
+<span class="sd">            Absolute path of the h5 file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">file_path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+        <span class="c1"># Figure out the basename of the data:</span>
+        <span class="p">(</span><span class="n">basename</span><span class="p">,</span> <span class="n">parm_paths</span><span class="p">,</span> <span class="n">data_paths</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_file_path</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+        
+        <span class="p">(</span><span class="n">folder_path</span><span class="p">,</span> <span class="n">unused</span><span class="p">)</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+        <span class="n">h5_path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder_path</span><span class="p">,</span> <span class="n">basename</span><span class="o">+</span><span class="s1">&#39;.h5&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">h5_path</span><span class="p">):</span>
+            <span class="n">remove</span><span class="p">(</span><span class="n">h5_path</span><span class="p">)</span>
+        
+        <span class="c1"># Load parameters from .mat file - &#39;BE_wave&#39;, &#39;FFT_BE_wave&#39;, &#39;total_cols&#39;, &#39;total_rows&#39;</span>
+        <span class="n">matread</span> <span class="o">=</span> <span class="n">loadmat</span><span class="p">(</span><span class="n">parm_paths</span><span class="p">[</span><span class="s1">&#39;parm_mat&#39;</span><span class="p">],</span> <span class="n">variable_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;BE_wave&#39;</span><span class="p">,</span> <span class="s1">&#39;FFT_BE_wave&#39;</span><span class="p">,</span> <span class="s1">&#39;total_cols&#39;</span><span class="p">,</span> <span class="s1">&#39;total_rows&#39;</span><span class="p">])</span>
+        <span class="n">be_wave</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">matread</span><span class="p">[</span><span class="s1">&#39;BE_wave&#39;</span><span class="p">]))</span>
+
+        <span class="c1"># Need to take the complex conjugate if reading from a .mat file</span>
+        <span class="c1"># FFT_BE_wave = np.conjugate(np.complex64(np.squeeze(matread[&#39;FFT_BE_wave&#39;])))</span>
+        
+        <span class="n">num_cols</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">matread</span><span class="p">[</span><span class="s1">&#39;total_cols&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">expected_rows</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">matread</span><span class="p">[</span><span class="s1">&#39;total_rows&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">points_per_pixel</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">be_wave</span><span class="p">)</span>
+        
+        <span class="c1"># Load parameters from .txt file - &#39;BE_center_frequency_[Hz]&#39;, &#39;IO rate&#39;</span>
+        <span class="n">is_beps</span><span class="p">,</span> <span class="n">parm_dict</span> <span class="o">=</span> <span class="n">parmsToDict</span><span class="p">(</span><span class="n">parm_paths</span><span class="p">[</span><span class="s1">&#39;parm_txt&#39;</span><span class="p">])</span>
+        
+        <span class="c1"># Get file byte size:</span>
+        <span class="c1"># For now, assume that bigtime_00 always exists and is the main file</span>
+        <span class="n">file_size</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">data_paths</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        
+        <span class="c1"># Calculate actual number of lines since the first few lines may not be saved</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_rows</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">*</span> <span class="n">file_size</span> <span class="o">/</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">points_per_pixel</span> <span class="o">*</span> <span class="n">num_cols</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_rows</span> <span class="o">%</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Error - File has incomplete rows&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_rows</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_rows</span><span class="p">)</span>
+
+        <span class="n">samp_rate</span> <span class="o">=</span> <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;IO_rate_[Hz]&#39;</span><span class="p">]</span>
+        <span class="n">ex_freq_nominal</span> <span class="o">=</span> <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;BE_center_frequency_[Hz]&#39;</span><span class="p">]</span>
+
+        <span class="c1"># method 1 for calculating the correct excitation frequency:</span>
+        <span class="n">pixel_duration</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">points_per_pixel</span> <span class="o">/</span> <span class="n">samp_rate</span>
+        <span class="n">num_periods</span> <span class="o">=</span> <span class="n">pixel_duration</span> <span class="o">*</span> <span class="n">ex_freq_nominal</span>
+        <span class="n">ex_freq_correct</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">pixel_duration</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">num_periods</span><span class="p">))</span>
+
+        <span class="c1"># method 2 for calculating the exact excitation frequency:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        fft_ex_wfm = np.abs(np.fft.fftshift(np.fft.fft(be_wave)))</span>
+<span class="sd">        w_vec = np.linspace(-0.5 * samp_rate, 0.5 * samp_rate - 1.0*samp_rate / self.points_per_pixel,</span>
+<span class="sd">                            self.points_per_pixel)</span>
+<span class="sd">        hot_bins = np.squeeze(np.argwhere(fft_ex_wfm &gt; 1E+3))</span>
+<span class="sd">        ex_freq_correct = w_vec[hot_bins[-1]]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># correcting the excitation frequency - will be VERY useful during analysis and filtering</span>
+        <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;BE_center_frequency_[Hz]&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ex_freq_correct</span>
+
+        <span class="c1"># Some very basic information that can help the processing crew</span>
+        <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;num_bins&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points_per_pixel</span>
+        <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;grid_num_rows&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_rows</span>
+        <span class="n">parm_dict</span><span class="p">[</span><span class="s1">&#39;data_type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;G_mode_line&#39;</span>
+            
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_rows</span> <span class="o">!=</span> <span class="n">expected_rows</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Note: </span><span class="si">{}</span><span class="s1"> of </span><span class="si">{}</span><span class="s1"> lines found in data file&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_rows</span><span class="p">,</span> <span class="n">expected_rows</span><span class="p">))</span>
+        
+        <span class="c1"># Calculate number of points to read per line:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__bytes_per_row__</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">file_size</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">num_rows</span><span class="p">)</span>
+
+        <span class="c1"># First finish writing all global parameters, create the file too:</span>
+        <span class="n">h5_f</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">h5_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+        <span class="n">global_parms</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">global_parms</span><span class="p">[</span><span class="s1">&#39;data_type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;G_mode_line&#39;</span>
+        <span class="n">global_parms</span><span class="p">[</span><span class="s1">&#39;translator&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;G_mode_line&#39;</span>
+        <span class="n">write_simple_attrs</span><span class="p">(</span><span class="n">h5_f</span><span class="p">,</span> <span class="n">global_parms</span><span class="p">)</span>
+
+        <span class="n">meas_grp</span> <span class="o">=</span> <span class="n">create_indexed_group</span><span class="p">(</span><span class="n">h5_f</span><span class="p">,</span> <span class="s1">&#39;Measurement&#39;</span><span class="p">)</span>
+        <span class="n">write_simple_attrs</span><span class="p">(</span><span class="n">meas_grp</span><span class="p">,</span> <span class="n">parm_dict</span><span class="p">)</span>
+
+        <span class="n">pos_desc</span> <span class="o">=</span> <span class="n">Dimension</span><span class="p">(</span><span class="s1">&#39;Y&#39;</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_rows</span><span class="p">))</span>
+        <span class="n">spec_desc</span> <span class="o">=</span> <span class="n">Dimension</span><span class="p">(</span><span class="s1">&#39;Excitation&#39;</span><span class="p">,</span> <span class="s1">&#39;V&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">VALUES_DTYPE</span><span class="p">(</span><span class="n">be_wave</span><span class="p">),</span> <span class="n">num_cols</span><span class="p">))</span>
+
+        <span class="n">first_dat</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">data_paths</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="c1"># Now that the file has been created, go over each raw data file:</span>
+            <span class="c1"># 1. write all ancillary data. Link data. 2. Write main data sequentially</span>
+
+<span class="w">            </span><span class="sd">&quot;&quot;&quot; We only allocate the space for the main data here.</span>
+<span class="sd">            This does NOT change with each file. The data written to it does.</span>
+<span class="sd">            The auxiliary datasets will not change with each raw data file since</span>
+<span class="sd">            only one excitation waveform is used&quot;&quot;&quot;</span>
+            <span class="n">chan_grp</span> <span class="o">=</span> <span class="n">create_indexed_group</span><span class="p">(</span><span class="n">meas_grp</span><span class="p">,</span> <span class="s1">&#39;Channel&#39;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">first_dat</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_paths</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="c1"># All positions and spectra are shared between channels</span>
+                    <span class="n">h5_pos_inds</span><span class="p">,</span> <span class="n">h5_pos_vals</span> <span class="o">=</span> <span class="n">write_ind_val_dsets</span><span class="p">(</span><span class="n">meas_grp</span><span class="p">,</span> <span class="n">pos_desc</span><span class="p">,</span> <span class="n">is_spectral</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                    <span class="n">h5_spec_inds</span><span class="p">,</span> <span class="n">h5_spec_vals</span> <span class="o">=</span> <span class="n">write_ind_val_dsets</span><span class="p">(</span><span class="n">meas_grp</span><span class="p">,</span> <span class="n">spec_desc</span><span class="p">,</span> <span class="n">is_spectral</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_paths</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">h5_pos_inds</span><span class="p">,</span> <span class="n">h5_pos_vals</span> <span class="o">=</span> <span class="n">write_ind_val_dsets</span><span class="p">(</span><span class="n">chan_grp</span><span class="p">,</span> <span class="n">pos_desc</span><span class="p">,</span> <span class="n">is_spectral</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                    <span class="n">h5_spec_inds</span><span class="p">,</span> <span class="n">h5_spec_vals</span> <span class="o">=</span> <span class="n">write_ind_val_dsets</span><span class="p">(</span><span class="n">chan_grp</span><span class="p">,</span> <span class="n">spec_desc</span><span class="p">,</span> <span class="n">is_spectral</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+                <span class="n">first_dat</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+            <span class="n">h5_main</span> <span class="o">=</span> <span class="n">write_main_dataset</span><span class="p">(</span><span class="n">chan_grp</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">points_per_pixel</span> <span class="o">*</span> <span class="n">num_cols</span><span class="p">),</span> <span class="s1">&#39;Raw_Data&#39;</span><span class="p">,</span>
+                                         <span class="s1">&#39;Deflection&#39;</span><span class="p">,</span> <span class="s1">&#39;V&#39;</span><span class="p">,</span>
+                                         <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span>
+                                         <span class="n">h5_pos_inds</span><span class="o">=</span><span class="n">h5_pos_inds</span><span class="p">,</span> <span class="n">h5_pos_vals</span><span class="o">=</span><span class="n">h5_pos_vals</span><span class="p">,</span>
+                                         <span class="n">h5_spec_inds</span><span class="o">=</span><span class="n">h5_spec_inds</span><span class="p">,</span> <span class="n">h5_spec_vals</span><span class="o">=</span><span class="n">h5_spec_vals</span><span class="p">,</span>
+                                         <span class="n">chunks</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">points_per_pixel</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float16</span><span class="p">)</span>
+
+            <span class="c1"># Now transfer scan data in the dat file to the h5 file:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_read_data</span><span class="p">(</span><span class="n">data_paths</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">h5_main</span><span class="p">)</span>
+            
+        <span class="n">h5_f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;G-Line translation complete!&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">h5_path</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_parse_file_path</span><span class="p">(</span><span class="n">data_filepath</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Goes through the file directory and figures out the basename and the </span>
+<span class="sd">        parameter (text and .mat), data file paths (for each analog input channel)</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        -----------------</span>
+<span class="sd">        data_filepath : string / unicode</span>
+<span class="sd">            absolute path of any file in the data folder</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        ----------------</span>
+<span class="sd">        basename : string / unicode</span>
+<span class="sd">            base name of the experiment\n</span>
+<span class="sd">        parm_paths : dictionary</span>
+<span class="sd">            paths for the text and .mat parameter files\n</span>
+<span class="sd">            parm_text : absolute file path of the parameter text file\n</span>
+<span class="sd">            parm_mat : absolute file path of the parameter .mat file</span>
+<span class="sd">        data_paths : dictionary of the paths for the big-time data files.</span>
+<span class="sd">            key : index of the analog input that generated the data file\n</span>
+<span class="sd">            value : absolute file path of the data file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Return (basename, parameter text path)</span>
+        <span class="n">folder_path</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">data_filepath</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">basename</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">folder_path</span><span class="p">)</span>
+
+        <span class="c1"># There may be one or two bigdata files. May need both paths</span>
+        <span class="n">parm_paths</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">data_paths</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">targ_str</span> <span class="o">=</span> <span class="s1">&#39;bigtime_0&#39;</span>
+        <span class="k">for</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="n">listdir</span><span class="p">(</span><span class="n">folder_path</span><span class="p">):</span>
+
+            <span class="k">if</span> <span class="n">file_name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.txt&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">file_name</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;parm&#39;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">parm_paths</span><span class="p">[</span><span class="s1">&#39;parm_txt&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder_path</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)</span>
+
+            <span class="k">elif</span> <span class="n">file_name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;_all.mat&#39;</span><span class="p">):</span>
+                <span class="n">parm_paths</span><span class="p">[</span><span class="s1">&#39;parm_mat&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder_path</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)</span>
+
+            <span class="k">elif</span> <span class="n">file_name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.dat&#39;</span><span class="p">):</span>
+                <span class="n">ind</span> <span class="o">=</span> <span class="n">file_name</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">targ_str</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">ind</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">data_paths</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">file_name</span><span class="p">[</span><span class="n">ind</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">targ_str</span><span class="p">)])]</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder_path</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">basename</span><span class="p">,</span> <span class="n">parm_paths</span><span class="p">,</span> <span class="n">data_paths</span>
+
+    <span class="k">def</span> <span class="nf">_read_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">h5_dset</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reads the .dat file and populates the .h5 dataset</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ---------</span>
+<span class="sd">        filepath : String / unicode</span>
+<span class="sd">            absolute path of the data file for a particular analog input channel</span>
+<span class="sd">        h5_dset : HDF5 dataset reference</span>
+<span class="sd">            Reference to the target Raw_Data dataset</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ---------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Create data matrix - Only need 16 bit floats (time) </span>
+                
+        <span class="c1"># Read line by line and write to h5                 </span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file_handl</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">row_indx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_rows</span><span class="p">):</span>
+                
+                <span class="k">if</span> <span class="n">row_indx</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Reading line </span><span class="si">{}</span><span class="s1"> of </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row_indx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_rows</span><span class="p">))</span>
+                
+                <span class="n">file_handl</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">row_indx</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">__bytes_per_row__</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="n">data_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">file_handl</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__bytes_per_row__</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;f&#39;</span><span class="p">)</span>
+                <span class="n">h5_dset</span><span class="p">[</span><span class="n">row_indx</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float16</span><span class="p">(</span><span class="n">data_vec</span><span class="p">)</span>
+                <span class="n">h5_dset</span><span class="o">.</span><span class="n">file</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+        
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Finished reading file: </span><span class="si">{}</span><span class="s1">!&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filepath</span><span class="p">))</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Pycroscopy contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
