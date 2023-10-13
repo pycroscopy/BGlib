@@ -130,7 +130,11 @@ def visualize_sho_results(h5_main, save_plots=True, show_plots=True, cmap=None,
         num_rows = int(np.floor((np.sqrt(h5_main.shape[0]))))
         num_cols = int(np.reshape(h5_main, [num_rows, -1, h5_main.shape[1]]).shape[1])
     else:
-        num_rows, num_cols = h5_main.pos_dim_sizes
+        if len(h5_main.pos_dim_sizes)==1: 
+            num_rows=h5_main.pos_dim_sizes[0]
+            num_cols = 1
+        else:
+            num_rows, num_cols = h5_main.pos_dim_sizes
 
     try:
         h5_spec_vals = h5_file[get_attr(h5_main, 'Spectroscopic_Values')]

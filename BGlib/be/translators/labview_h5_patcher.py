@@ -25,6 +25,46 @@ from .df_utils.be_utils import remove_non_exist_spec_dim_labs
 if sys.version_info.major == 3:
     unicode = str
 
+def fix_BE_problem(h5_main):
+    """
+    This function will fix dodgy BEline files that are output from some versions of V3
+    This bug causes incorrect sizes of the spectroscopic dimensions.
+    WARNING: This will irretrievably change the h5 file!
+    Input:
+        - h5_main: main dataset
+    Output:
+        None. The file is modified in-place.
+    """
+    spec_inds = h5_main.parent['Spectroscopic_Indices']
+    spec_vals = h5_main.parent['Spectroscopic_Values']
+    pos_inds = h5_main.parent['Position_Indices']
+    pos_vals = h5_main.parent['Position_Values']
+
+    freq_vec = np.unique(spec_vals)
+
+    spec_inds_new = np.zeros((1, len(freq_vec)))
+    spec_inds_new[0,:] = np.arange(len(freq_vec))
+    spec_vals_new = np.zeros_like(spec_inds_new)
+    spec_vals_new[0,:] = freq_vec
+
+    del h5_main.parent['Spectroscopic_Indices']
+    del h5_main.parent['Spectroscopic_Values']
+    h5_file = h5_main.file
+
+    h5_file.flush()
+
+    h5_spec_inds = h5_main.parent.create_dataset(name='Spectroscopic_Indices', shape = (1, len(freq_vec)), data = spec_inds_new)
+    h5_spec_vals = h5_main.parent.create_dataset(name='Spectroscopic_Values', shape = (1, len(freq_vec)), data = spec_vals_new)
+
+    h5_spec_inds.attrs['labels'] = ['Frequency']
+    h5_spec_inds.attrs['units'] = ['Hz']
+
+    h5_spec_vals.attrs['labels'] = ['Frequency']
+    h5_spec_vals.attrs['units'] = ['Hz']
+
+    h5_file.flush()
+
+    return
 
 class LabViewH5Patcher(Translator):
     """
@@ -34,6 +74,11 @@ class LabViewH5Patcher(Translator):
     """
 
     def __init__(self):
+        """
+       Patches the hdf5 files from the LabView V3 data aquisition software to meet the
+         standards of the Pycroscopy data format.
+        Output: Sidpy.Translator object
+        """
         super(LabViewH5Patcher, self).__init__()
 
     def _parse_file_path(self, input_path):
