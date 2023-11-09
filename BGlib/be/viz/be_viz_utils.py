@@ -249,7 +249,7 @@ def plot_loop_guess_fit(vdc, ds_proj_loops, ds_guess, ds_fit, title=''):
 
     num_plots = np.min([5, int(np.sqrt(ds_proj_loops.shape[0]))])
     fig, axes = plt.subplots(nrows=num_plots, ncols=num_plots, figsize=(18, 18))
-    positions = np.linspace(0, ds_proj_loops.shape[0] - 1, num_plots ** 2, dtype=np.int)
+    positions = np.linspace(0, ds_proj_loops.shape[0] - 1, num_plots ** 2, dtype=int)
     for ax, pos in zip(axes.flat, positions):
         ax.plot(vdc_shifted, loops_shifted[pos, :], 'k', label='Raw')
         ax.plot(vdc_shifted, loop_fit_function(vdc_shifted, np.array(list(ds_guess[pos]))), 'g', label='guess')
@@ -1624,7 +1624,7 @@ def _add_loop_parameters(axes, switching_coef_vec):
     -------
     axes : list of matplotlib.pyplo.axes
     """
-    positions = np.linspace(0, switching_coef_vec.shape[0] - 1, len(axes.flat), dtype=np.int)
+    positions = np.linspace(0, switching_coef_vec.shape[0] - 1, len(axes.flat), dtype=int)
 
     for ax, pos in zip(axes.flat, positions):
         ax.axvline(switching_coef_vec[pos]['V+'], c='k', label='V+')
