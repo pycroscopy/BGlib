@@ -309,7 +309,7 @@ def loop_fit_jacobian(vdc, coef_vec):
     vdc = np.squeeze(np.array(vdc))
     num_steps = vdc.size
 
-    J = np.zeros([num_steps, 9], dtype=np.float32)
+    J = np.zeros([num_steps, 9], dtype=float)
 
     V1 = vdc[:int(num_steps / 2)]
     V2 = vdc[int(num_steps / 2):]
@@ -602,8 +602,8 @@ def generate_guess(vdc, pr_vec, show_plots=False):
             return intersection(line(A, B), line(C, D))
 
     # start and end coordinates of each line segment defining the convex hull
-    outline_1 = np.zeros((hull.simplices.shape[0], 2), dtype=np.float)
-    outline_2 = np.zeros((hull.simplices.shape[0], 2), dtype=np.float)
+    outline_1 = np.zeros((hull.simplices.shape[0], 2), dtype=float)
+    outline_2 = np.zeros((hull.simplices.shape[0], 2), dtype=float)
     for index, pair in enumerate(hull.simplices):
         outline_1[index, :] = points[pair[0]]
         outline_2[index, :] = points[pair[1]]
