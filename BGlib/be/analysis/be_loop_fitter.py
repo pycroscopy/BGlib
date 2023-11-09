@@ -351,7 +351,7 @@ class BELoopFitter(Fitter):
                         0]
             else:
                 this_forc_spec_inds = np.ones(
-                    shape=self.h5_main.h5_spec_inds.shape[1], dtype=np.bool)
+                    shape=self.h5_main.h5_spec_inds.shape[1], dtype=bool)
 
             if self._num_forcs:
                 this_forc_dc_vec = get_unit_values(
@@ -495,7 +495,7 @@ class BELoopFitter(Fitter):
                 np.where(self._h5_guess.h5_spec_inds[forc_pos] == forc_ind)[0]
             else:
                 this_forc_spec_inds = np.ones(
-                    shape=self._h5_guess.h5_spec_inds.shape[1], dtype=np.bool)
+                    shape=self._h5_guess.h5_spec_inds.shape[1], dtype=bool)
 
             this_forc_2d = self._guess[:, this_forc_spec_inds]
             if self.verbose and self.mpi_rank == 0:
