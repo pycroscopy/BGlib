@@ -521,6 +521,7 @@ def jupyter_visualize_be_spectrograms(pc_main, cmap=None):
         x_size = pos_dims[-1]
         y_size = pos_dims[-2]
 
+        spatial_map = np.abs(np.reshape(pc_main[:, 0][spatial_slice], (y_size, x_size)))
         spatial_map = np.abs(np.reshape(pc_main[spatial_slice, 0], (y_size, x_size)))
         spectrogram = np.reshape(pc_main[0], (num_udvs_steps, -1))
         fig, axes = plt.subplots(ncols=3, figsize=(12, 4), subplot_kw={'adjustable': 'box'})
@@ -605,7 +606,7 @@ def jupyter_visualize_be_spectrograms(pc_main, cmap=None):
 
             spatial_slice, _ = pc_main._get_pos_spec_slices(slice_dict=spatial_slice_dict)
 
-            spatial_map = np.abs(np.reshape(pc_main[spatial_slice, step], (x_size, y_size)))
+            spatial_map = np.abs(np.reshape(pc_main[:, step][spatial_slice], (x_size, y_size)))
             spatial_img.set_data(spatial_map)
             spat_mean = np.mean(spatial_map)
             spat_std = np.std(spatial_map)
@@ -637,7 +638,8 @@ def jupyter_visualize_be_spectrograms(pc_main, cmap=None):
             axes[2].set_title('Phase \n' + pos_heading)
 
             spectrogram = np.reshape(pc_main[spatial_slice, :], (num_udvs_steps, -1))
-
+            print('spectrogram shape is {}'.format(spectrogram.shape))
+            print(spectrogram)
             if len(spec_dims) > 1:
                 amp_map = np.abs(spectrogram)
                 amp_img.set_data(np.abs(spectrogram))
