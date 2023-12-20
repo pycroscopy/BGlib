@@ -150,6 +150,23 @@ class LabViewH5Patcher(Translator):
             h5_spec_inds = h5_chan['Spectroscopic_Indices']
             h5_spec_vals = h5_chan['Spectroscopic_Values']
 
+            if h5_spec_vals.shape[1]!=h5_raw.shape[1]:
+         
+                print("Problem encountered with spectroscopic dimensions. Attempting to fix.")
+                spec_inds_fixed = h5_main.parent.create_dataset("spec_inds_fixed",
+                                                                  shape=(1,h5_raw.shape[1]),dtype = 'uint32')
+                spec_inds_fixed.attrs['labels'] = spec_indices.attrs['labels']
+                spec_inds_fixed.attrs['units'] = spec_indices.attrs['units']
+
+                spec_vals_fixed = h5_main.parent.create_dataset("spec_vals_fixed",
+                                                                                  shape=(1,h5_raw.shape[1]),dtype = 'uint32')
+                spec_vals_fixed.attrs['labels'] = spec_values.attrs['labels']
+                spec_vals_fixed.attrs['units'] = spec_values.attrs['units']
+                spec_vals_fixed[:] = h5_spec_vals[0,:h5_raw.shape[1]]
+                h5_raw.file.flush()
+                h5_spec_inds = h5_chan['spec_inds_fixed']
+                h5_spec_vals = h5_chan['spec_vals_fixed']
+
             # Make sure we have correct spectroscopic indices for the given values
             ds_spec_inds = create_spec_inds_from_vals(h5_spec_vals[()])
             if not np.allclose(ds_spec_inds, h5_spec_inds[()]):
