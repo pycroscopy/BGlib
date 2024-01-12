@@ -170,7 +170,7 @@ def SHOfastGuess(w_vec, resp_vec, qual_factor=200):
 #Now let's fit them all with sidpy
 #Let's try sidpy fitter
 #Instantiate the SidFitter class
-
+"""
 p0 = SHOestimateGuess(freq_vec, ydata)
 
 lb = [1E-6, freq_vec.min(), 50, -2*np.pi]
@@ -189,3 +189,4 @@ fitter = sidpy.proc.fitter.SidFitter(beps_small, SHO_fit_flattened,num_workers=n
                                      guess_fn = SHOestimateGuess,ind_dims=[0,1,3,4],
                            threads=1, return_cov=False, return_fit=False, return_std=False,
                            km_guess=True,num_fit_parms = 4, n_clus = 4)
+"""
