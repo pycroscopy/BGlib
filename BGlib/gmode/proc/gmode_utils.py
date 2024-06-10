@@ -230,7 +230,7 @@ def decompress_response(f_condensed_mat, num_pts, hot_inds):
     f_condensed_mat = np.array(f_condensed_mat)
     f_condensed_mat = np.atleast_2d(f_condensed_mat)
     hot_inds_mirror = np.flipud(num_pts - hot_inds)
-    time_resp = np.zeros(shape=(f_condensed_mat.shape[0], num_pts), dtype=np.float32)
+    time_resp = np.zeros(shape=(f_condensed_mat.shape[0], num_pts), dtype=float)
     for pos in range(f_condensed_mat.shape[0]):
         f_complete = np.zeros(shape=num_pts, dtype=np.complex)
         f_complete[hot_inds] = f_condensed_mat[pos, :]

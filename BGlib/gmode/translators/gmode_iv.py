@@ -84,7 +84,7 @@ class GIVTranslator(Translator):
                 h5_raw = write_main_dataset(h5_chan_grp, (parm_dict['grid_num_rows'], excit_wfm.size), 'Raw_Data',
                                             'Current',
                                             '1E-{} A'.format(parm_dict['IO_amplifier_gain']), pos_dims, spec_dims,
-                                            dtype=np.float16, chunks=(1, excit_wfm.size), compression='gzip')
+                                            dtype=float, chunks=(1, excit_wfm.size), compression='gzip')
 
                 self.raw_datasets.append(h5_raw)
 
@@ -119,7 +119,7 @@ class GIVTranslator(Translator):
                     if h5_data.shape[0] >= parm_dict['excitation_length'] and \
                             h5_data.shape[1] == len(self.raw_datasets):
                         for chan, h5_chan in enumerate(self.raw_datasets):
-                            h5_chan[line_ind, :] = np.float16(h5_data[main_data, chan])
+                            h5_chan[line_ind, :] = np.array(h5_data[main_data, chan]).astype(float)
                             h5_chan.file.flush()
                     else:
                         warn('No data found for Line '+str(line_ind))
@@ -150,15 +150,15 @@ class GIVTranslator(Translator):
             parm_dict['IO_samp_rate_[Hz]'] = np.uint32(h5_f['samp_rate'][0][0])
             parm_dict['IO_amplifier_gain'] = np.uint32(h5_f['amp_gain'][0][0])
 
-            parm_dict['excitation_frequency_[Hz]'] = np.float32(h5_f['frequency'][0][0])
-            #parm_dict['excitation_amplitude_[V]'] = np.float32(h5_f['amplitude'][0][0])
-            #parm_dict['excitation_offset_[V]'] = np.float32(h5_f['offset'][0][0])
+            parm_dict['excitation_frequency_[Hz]'] = float(h5_f['frequency'][0][0])
+            #parm_dict['excitation_amplitude_[V]'] = float(h5_f['amplitude'][0][0])
+            #parm_dict['excitation_offset_[V]'] = float(h5_f['offset'][0][0])
 
-            excit_wfm = np.float32(np.squeeze(h5_f['excit_wfm'].value))
+            excit_wfm = np.array(np.squeeze(h5_f['excit_wfm'].value)).astype(float)
             #in case these keys are not present (in some versions they are not)
             try:
-                parm_dict['excitation_amplitude_[V]'] = np.float32(h5_f['amplitude'][0][0])
-                parm_dict['excitation_offset_[V]'] = np.float32(h5_f['offset'][0][0])
+                parm_dict['excitation_amplitude_[V]'] = np.array(h5_f['amplitude'][0][0]).astype(float)
+                parm_dict['excitation_offset_[V]'] = np.array(h5_f['offset'][0][0]).astype(float)
             except KeyError:
                 parm_dict['excitation_offset_[V]'] = excit_wfm[0] #need a better way to handle this.
                 parm_dict['excitation_amplitude_[V]'] = np.max(excit_wfm[:]) #risky for non sine waves
@@ -174,20 +174,20 @@ class GIVTranslator(Translator):
 
             # This pulse may or may not have been used:
             try:
-                pulse_duration = np.float32(h5_f['pulse_duration'][0][0])
-                pulse_height = np.float32(h5_f['pulse_height'][0][0])
+                pulse_duration = np.astype(h5_f['pulse_duration'][0][0]).astype(float)
+                pulse_height = np.astype(h5_f['pulse_height'][0][0]).astype(float)
             except KeyError:
                 pulse_duration = 0.0
                 pulse_height = 0.0
             if pulse_duration == 0.0:
                 pulse_height = 0.0
 
-            parm_dict['excitation_pulse_height_[V]'] = np.float32(pulse_height)
-            parm_dict['excitation_pulse_time_[sec]'] = np.float32(pulse_duration)
+            parm_dict['excitation_pulse_height_[V]'] = np.array(pulse_height).astype(float)
+            parm_dict['excitation_pulse_time_[sec]'] = np.array(pulse_duration).astype(float)
             pulse_points = int(np.round(pulse_duration * parm_dict['IO_samp_rate_[Hz]']))
             parm_dict['excitation_pulse_points'] = np.uint32(pulse_points)
 
-            line_time = np.float32(h5_f['line_time'][0][0]) - pulse_duration
+            line_time = np.array(h5_f['line_time'][0][0]).astype(float) - pulse_duration
             excess_time = line_time - 1.0*extra_pts/parm_dict['IO_samp_rate_[Hz]']
             parm_dict['excitation_duration_[sec]'] = line_time - excess_time
             if extra_pts > 0:
@@ -199,8 +199,8 @@ class GIVTranslator(Translator):
             parm_dict['grid_num_rows'] = np.uint32(h5_f['num_lines'][0][0])
             parm_dict['grid_num_cols'] = np.uint32(np.floor(len(excit_wfm) / pts_per_cycle))
 
-            parm_dict['grid_scan_height_[m]'] = np.float32(h5_f['scan_height'][0][0])
-            parm_dict['grid_scan_width_[m]'] = np.float32(h5_f['scan_width'][0][0])
-            parm_dict['grid_scan_speed_[ms-1]'] = np.float32(h5_f['scan_speed'][0][0])
+            parm_dict['grid_scan_height_[m]'] = np.array(h5_f['scan_height'][0][0]).astype(float)
+            parm_dict['grid_scan_width_[m]'] = np.array(h5_f['scan_width'][0][0]).astype(float)
+            parm_dict['grid_scan_speed_[ms-1]'] = np.array(h5_f['scan_speed'][0][0]).astype(float)
 
         return parm_dict, excit_wfm

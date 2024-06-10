@@ -30,7 +30,7 @@ from ...viz.be_viz_utils import plot_1d_spectrum, plot_2d_spectrogram, \
     plot_histograms
 
 nf32 = np.dtype({'names': ['super_band', 'inter_bin_band', 'sub_band'],
-                 'formats': [np.float32, np.float32, np.float32]})
+                 'formats': [float, float, float]})
 
 
 def generate_bipolar_triangular_waveform(cycle_pts, cycle_frac=1, phase=0,

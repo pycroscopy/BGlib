@@ -427,7 +427,7 @@ class BEPSndfTranslator(Translator):
             tot_pts = int(tot_pts / 2)
 
         # Populate information from the columns within the pixels such as the FFT, bin freq, indices, etc. 
-        bin_freqs = np.zeros(shape=tot_bins, dtype=np.float32)
+        bin_freqs = np.zeros(shape=tot_bins, dtype=float)
         bin_inds = np.zeros(shape=tot_bins, dtype=np.uint32)
         bin_FFT = np.zeros(shape=tot_bins, dtype=np.complex64)
         exec_bin_vec = np.zeros(shape=tot_bins, dtype=np.int32)
@@ -473,7 +473,7 @@ class BEPSndfTranslator(Translator):
                            {'Channel_Input': curr_parm_dict['IO_Analog_Input_1']})
 
         ds_ex_wfm = h5_chan_grp.create_dataset('Excitation_Waveform',
-                                               data=np.float32(np.real(np.fft.ifft(np.fft.ifftshift(self.BE_wave)))))
+                                               data=float(np.real(np.fft.ifft(np.fft.ifftshift(self.BE_wave)))))
         ds_bin_freq = h5_chan_grp.create_dataset('Bin_Frequencies',
                                                  data=bin_freqs)
         ds_bin_inds = h5_chan_grp.create_dataset('Bin_Indices',
@@ -578,8 +578,8 @@ class BEPSndfTranslator(Translator):
         self.mean_resp = np.zeros(shape=tot_pts, dtype=np.complex64)
 
         # Used for Histograms
-        self.max_resp = np.zeros(shape=num_pix, dtype=np.float32)
-        self.min_resp = np.zeros(shape=num_pix, dtype=np.float32)
+        self.max_resp = np.zeros(shape=num_pix, dtype=float)
+        self.min_resp = np.zeros(shape=num_pix, dtype=float)
 
         return h5_refs
 
@@ -608,7 +608,7 @@ class BEPSndfTranslator(Translator):
             zero_pix = self.__unique_waves__[0]
 
             data_vec = pixel_data[zero_pix].spectrogram_vec
-            noise_mat = np.float32(pixel_data[zero_pix].noise_floor_mat)
+            noise_mat = np.array(pixel_data[zero_pix].noise_floor_mat, dtype=float)
 
             # Storing a list of lists since we don't know how many pixels we will find in this measurement group
             self.pos_vals_list.append([pixel_data[zero_pix].x_value, pixel_data[zero_pix].y_value,
@@ -617,7 +617,7 @@ class BEPSndfTranslator(Translator):
         else:
 
             data_vec = np.zeros(shape=(self.ds_main.shape[1]), dtype=np.complex64)
-            noise_mat = np.zeros(shape=(3, self.ds_noise.shape[1]), dtype=np.float32)
+            noise_mat = np.zeros(shape=(3, self.ds_noise.shape[1]), dtype=float)
 
             internal_step_index = {}
             for wave_type in self.__unique_waves__:
@@ -640,7 +640,7 @@ class BEPSndfTranslator(Translator):
                 enind = stind + pixel_data[wave_type].num_bins
 
                 data_vec[stind:enind] = data_pix[:, internal_step_index[wave_type]]
-                noise_mat[:, step_counter] = np.float32(noise_pix[:, internal_step_index[wave_type]])
+                noise_mat[:, step_counter] = noise_pix[:, internal_step_index[wave_type]].astype(float)
 
                 stind = enind
                 internal_step_index[wave_type] += 1
@@ -783,7 +783,7 @@ class BEPSndfTranslator(Translator):
         """
         if not path.exists(filepath):
             warn('BEPSndfTranslator - NO more_parms.mat file found')
-            return np.zeros(1000, dtype=np.float32)
+            return np.zeros(1000, dtype=float)
 
         if 'more_parms' in filepath:
             matread = loadmat(filepath, variable_names=['FFT_BE_wave'])
@@ -830,7 +830,7 @@ class BEPSndfTranslator(Translator):
         udvs_labs[0:5] = ['step_num', 'dc_offset', 'ac_amp', 'wave_type', 'wave_mod']
         udvs_units[0:5] = ['', 'V', 'A', '', '']
 
-        udvs_mat = np.zeros(shape=(worksheet.nrows - 1, worksheet.ncols), dtype=np.float32)
+        udvs_mat = np.zeros(shape=(worksheet.nrows - 1, worksheet.ncols), dtype=float)
         for row in range(1, worksheet.nrows):
             for col in range(worksheet.ncols):
                 try:

@@ -18,19 +18,19 @@ from scipy.spatial import ConvexHull
 from scipy.special import erf, erfinv
 import warnings
 
-# switching32 = np.dtype([('V+', np.float32),
-#                         ('V-', np.float32),
-#                         ('Imprint', np.float32),
-#                         ('R+', np.float32),
-#                         ('R-', np.float32),
-#                         ('Switchable Polarization', np.float32),
-#                         ('Work of Switching', np.float32),
-#                         ('Nucleation Bias 1', np.float32),
-#                         ('Nucleation Bias 2', np.float32)])
+# switching32 = np.dtype([('V+', float),
+#                         ('V-', float),
+#                         ('Imprint', float),
+#                         ('R+', float),
+#                         ('R-', float),
+#                         ('Switchable Polarization', float),
+#                         ('Work of Switching', float),
+#                         ('Nucleation Bias 1', float),
+#                         ('Nucleation Bias 2', float)])
 field_names = ['V+', 'V-', 'Imprint', 'R+', 'R-', 'Switchable Polarization',
                'Work of Switching', 'Nucleation Bias 1', 'Nucleation Bias 2']
 switching32 = np.dtype({'names': field_names,
-                        'formats': [np.float32 for name in field_names]})
+                        'formats': [float for name in field_names]})
 
 
 ###############################################################################
@@ -309,7 +309,7 @@ def loop_fit_jacobian(vdc, coef_vec):
     vdc = np.squeeze(np.array(vdc))
     num_steps = vdc.size
 
-    J = np.zeros([num_steps, 9], dtype=np.float32)
+    J = np.zeros([num_steps, 9], dtype=float)
 
     V1 = vdc[:int(num_steps / 2)]
     V2 = vdc[int(num_steps / 2):]
@@ -602,8 +602,8 @@ def generate_guess(vdc, pr_vec, show_plots=False):
             return intersection(line(A, B), line(C, D))
 
     # start and end coordinates of each line segment defining the convex hull
-    outline_1 = np.zeros((hull.simplices.shape[0], 2), dtype=np.float)
-    outline_2 = np.zeros((hull.simplices.shape[0], 2), dtype=np.float)
+    outline_1 = np.zeros((hull.simplices.shape[0], 2), dtype=float)
+    outline_2 = np.zeros((hull.simplices.shape[0], 2), dtype=float)
     for index, pair in enumerate(hull.simplices):
         outline_1[index, :] = points[pair[0]]
         outline_2[index, :] = points[pair[1]]

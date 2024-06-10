@@ -110,7 +110,7 @@ class GLineTranslator(Translator):
         
         # Load parameters from .mat file - 'BE_wave', 'FFT_BE_wave', 'total_cols', 'total_rows'
         matread = loadmat(parm_paths['parm_mat'], variable_names=['BE_wave', 'FFT_BE_wave', 'total_cols', 'total_rows'])
-        be_wave = np.float32(np.squeeze(matread['BE_wave']))
+        be_wave = np.array(np.squeeze(matread['BE_wave'])).astype(float)
 
         # Need to take the complex conjugate if reading from a .mat file
         # FFT_BE_wave = np.conjugate(np.complex64(np.squeeze(matread['FFT_BE_wave'])))
@@ -207,7 +207,7 @@ class GLineTranslator(Translator):
                                          None, None,
                                          h5_pos_inds=h5_pos_inds, h5_pos_vals=h5_pos_vals,
                                          h5_spec_inds=h5_spec_inds, h5_spec_vals=h5_spec_vals,
-                                         chunks=(1, self.points_per_pixel), dtype=np.float16)
+                                         chunks=(1, self.points_per_pixel), dtype=float)
 
             # Now transfer scan data in the dat file to the h5 file:
             self._read_data(data_paths[key], h5_main)
@@ -289,7 +289,7 @@ class GLineTranslator(Translator):
                 
                 file_handl.seek(row_indx*self.__bytes_per_row__, 0)
                 data_vec = np.fromstring(file_handl.read(self.__bytes_per_row__), dtype='f')
-                h5_dset[row_indx] = np.float16(data_vec)
+                h5_dset[row_indx] = np.array(data_vec).astype(float)
                 h5_dset.file.flush()
         
         print('Finished reading file: {}!'.format(filepath))

@@ -1867,14 +1867,14 @@ def viz_berelaxfit(berelaxfit, bias_ind =0, t_time=0 , x_col=0, h_row=0, sensiti
             read_inds_split.append(all_inds_split[i][no_write_steps:])
             #write_dc_offset_values = [sho_fit.h5_spec_vals[1, np.argwhere(sho_fit.h5_spec_vals[0] == 0)]]
             write_dc_offset_values = all_dc_offset_values[::2]
-        if type(write_dc_offset_values) == np.float32:
+        if type(write_dc_offset_values) == float:
             write_dc_offset_values = [write_dc_offset_values]
 
     if starts_with == 'read':
         for i in range(no_rs_spectra):
             read_inds_split.append(all_inds_split[i][:-int(no_write_steps)])
             write_dc_offset_values = sho_fit.h5_spec_vals[1, np.argwhere(sho_fit.h5_spec_vals[0] == no_read_steps)]
-        if type(write_dc_offset_values) == np.float32:
+        if type(write_dc_offset_values) == float:
             write_dc_offset_values = [write_dc_offset_values]
     raw_phase_reshape = raw_phase.reshape((x_length, y_length, total_time_steps, no_freq))
     raw_amp_reshape = raw_amp.reshape((x_length,y_length, total_time_steps, no_freq))
