@@ -39,17 +39,17 @@ Custom dtypes for the datasets created during fitting.
 '''
 loop_metrics32 = np.dtype({'names': ['Area', 'Centroid x', 'Centroid y',
                                      'Rotation Angle [rad]', 'Offset'],
-                           'formats': [np.float32, np.float32, np.float32,
-                                       np.float32, np.float32]})
+                           'formats': [float, float, float,
+                                       float, float]})
 
 crit32 = np.dtype({'names': ['AIC_loop', 'BIC_loop', 'AIC_line', 'BIC_line'],
-                   'formats': [np.float32, np.float32, np.float32,
-                               np.float32]})
+                   'formats': [float, float, float,
+                               float]})
 
 __field_names = ['a_0', 'a_1', 'a_2', 'a_3', 'a_4', 'b_0', 'b_1', 'b_2', 'b_3',
                  'R2 Criterion']
 loop_fit32 = np.dtype({'names': __field_names,
-                       'formats': [np.float32 for name in __field_names]})
+                       'formats': [float for name in __field_names]})
 
 
 class BELoopFitter(Fitter):
@@ -217,7 +217,7 @@ class BELoopFitter(Fitter):
 
         # Write datasets
         self.h5_projected_loops = create_empty_dataset(self.h5_main,
-                                                       np.float32,
+                                                       float,
                                                        'Projected_Loops',
                                                        h5_group=self.h5_results_grp)
 
@@ -351,7 +351,7 @@ class BELoopFitter(Fitter):
                         0]
             else:
                 this_forc_spec_inds = np.ones(
-                    shape=self.h5_main.h5_spec_inds.shape[1], dtype=np.bool)
+                    shape=self.h5_main.h5_spec_inds.shape[1], dtype=bool)
 
             if self._num_forcs:
                 this_forc_dc_vec = get_unit_values(
@@ -495,7 +495,7 @@ class BELoopFitter(Fitter):
                 np.where(self._h5_guess.h5_spec_inds[forc_pos] == forc_ind)[0]
             else:
                 this_forc_spec_inds = np.ones(
-                    shape=self._h5_guess.h5_spec_inds.shape[1], dtype=np.bool)
+                    shape=self._h5_guess.h5_spec_inds.shape[1], dtype=bool)
 
             this_forc_2d = self._guess[:, this_forc_spec_inds]
             if self.verbose and self.mpi_rank == 0:
@@ -532,7 +532,7 @@ class BELoopFitter(Fitter):
             # TODO: avoid memory copies!
             float_mat = np.zeros(shape=list(dc_rest_2d.shape) +
                                        [len(loop_fit32.names)-1],
-                                 dtype=np.float32)
+                                 dtype=float)
             if self.verbose and self.mpi_rank == 0:
                 print('Created empty float matrix of shape: {}'
                       '.'.format(float_mat.shape))
@@ -569,7 +569,7 @@ class BELoopFitter(Fitter):
         ancillary : numpy.ndarray
             Metrics for the loop projection
         """
-        # projected_loop = np.zeros(shape=sho_response.shape, dtype=np.float32)
+        # projected_loop = np.zeros(shape=sho_response.shape, dtype=float)
         ancillary = np.zeros(shape=1, dtype=loop_metrics32)
 
         pix_dict = projectLoop(np.squeeze(dc_offset),
@@ -683,7 +683,7 @@ class BELoopFitter(Fitter):
             print('Unzipping loop projection results')
         loop_mets = np.zeros(shape=len(results), dtype=loop_metrics32)
         proj_loops = np.zeros(shape=(len(results), self.data[0][0].shape[1]),
-                              dtype=np.float32)
+                              dtype=float)
 
         if self.verbose and self.mpi_rank == 0:
             print(
@@ -1302,7 +1302,7 @@ def guess_loops_hierarchically(vdc_vec, projected_loops_2d):
     num_nodes = len(cluster_tree.nodes)
 
     # prepare the guess and fit matrices
-    loop_guess_mat = np.zeros(shape=(num_nodes, 9), dtype=np.float32)
+    loop_guess_mat = np.zeros(shape=(num_nodes, 9), dtype=float)
     # loop_fit_mat = np.zeros(shape=loop_guess_mat.shape, dtype=loop_guess_mat.dtype)
     loop_fit_results = list(
         np.arange(num_nodes, dtype=np.uint16))  # temporary placeholder

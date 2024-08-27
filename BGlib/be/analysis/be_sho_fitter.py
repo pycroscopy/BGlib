@@ -29,7 +29,7 @@ Custom dtype for the datasets created during fitting.
 _field_names = ['Amplitude [V]', 'Frequency [Hz]', 'Quality Factor',
                 'Phase [rad]', 'R2 Criterion']
 sho32 = np.dtype({'names': _field_names,
-                  'formats': [np.float32 for name in _field_names]})
+                  'formats': [float for name in _field_names]})
 
 
 class SHOGuessFunc(Enum):

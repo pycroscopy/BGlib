@@ -97,7 +97,7 @@ class BERelaxFit(usid.Process):
                 self.write_dc_offset_values = self.all_dc_offset_values[::2]
 
                 #if there is only one RS spectrum
-                if type(self.write_dc_offset_values) == np.float32:
+                if type(self.write_dc_offset_values) == float:
                     self.write_dc_offset_values = [self.write_dc_offset_values]
 
         if self.starts_with == 'read':
@@ -107,7 +107,7 @@ class BERelaxFit(usid.Process):
                                                                         np.argwhere(self.h5_main.h5_spec_vals[
                                                                                         0] == self.no_read_steps)]
                 # if there is only one RS spectrum
-                if type(self.write_dc_offset_values) == np.float32:
+                if type(self.write_dc_offset_values) == float:
                     self.write_dc_offset_values = [self.write_dc_offset_values]
 
         self.no_read_offset = len(self.all_dc_offset_values) - self.no_rs_spectra
@@ -248,7 +248,7 @@ class BERelaxFit(usid.Process):
             results_units = 'pm'
 
         berelaxfit32 = np.dtype({'names': field_names,
-                            'formats': [np.float32 for name in field_names]})
+                            'formats': [float for name in field_names]})
         self.h5_results = usid.hdf_utils.write_main_dataset(self.h5_results_grp, results_shape, results_dset_name,
                                                             results_quantity, results_units, pos_dims, spec_dims,
                                                             dtype=berelaxfit32, h5_pos_inds=self.h5_main.h5_pos_inds,
@@ -292,7 +292,7 @@ class BERelaxFit(usid.Process):
         if self.fit_method == 'Logistic':
             field_names = ['A', 'K', 'B', 'v', 'Q', 'C']
         berelaxfit32 = np.dtype({'names': field_names,
-                            'formats': [np.float32 for name in field_names]})
+                            'formats': [float for name in field_names]})
         # write and flush results
         results = usid.io.dtype_utils.stack_real_to_compound(self._results, compound_type=berelaxfit32)
         results = results.reshape(self.h5_results.shape[0], -1)

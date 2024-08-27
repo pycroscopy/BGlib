@@ -71,7 +71,7 @@ class ForcIVTranslator(Translator):
         if self.h5_read:
             excitation_vec = h5_raw[test]
         else:
-            excitation_vec = np.float32(np.squeeze(test))
+            excitation_vec = float(np.squeeze(test))
 
         try:
             current_cell = h5_raw['current_cell3']
@@ -85,9 +85,9 @@ class ForcIVTranslator(Translator):
         num_cycles = 0
         if len(current_cell.shape)==4:
             num_cycles = current_cell.shape[-1]
-            current_data = np.zeros(shape=(num_rows * num_cols, num_iv_pts*num_cycles), dtype=np.float32)
+            current_data = np.zeros(shape=(num_rows * num_cols, num_iv_pts*num_cycles), dtype=float)
         else:
-            current_data = np.zeros(shape=(num_rows * num_cols, num_iv_pts), dtype=np.float32)
+            current_data = np.zeros(shape=(num_rows * num_cols, num_iv_pts), dtype=float)
 
         for row_ind in range(num_rows):
             for col_ind in range(num_cols):
@@ -95,7 +95,7 @@ class ForcIVTranslator(Translator):
                 if self.h5_read:
                     curr_val = np.squeeze(h5_raw[current_cell[row_ind][col_ind]].value)
                 else:
-                    curr_val = np.float32(np.squeeze(current_cell[row_ind][col_ind]))
+                    curr_val = np.array(np.squeeze(current_cell[row_ind][col_ind])).astype(float)
                 curr_val = curr_val.reshape(current_data[0,:].shape)
                 current_data[pix_ind, :] = 1E+9 * curr_val
 
