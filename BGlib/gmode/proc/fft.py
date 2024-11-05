@@ -13,7 +13,7 @@ import numpy as np  # for all array, data operations
 import matplotlib.pyplot as plt  # for all plots
 from scipy.special import erf
 from scipy import signal as sps
-from collections import Iterable
+from collections.abc import Iterable
 from warnings import warn
 
 
