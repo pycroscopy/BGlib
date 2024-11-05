@@ -78,11 +78,11 @@ class SporcTranslator(Translator):
         ds_spec_vals.attrs['labels'] = spec_ind_dict
         ds_spec_vals.attrs['units'] = ['V', 'V', '', '', '']
 
-        ds_excit_wfm = VirtualDataset('Excitation_Waveform', np.float32(excit_wfm))
+        ds_excit_wfm = VirtualDataset('Excitation_Waveform', np.array(excit_wfm).astype(float))
 
         ds_raw_data = VirtualDataset('Raw_Data', data=[],
                                      maxshape=(num_pix, len(excit_wfm)),
-                                     dtype=np.float16, chunking=(1, len(excit_wfm)),
+                                     dtype=float, chunking=(1, len(excit_wfm)),
                                      compression='gzip')
 
         # technically should change the date, etc.
@@ -136,7 +136,7 @@ class SporcTranslator(Translator):
                     # Take the inverse FFT on 1st dimension
                     pix_vec = np.fft.ifft(np.fft.ifftshift(pix_data['data']))
                     # Verified with Matlab - no conjugate required here.
-                    h5_main[pos_ind, :] = np.float16(np.real(pix_vec))
+                    h5_main[pos_ind, :] = np.array(np.real(pix_vec)).astype(float)
                     hdf.flush()  # flush from memory!
                 else:
                     print('File for row {} col {} not found'.format(row_ind, col_ind))
@@ -183,16 +183,16 @@ class SporcTranslator(Translator):
         parm_dict['grid_num_cols'] = parm_data['numcols']
 
         sporc_parms = parm_data['sporcParms']
-        parm_dict['SPORC_V_max_[V]'] = np.float32(sporc_parms['V_max'].item())
+        parm_dict['SPORC_V_max_[V]'] = np.array(sporc_parms['V_max'].item()).astype(float)
         parm_dict['SPORC_N_steps'] = np.int32(sporc_parms['N_steps'].item())
         parm_dict['SPORC_N_reps'] = np.int32(sporc_parms['N_reps'].item())
-        parm_dict['SPORC_t_max_[sec]'] = np.float32(sporc_parms['t_max'])
+        parm_dict['SPORC_t_max_[sec]'] = np.array(sporc_parms['t_max']).astype(float)
         parm_dict['SPORC_f_cutoff_[Hz]'] = np.int32(sporc_parms['f_cutoff'])
         parm_dict['SPORC_f_rolloff_[Hz]'] = np.int32(sporc_parms['f_rolloff'])
 
         if 'FORC_vec' in parm_data.keys() and 'ind_vecs' in parm_data.keys():
-            excit_wfm = np.squeeze(np.float32(parm_data['FORC_vec']))
-            spec_ind_mat = np.transpose(np.float32(parm_data['ind_vecs']))
+            excit_wfm = np.squeeze(np.array(parm_data['FORC_vec']).astype(float))
+            spec_ind_mat = np.transpose(np.array(parm_data['ind_vecs']).astype(float))
         else:
             # Look for a second parms file that contains these vectors:
             fold, basename = path.split(parm_path)

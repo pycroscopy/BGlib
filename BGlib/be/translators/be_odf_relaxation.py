@@ -115,13 +115,13 @@ class BEodfRelaxationTranslator(Translator):
         band_width = parm_dict['BE_band_width_[Hz]'] * (0.5 - parm_dict['BE_band_edge_trim'])
         st_f = parm_dict['BE_center_frequency_[Hz]'] - band_width
         en_f = parm_dict['BE_center_frequency_[Hz]'] + band_width
-        bin_freqs = np.linspace(st_f, en_f, len(bin_inds), dtype=np.float32)
+        bin_freqs = np.linspace(st_f, en_f, len(bin_inds), dtype=float)
 
         # Forcing standardized datatypes:
         bin_inds = np.int32(bin_inds)
-        bin_freqs = np.float32(bin_freqs)
+        bin_freqs = float(bin_freqs)
         bin_FFT = np.complex64(bin_FFT)
-        ex_wfm = np.float32(ex_wfm)
+        ex_wfm = float(ex_wfm)
 
         self.FFT_BE_wave = bin_FFT
 
@@ -188,7 +188,7 @@ class BEodfRelaxationTranslator(Translator):
             udvs_slices[col_name] = (slice(None), slice(col_ind, col_ind + 1))
         h5_UDVS = chan_grp.create_dataset('UDVS',
                                           data=UDVS_mat,
-                                          dtype=np.float32)
+                                          dtype=float)
         write_simple_attrs(h5_UDVS, {'labels': UDVS_labs, 'units': UDVS_units})
 
         h5_bin_steps = chan_grp.create_dataset('Bin_Steps',
@@ -206,7 +206,7 @@ class BEodfRelaxationTranslator(Translator):
                                               dtype=np.uint32)
         h5_bin_freq = chan_grp.create_dataset('Bin_Frequencies',
                                               data=bin_freqs,
-                                              dtype=np.float32)
+                                              dtype=float)
         h5_bin_FFT = chan_grp.create_dataset('Bin_FFT',
                                              data=bin_FFT,
                                              dtype=np.complex64)
@@ -262,8 +262,8 @@ class BEodfRelaxationTranslator(Translator):
                                           compression='gzip')
 
         self.mean_resp = np.zeros(shape=(self.ds_main.shape[1]), dtype=np.complex64)
-        self.max_resp = np.zeros(shape=(self.ds_main.shape[0]), dtype=np.float32)
-        self.min_resp = np.zeros(shape=(self.ds_main.shape[0]), dtype=np.float32)
+        self.max_resp = np.zeros(shape=(self.ds_main.shape[0]), dtype=float)
+        self.min_resp = np.zeros(shape=(self.ds_main.shape[0]), dtype=float)
 
         # Now read the raw data files:
         self._read_data(path_dict['read_real'], path_dict['read_imag'], parm_dict)
@@ -594,7 +594,7 @@ class BEodfRelaxationTranslator(Translator):
             num_VS_steps = total_steps * 2  # To account for IF and OOF
 
             UD_VS_table_label = ['step_num', 'dc_offset', 'ac_amp', 'wave_type', 'wave_mod', 'in-field', 'out-of-field']
-            UD_VS_table = np.zeros(shape=(num_VS_steps, 7), dtype=np.float32)
+            UD_VS_table = np.zeros(shape=(num_VS_steps, 7), dtype=float)
             UD_VS_table_unit = ['', 'V', 'A', '', '', 'V', 'V']
 
             UD_VS_table[:, 0] = np.arange(0, num_VS_steps)  # Python base 0

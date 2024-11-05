@@ -564,7 +564,7 @@ class FakeBEPSGenerator(Translator):
         sho_if_inds = sho_field == 1
 
         # determine how many pixels can be read at once
-        mem_per_pix = vdc_vec.size * np.float32(0).itemsize
+        mem_per_pix = vdc_vec.size * float(0).itemsize
         #free_mem = self.max_ram - vdc_vec.size * vdc_vec.dtype.itemsize * 6
         free_mem = 1024
         batch_size = int(free_mem / mem_per_pix)

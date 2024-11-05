@@ -122,7 +122,7 @@ class TRKPFMTranslator(Translator):
             #print(count, f.tell())
             count += 1
 
-            data_length = np.fromfile(f, dtype=np.float32, count=1)
+            data_length = np.fromfile(f, dtype=float, count=1)
 
             if data_length > 0:
                 data_lengths.append(int(data_length))
@@ -318,7 +318,7 @@ class TRKPFMTranslator(Translator):
             count_vals.append(count)
             count += 1
 
-            data_vec = np.fromfile(f, dtype=np.float32, count=int(data_length))
+            data_vec = np.fromfile(f, dtype=float, count=int(data_length))
             data_vec1 = data_vec[5:int(data_length)]
 
             if len(data_vec) > 1:
@@ -355,9 +355,9 @@ class TRKPFMTranslator(Translator):
         parm_dict = dict()
 
         parm_dict['IO_samp_rate_[Hz]'] = np.uint32(h5_f['IO_rate'][0][0])
-        parm_dict['IO_time'] = np.float32(h5_f['IO_time'][0][0])
+        parm_dict['IO_time'] = np.array(h5_f['IO_time'][0][0]).astype(float)
 
-        excit_wfm = np.float32(np.squeeze(h5_f['dc_amp_vec']))
+        excit_wfm = np.array(np.squeeze(h5_f['dc_amp_vec'])).astype(float)
 
         parm_dict['grid_num_rows'] = np.int(h5_f['num_rows'][0][0])
         parm_dict['grid_num_cols'] = np.int(h5_f['num_cols'][0][0])

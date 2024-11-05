@@ -377,7 +377,7 @@ class BEodfTranslator(Translator):
             UDVS_labs = ['step_num', 'dc_offset', 'ac_amp', 'wave_type', 'wave_mod', 'be-line']
             UDVS_units = ['', 'V', 'A', '', '', '']
             UDVS_mat = np.array([1, 0, parm_dict['BE_amplitude_[V]'], 1, 1, 1],
-                                dtype=np.float32).reshape(1, len(UDVS_labs))
+                                dtype=float).reshape(1, len(UDVS_labs))
 
             old_spec_inds = np.vstack((np.arange(tot_bins, dtype=INDICES_DTYPE),
                                        np.zeros(tot_bins, dtype=INDICES_DTYPE)))
@@ -396,20 +396,20 @@ class BEodfTranslator(Translator):
             band_width = parm_dict['BE_band_width_[Hz]'] * (0.5 - parm_dict['BE_band_edge_trim'])
             st_f = parm_dict['BE_center_frequency_[Hz]'] - band_width
             en_f = parm_dict['BE_center_frequency_[Hz]'] + band_width
-            bin_freqs = np.linspace(st_f, en_f, bins_per_step, dtype=np.float32)
+            bin_freqs = np.linspace(st_f, en_f, bins_per_step, dtype=float)
 
             if verbose:
                 print('\tGenerating BE arrays of length: '
                       '{}'.format(bins_per_step))
             bin_inds = np.zeros(shape=bins_per_step, dtype=np.int32)
             bin_FFT = np.zeros(shape=bins_per_step, dtype=np.complex64)
-            ex_wfm = np.zeros(shape=bins_per_step, dtype=np.float32)
+            ex_wfm = np.zeros(shape=bins_per_step, dtype=float)
 
         # Forcing standardized datatypes:
         bin_inds = np.int32(bin_inds)
-        bin_freqs = np.float32(bin_freqs)
+        bin_freqs = float(bin_freqs)
         bin_FFT = np.complex64(bin_FFT)
-        ex_wfm = np.float32(ex_wfm)
+        ex_wfm = float(ex_wfm)
 
         self.FFT_BE_wave = bin_FFT
 
@@ -711,8 +711,8 @@ class BEodfTranslator(Translator):
         take_conjugate = requires_conjugate(rand_spectra, cores=self._cores)
 
         self.mean_resp = np.zeros(shape=(self.h5_raw.shape[1]), dtype=np.complex64)
-        self.max_resp = np.zeros(shape=(self.h5_raw.shape[0]), dtype=np.float32)
-        self.min_resp = np.zeros(shape=(self.h5_raw.shape[0]), dtype=np.float32)
+        self.max_resp = np.zeros(shape=(self.h5_raw.shape[0]), dtype=float)
+        self.min_resp = np.zeros(shape=(self.h5_raw.shape[0]), dtype=float)
 
         numpix = self.h5_raw.shape[0]
         """ 
@@ -945,7 +945,7 @@ class BEodfTranslator(Translator):
                                              h5_pos_vals=self.h5_raw.h5_pos_vals,
                                              h5_spec_inds=h5_current_spec_inds,
                                              h5_spec_vals=h5_current_spec_values,
-                                             dtype=np.float32,  # data type / precision
+                                             dtype=float,  # data type / precision
                                              main_dset_attrs={'IO_rate': 4E+6, 'Amplifier_Gain': 9},
                                              verbose=self._verbose)
 
@@ -961,7 +961,7 @@ class BEodfTranslator(Translator):
             spectral_len = spectral_len // 2
 
         # calculate the # positions that can be stored in memory in one go.
-        b_per_position = np.float32(0).itemsize * spectral_len
+        b_per_position = np.dtype('float32').itemsize * spectral_len
 
         max_pos_per_read = int(np.floor((get_available_memory()) / b_per_position))
 
@@ -1565,7 +1565,7 @@ class BEodfTranslator(Translator):
                                  'wave_type', 'wave_mod', 'in-field',
                                  'out-of-field']
             UD_VS_table_unit = ['', 'V', 'A', '', '', 'V', 'V']
-            udvs_table = np.zeros(shape=(num_VS_steps, 7), dtype=np.float32)
+            udvs_table = np.zeros(shape=(num_VS_steps, 7), dtype=float)
 
             udvs_table[:, 0] = np.arange(0, num_VS_steps)  # Python base 0
             udvs_table[:, 1] = UD_dc_vec
@@ -1606,7 +1606,7 @@ class BEodfTranslator(Translator):
             UD_dc_vec = VS_offset * np.ones(num_VS_steps)
             UD_VS_table_label = ['step_num', 'dc_offset', 'ac_amp', 'wave_type', 'wave_mod', 'forward', 'reverse']
             UD_VS_table_unit = ['', 'V', 'A', '', '', 'A', 'A']
-            udvs_table = np.zeros(shape=(num_VS_steps, 7), dtype=np.float32)
+            udvs_table = np.zeros(shape=(num_VS_steps, 7), dtype=float)
             udvs_table[:, 0] = np.arange(1, num_VS_steps + 1)
             udvs_table[:, 1] = UD_dc_vec
             udvs_table[:, 2] = vs_amp_vec

@@ -167,7 +167,7 @@ class SignalFilter(Process):
 
         if isinstance(self.composite_filter, np.ndarray):
             h5_comp_filt = self.h5_results_grp.create_dataset('Composite_Filter',
-                                                              data=np.float32(self.composite_filter))
+                                                              data=float(self.composite_filter))
 
             if self.verbose and self.mpi_rank == 0:
                 print('Rank {} - Finished creating the Composite_Filter dataset'.format(self.mpi_rank))
@@ -203,7 +203,7 @@ class SignalFilter(Process):
         if self.noise_threshold is not None:
             self.h5_noise_floors = write_main_dataset(self.h5_results_grp, (self.num_effective_pix, 1), 'Noise_Floors',
                                                       'Noise', 'a.u.', None, Dimension('arb', '', [1]),
-                                                      dtype=np.float32, aux_spec_prefix='Noise_Spec_',
+                                                      dtype=float, aux_spec_prefix='Noise_Spec_',
                                                       h5_pos_inds=h5_pos_inds_new, h5_pos_vals=h5_pos_vals_new,
                                                       verbose=self.verbose and self.mpi_rank == 0)
             if self.verbose and self.mpi_rank == 0:
