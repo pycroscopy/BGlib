@@ -32,7 +32,8 @@ class VectorPFM(object):
         self.data_path_dict = data_path_dict
         self.parms_dict = parameters_dict
         self.line_correction = apply_line_correction
-        self.data_dict = self.open_data()
+        self.data_dict = self._open_data()
+        
         #process the data
         self._process_data()
     
@@ -46,6 +47,14 @@ class VectorPFM(object):
         Gx=self.parms_dict['Gx']
         Gy=self.parms_dict['Gy']
 
+
+        self.data_dict['Difference'] = {}
+        self.data_dict['Average'] = {}
+        self.data_dict['Difference']['Left-Right'] = {}
+        self.data_dict['Difference']['Past-Before'] = {}
+        self.data_dict['Average']['Left-Right'] = {}
+        self.data_dict['Average']['Past-Before'] = {}
+
         # Compute difference and average images for amplitude and piezoresponse
         difference_left_right_amplitude = self.data_dict["Left"]['amplitude'] - self.data_dict["Right"]['amplitude']
         difference_past_before_amplitude = self.data_dict["Past"]['amplitude'] - self.data_dict["Before"]['amplitude']
@@ -57,10 +66,96 @@ class VectorPFM(object):
         average_left_right_piezoresponse = (self.data_dict["Left"]['piezoresponse'] + self.data_dict["Right"]['piezoresponse']) / 2
         average_before_past_piezoresponse = (self.data_dict["Before"]['piezoresponse'] + self.data_dict["Past"]['piezoresponse']) / 2
 
+        self.data_dict['Difference']['Left-Right']['Amplitude'] =  difference_left_right_amplitude
+        self.data_dict['Difference']['Past-Before']['Amplitude'] =  difference_past_before_amplitude
+        self.data_dict['Average']['Left-Right']['Amplitude'] = average_left_right_amplitude
+        self.data_dict['Average']['Past-Before']['Amplitude'] = average_before_past_amplitude
 
-    def plot_difference_data(self):
+        self.data_dict['Difference']['Left-Right']['Piezoresponse'] = difference_left_right_piezoresponse
+        self.data_dict['Difference']['Past-Before']['Piezoresponse'] = difference_past_before_piezoresponse
+        self.data_dict['Average']['Left-Right']['Piezoresponse'] = average_left_right_piezoresponse
+        self.data_dict['Average']['Past-Before']['Piezoresponse'] = average_before_past_piezoresponse
 
-    def open_data(self):
+        return 
+
+    def load_ibw_data(self, file, channel = 0)->np.ndarray:
+        """
+        Inputs:
+            - file: Path to ibw file
+            - channel: 0 is default, will return the height. 1 = amplitude, 2 = deflection, 3 = phase.
+        Outputs:
+            - image: np.ndarray image requested
+        """
+        ibw_reader = sr.IgorIBWReader(file)
+        datasets = ibw_reader.read()
+        key = list(datasets.keys())[channel]
+        return np.array(datasets[key])
+
+
+    def plot_difference_data(self)->list:
+        # Plot difference and average images for amplitude and piezoresponse
+        fig0 = self._plot_image(self.data_dict['Difference']['Left-Right']['Amplitude'], "Difference (Left - Right) - Amplitude", cmap='bwr')
+        fig1 = self._plot_image(self.data_dict['Difference']['Past-Before']['Amplitude'], "Difference (Past - Before) - Amplitude", cmap='bwr')
+        fig2 = self._plot_image(self.data_dict['Average']['Left-Right']['Amplitude'], "Average (Left + Right) / 2 - Amplitude", cmap='viridis')
+        fig3 = self._plot_image(self.data_dict['Average']['Past-Before']['Amplitude'], "Average (Before + Past) / 2 - Amplitude", cmap='viridis')
+        
+        fig4 = self._plot_image(self.data_dict['Difference']['Left-Right']['Piezoresponse'], "Difference (Left - Right) - Piezoresponse", cmap='Blues',vmin=-2e-12, vmax=2e-12)
+        fig5 = self._plot_image(self.data_dict['Difference']['Past-Before']['Piezoresponse'], "Difference (Past - Before) - Piezoresponse", cmap='Greens',vmin=-2e-12, vmax=2e-12)
+        fig6 = self._plot_image(self.data_dict['Average']['Left-Right']['Piezoresponse'], "Average (Left + Right) / 2 - Piezoresponse", cmap='Reds',vmin=-8e-12, vmax=8e-12)
+        fig7 = self._plot_image(self.data_dict['Average']['Past-Before']['Piezoresponse'], "Average (Before + Past) / 2 - Piezoresponse", cmap='Reds',vmin=-4e-12, vmax=4e-12)
+
+        return [fig0,fig1,fig2,fig3,fig4,fig5,fig6,fig7]
+
+    def plot_data(self)->list:
+        # Plot individual amplitude and piezoresponse images
+        figure_handles = []
+        for label, data in self.data_dict.items():
+            if 'amplitude' in data.keys() and 'piezoresponse' in data.keys():
+                fig0 = self._plot_image(data['amplitude'], f"{label} Amplitude", cmap='bwr')
+                fig1 = self._plot_image(data['piezoresponse'], f"{label} Piezoresponse", cmap='Greens')
+                figure_handles.append([fig0,fig1])
+        return figure_handles
+    
+    def normalize_to_minus_one_one(data)->np.ndarray:
+        """
+        Normalize the input data to the range [-1, 1].
+        
+        Args:
+            data (np.array): 2D array to normalize.
+        
+        Returns:
+            np.array: Normalized data in range [-1, 1].
+        """
+        data_min = np.min(data)
+        data_max = np.max(data)
+        
+        print(f"Original data range: min={data_min}, max={data_max}")
+        
+        # Normalize to range [-1, 1]
+        normalized_data = 2 * ((data - data_min) / (data_max - data_min)) - 1
+        
+        print(f"Normalized data range: min={np.min(normalized_data)}, max={np.max(normalized_data)}")
+        
+        return normalized_data
+
+def plot_normalized_data(data, title):
+    """
+    Plot the normalized data using a color scale that reflects negative to positive range.
+    
+    Args:
+        data (np.array): 2D normalized data.
+        title (str): Title for the plot.
+    """
+    plt.figure(figsize=(6, 6))
+    plt.imshow(np.rot90(data), cmap='bwr', vmin=-1, vmax=1)
+    plt.colorbar(label="Normalized Value (-1 to 1)")
+    plt.title(title)
+    plt.xlabel("X Axis")
+    plt.ylabel("Y Axis")
+    plt.show()
+
+
+    def _open_data(self):
         """
         Opens data pointed to by self.data_path_dict, converts to piezoresponse, and adds it to a data dictionary
         """
@@ -73,12 +168,11 @@ class VectorPFM(object):
             if amplitude_data is not None and phase_data is not None:
                 piezoresponse_data = self.compute_piezoresponse(amplitude_data, phase_data)
                 if self.line_correction:
-
-                data_dict[label] = {
-                    'amplitude': amplitude_data,
-                    'phase': phase_data,
-                    'piezoresponse': piezoresponse_data
-                }
+                    data_dict[label] = {
+                        'amplitude': self.line_by_line_offset_correction(amplitude_data),
+                        'phase': self.line_by_line_offset_correction(phase_data),
+                        'piezoresponse': self.line_by_line_offset_correction(piezoresponse_data)
+                    }
             else:
                 print(f"Failed to load data for {label}.")
 
@@ -109,8 +203,11 @@ class VectorPFM(object):
         Input:  - image (np.ndarray).
         Output: - corrected_image: image after offset correction
         """
+        new_image = np.zeros(image.shape)
+        for ind in range(image.shape[0]):
+            new_image[ind,:] = image[ind,:] - np.mean(image[ind,:])
 
-        return
+        return new_image
     
     def _plot_image(self, data, title, cmap='viridis', vmin=None, vmax=None)->matplotlib.figure.Figure:
         """
