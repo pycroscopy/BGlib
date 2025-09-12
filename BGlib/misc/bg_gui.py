@@ -199,37 +199,37 @@ class SidpyBandExcitationProcessor(QMainWindow):
         self.do_fit_button.setEnabled(False)
 
     # ===== Right side: visualization + output =====
-        right_layout = QVBoxLayout()
-
-        # After the SHO fit is complete, create and add the visualizer widget
-        from sho_visualizer_widget import SHOVisualizerWidget
-
-        def show_visualizer(self, raw_data, fit_data, freq_vec):
-            """
-            Embed the visualizer directly into the right side of the Fit and View SHO tab.
-            """
-            if hasattr(self, "sho_visualizer_widget"):
-                # Remove old visualizer if it exists
-                self.right_layout.removeWidget(self.sho_visualizer_widget)
-                self.sho_visualizer_widget.deleteLater()
-
-            # Create new visualizer
-            self.sho_visualizer_widget = SHOVisualizerWidget(raw_data, fit_data, freq_vec)
-            self.right_layout.addWidget(self.sho_visualizer_widget)
-
+        self.right_layout = QVBoxLayout()
+        
         # Output box for logs
         self.output_box = QTextEdit()
         self.output_box.setReadOnly(True)
         self.output_box.setPlaceholderText("Output logs will appear here...")
 
-        right_layout.addWidget(self.output_box, 1)
+        self.right_layout.addWidget(self.output_box, 1)
 
         main_layout.addLayout(controls_layout, 1)
-        main_layout.addLayout(right_layout, 2)
+        main_layout.addLayout(self.right_layout, 2)
 
         tab.setLayout(main_layout)
         return tab
 
+    # After the SHO fit is complete, create and add the visualizer widget
+    def show_visualizer(self, raw_data, fit_data, freq_vec):
+        """
+        Embed the visualizer directly into the right side of the Fit and View SHO tab.
+        """
+        from sho_visualizer_widget import SHOVisualizerWidget            
+        if hasattr(self, "sho_visualizer_widget"):
+            # Remove old visualizer if it exists
+            self.right_layout.removeWidget(self.sho_visualizer_widget)
+            self.sho_visualizer_widget.deleteLater()
+
+        # Create new visualizer
+        self.sho_visualizer_widget = SHOVisualizerWidget(raw_data, fit_data, freq_vec)
+        self.right_layout.addWidget(self.sho_visualizer_widget)
+
+        
     # ==============================
     # Tab 3: Fit Loops
     # ==============================
@@ -292,7 +292,9 @@ class SidpyBandExcitationProcessor(QMainWindow):
         self.lower_bounds, self.upper_bounds = self.get_fitting_bounds()
         self.fitter_output = self.fitter.do_fit()
         self.fitter_output[0].data_type = 'spectral_image'
-        self.show_visualizer(np.array(self.fitter_output[0].compute()), np.array(self.fitter_output[1].compute()), np.array(self.freq_vec))
+        raw = np.array(self.beps_raw.compute())
+        fit_params = np.array(self.fitter_output[0].compute())
+        self.show_visualizer(raw, fit_params, np.array(self.freq_vec))
         return
 # ==============================
 # Main application entry point
