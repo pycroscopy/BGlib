@@ -19,11 +19,12 @@ class SHOVisualizerWidget(QWidget):
     """
     Widget containing the BEPS visualizer for embedding inside a tab.
     """
-    def __init__(self, raw_data, fit_data, freq_vec, parent=None):
+    def __init__(self, fit_data, freq_vec,dc_vec, parent=None):
         super().__init__(parent)
+        
 
         # Backend logic
-        self.core = SHOVisualizerCore(raw_data, fit_data, freq_vec)
+        self.core = SHOVisualizerCore(fit_data, freq_vec, dc_vec)
 
         # Main layout
         main_layout = QHBoxLayout()
@@ -31,10 +32,12 @@ class SHOVisualizerWidget(QWidget):
         # ========== LEFT SIDE: CONTROLS ==========
         control_layout = QGridLayout()
 
+        self.dc_vec = dc_vec
+
         # DC Offset Slider
         self.dc_slider = QSlider(Qt.Horizontal)
         self.dc_slider.setMinimum(0)
-        self.dc_slider.setMaximum(raw_data.shape[2] - 1)  # DC dimension size
+        self.dc_slider.setMaximum(fit_data.shape[2] - 1)  # DC dimension size
         self.dc_slider.setValue(0)
         self.dc_slider.valueChanged.connect(self.update_dc_index)
         control_layout.addWidget(QLabel("DC Offset"), 0, 0)
@@ -42,14 +45,14 @@ class SHOVisualizerWidget(QWidget):
 
         # Field Dropdown
         self.field_dropdown = QComboBox()
-        self.field_dropdown.addItems([f"Field {i}" for i in range(raw_data.shape[3])])
+        self.field_dropdown.addItems([f"Field {i}" for i in range(fit_data.shape[3])])
         self.field_dropdown.currentIndexChanged.connect(self.update_field)
         control_layout.addWidget(QLabel("Field"), 1, 0)
         control_layout.addWidget(self.field_dropdown, 1, 1)
 
         # Cycle Dropdown
         self.cycle_dropdown = QComboBox()
-        self.cycle_dropdown.addItems([f"Cycle {i}" for i in range(raw_data.shape[4])])
+        self.cycle_dropdown.addItems([f"Cycle {i}" for i in range(fit_data.shape[4])])
         self.cycle_dropdown.currentIndexChanged.connect(self.update_cycle)
         control_layout.addWidget(QLabel("Cycle"), 2, 0)
         control_layout.addWidget(self.cycle_dropdown, 2, 1)
@@ -111,8 +114,9 @@ class SHOVisualizerWidget(QWidget):
         self.map_canvas.draw()
 
         # Update Spectrum
+        
         self.spectrum_canvas.axes.clear()
         spectrum = self.core.get_spectrum_at_point()
-        self.spectrum_canvas.axes.plot(np.arange(len(spectrum)), spectrum, 'b-')
+        self.spectrum_canvas.axes.plot(self.dc_vec, spectrum, 'b-')
         self.spectrum_canvas.axes.set_title("Response vs DC Offset")
         self.spectrum_canvas.draw()

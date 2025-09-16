@@ -5,11 +5,11 @@ class SHOVisualizerCore:
     Backend for BEPS visualizer logic.
     Pure computation and data slicing; no UI code.
     """
-    def __init__(self, raw_data, fit_data, freq_vec):
-        self.raw_data = raw_data        # shape: [X, Y, DC, Field, Cycle, freq]
-        self.fit_data = fit_data        # shape: same as raw_data or fitted params
+    def __init__(self, fit_data, freq_vec, dc_vec):
+        # shape: [X, Y, DC, Field, Cycle, freq]
+        self.fit_data = fit_data        
         self.freq_vec = freq_vec        # 1D frequency vector
-
+        self.dc_vec = dc_vec
         self.selected_x = 0
         self.selected_y = 0
         self.selected_field = 0
@@ -51,11 +51,4 @@ class SHOVisualizerCore:
                              self.selected_cycle,
                              self.selected_fit_param]
 
-    def get_raw_spectrum(self):
-        """
-        Return raw spectrum for selected point and current DC index.
-        """
-        return self.raw_data[self.selected_x, self.selected_y,
-                             self.selected_dc_index,
-                             self.selected_field,
-                             self.selected_cycle, :]
+
