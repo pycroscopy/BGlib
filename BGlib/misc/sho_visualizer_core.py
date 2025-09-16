@@ -42,11 +42,11 @@ class SHOVisualizerCore:
                              self.selected_cycle,
                              self.selected_fit_param]
 
-    def get_spectrum_at_point(self):
+    def get_spectrum_at_point(self, row=0, col=0):
         """
         Returns the spectrum at the selected (X, Y) point for all DC indices.
         """
-        return self.fit_data[self.selected_x, self.selected_y,
+        return self.fit_data[row, col,
                              :, self.selected_field,
                              self.selected_cycle,
                              self.selected_fit_param]

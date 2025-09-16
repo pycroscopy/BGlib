@@ -5,6 +5,7 @@ from PyQt5.QtCore import Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from BGlib.misc.sho_visualizer_core import SHOVisualizerCore
+import matplotlib as mpl
 
 class MplCanvas(FigureCanvas):
     """Matplotlib canvas to embed in PyQt."""
@@ -71,6 +72,11 @@ class SHOVisualizerWidget(QWidget):
         plot_layout = QVBoxLayout()
         plot_layout.addWidget(QLabel("2D Map"))
         plot_layout.addWidget(self.map_canvas)
+        self._map_click_cid = (
+        self.map_canvas.figure.canvas.mpl_connect(
+            "button_press_event", self._on_map_click
+            )
+        )
         plot_layout.addWidget(QLabel("Spectrum at Selected Point"))
         plot_layout.addWidget(self.spectrum_canvas)
 
@@ -78,9 +84,118 @@ class SHOVisualizerWidget(QWidget):
         main_layout.addLayout(control_layout, 1)
         main_layout.addLayout(plot_layout, 3)
         self.setLayout(main_layout)
-
+      
         # Initial plot
         self.update_visualization()
+
+    def _on_map_click(self, event):
+        """Handle clicks on the 2D map and update the spectrum plot."""
+        # Only act on the map axes and valid data coords:
+        if event.inaxes is not self.map_canvas.axes or event.xdata is None or event.ydata is None:
+            return
+
+        # 1) Convert axes coords to integer row/col indices:
+        r, c = self._xy_to_indices(event.xdata, event.ydata)
+        if r is None or c is None:
+            return
+
+        # 2) Plot spectrum for that pixel:
+        self._plot_spectrum_at(r, c)
+
+        # 3) (Optional) mark the selected pixel on the map:
+        self._update_click_marker(c, r)
+
+    def _xy_to_indices(self, x, y):
+        """
+        Convert axes data coords (x,y) to array indices (row, col) for the map image.
+        This assumes the map is shown with imshow. We read the first image on the axes.
+        """
+        if len(self.map_canvas.axes.images) == 0:
+            return None, None
+
+        im: mpl.image.AxesImage = self.map_canvas.axes.images[0]
+        arr = im.get_array()
+        if arr is None:
+            return None, None
+
+        # Image extent and orientation used by imshow:
+        x0, x1, y0, y1 = im.get_extent()
+        ny, nx = arr.shape[:2]
+        origin = im.origin  # 'upper' or 'lower'
+
+        # Normalize x,y within extent → fractional coord in [0,1]
+        # guard against zero division if degenerate extent:
+        if (x1 - x0) == 0 or (y1 - y0) == 0:
+            return None, None
+        fx = (x - x0) / (x1 - x0)
+        fy = (y - y0) / (y1 - y0)
+
+        # Convert to pixel indices
+        col = int(np.floor(fx * nx))
+        if origin == "upper":
+            row = int(np.floor((1.0 - fy) * ny))
+        else:  # origin == 'lower'
+            row = int(np.floor(fy * ny))
+
+        # Clamp to valid range:
+        row = np.clip(row, 0, ny - 1)
+        col = np.clip(col, 0, nx - 1)
+
+        return row, col
+
+    def _plot_spectrum_at(self, r, c):
+        """
+        Pull the spectrum for (row=r, col=c) and draw it on spectrum axes.
+        Adapt the 'get' part to your data model (examples below).
+        """
+        ax = self.spectrum_canvas.axes
+        ax.cla()
+
+        # ---- EXAMPLE ways to fetch the spectrum (pick the one that matches your widget) ----
+        # Case A: you have a 3D cube of shape (rows, cols, freq)
+        # spec = self.spectra[r, c, :]
+        #
+        # Case B: you have a callable / accessor
+        # spec = self.get_spectrum(r, c)
+        #
+        # Case C: data stored in sidpy Dataset (e.g., with spectral dimension last)
+        # spec = self.dataset.isel(y=r, x=c).values  # adjust dim names as needed
+
+        # Replace with your actual retrieval:
+        spec = self.spectrum = self.core.get_spectrum_at_point(r, c)  # <-- implement or swap in your accessor
+
+        # Frequency or x-axis:
+        # If you already have frequency axis (1D) aligned to spec:
+        # freq = self.frequency  # shape (nfreq,)
+        # Else fall back to index:
+        freq = getattr(self, "frequency", None)
+        if freq is None or len(freq) != len(spec):
+            freq = np.arange(len(spec))
+
+        ax.plot(self.dc_vec, spec)
+        ax.set_title(f"Spectrum at (row={r}, col={c})")
+
+        # If you like, auto-scale or set consistent y-lims:
+        ax.relim()
+        ax.autoscale_view()
+
+        # Redraw just this canvas:
+        self.spectrum_canvas.figure.canvas.draw_idle()
+
+    def _update_click_marker(self, x, y):
+        """Show a marker at the clicked position on the map."""
+        ax = self.map_canvas.axes
+        # Remove the old marker if it exists:
+        if hasattr(self, "_click_marker") and self._click_marker in ax.lines:
+            self._click_marker.remove()
+
+        # Draw a nice white-outlined circle so it’s visible on most colormaps:
+        (self._click_marker,) = ax.plot(
+            [x], [y],
+            marker="o", mfc="none", mec="w", mew=1.5, ms=10, linestyle="None"
+        )
+        self.map_canvas.figure.canvas.draw_idle()
+
 
     # ========================================
     # Control Updates
