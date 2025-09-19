@@ -1,11 +1,12 @@
 # visualizer_widget.py
 import numpy as np
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSlider, QComboBox, QGridLayout
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSlider, QComboBox, QGridLayout, QTextEdit
 from PyQt5.QtCore import Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from BGlib.misc.sho_visualizer_core import SHOVisualizerCore
 import matplotlib as mpl
+
 
 class MplCanvas(FigureCanvas):
     """Matplotlib canvas to embed in PyQt."""
@@ -32,7 +33,6 @@ class SHOVisualizerWidget(QWidget):
 
         # ========== LEFT SIDE: CONTROLS ==========
         control_layout = QGridLayout()
-
         self.dc_vec = dc_vec
 
         # DC Offset Slider

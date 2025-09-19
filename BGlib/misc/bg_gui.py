@@ -30,6 +30,154 @@ from BGlib.be.analysis.utils.sidpy_sho_fitter import SHOestimateGuess, SHOestima
 from PyQt5.QtGui import QTextCursor
 from PyQt5.QtCore import QObject, pyqtSignal
 
+# pip install dask distributed
+import time
+from typing import Optional, Sequence, Tuple
+
+from PyQt5.QtCore import QObject, pyqtSignal, QThread  # PyQt6: use PyQt6.QtCore
+from dask.distributed import Client
+
+# Helper to normalize log records across dask versions
+def _format_sched_record(rec) -> str:
+    try:
+        level, msg, ts = rec[0], rec[1], rec[2]
+        return f"[SCHEDULER] {ts} {level}: {msg}"
+    except Exception:
+        return f"[SCHEDULER] {rec}"
+
+def _format_worker_record(worker: str, item) -> str:
+    # item might be (ts, msg), (ts, level, msg), or (level, msg)
+    try:
+        if len(item) == 3 and isinstance(item[0], (int, float, str)):
+            ts, level, msg = item
+            return f"[{worker}] {ts} {level}: {msg}"
+        elif len(item) == 2:
+            a, b = item
+            # Heuristic: timestamp first
+            if isinstance(a, (int, float, str)) and not isinstance(b, (int, float)):
+                return f"[{worker}] {a}: {b}"
+            else:
+                return f"[{worker}] {a} {b}"
+    except Exception:
+        pass
+    return f"[{worker}] {item}"
+
+class DaskLogWorker(QObject):
+    # Emits batches of log lines to append
+    log_lines = pyqtSignal(list)
+    error = pyqtSignal(str)
+    connected = pyqtSignal(str)   # emits dashboard link when ready
+
+    def __init__(self, scheduler_address: str, poll_interval_ms: int = 1000,
+                 worker_tail: int = 2000, parent=None):
+        super().__init__(parent)
+        self.address = scheduler_address
+        self.poll_interval_ms = max(200, poll_interval_ms)
+        self.worker_tail = worker_tail
+        self._running = False
+        self._client: Optional[Client] = None
+        self._seen_counts: dict[str, int] = {}
+
+    def start(self):
+        """Entry point wired to QThread.started"""
+        try:
+            # Create the Client *in this thread* so its IO loop lives here.
+            self._client = Client(self.address, set_as_default=False, asynchronous=False)
+            # Let the UI show a link if desired (useful during dev)
+            if getattr(self._client, "dashboard_link", None):
+                self.connected.emit(self._client.dashboard_link)
+        except Exception as e:
+            self.error.emit(f"Failed to connect Client: {e!r}")
+            return
+
+        self._running = True
+        # First fetch primes scheduler logs; worker logs can be large so use tails
+        while self._running:
+            try:
+                lines: list[str] = []
+
+                # --- Scheduler logs ---
+                try:
+                    sched_logs: Sequence[Tuple] = self._client.get_scheduler_logs()  # type: ignore
+                    for rec in sched_logs:
+                        lines.append(_format_sched_record(rec))
+                except Exception as e:
+                    # Older/newer versions may differ; keep going
+                    self.error.emit(f"Scheduler logs error: {e!r}")
+
+                # --- Worker logs (tail only) ---
+                try:
+                    # n=tail only supported on newer versions; fallback handled below
+                    worker_logs = self._client.get_worker_logs(n=self.worker_tail)  # type: ignore
+                except TypeError:
+                    worker_logs = self._client.get_worker_logs()  # type: ignore
+
+                # worker_logs is {worker_name: list_of_records}
+                for worker, records in worker_logs.items():
+                    seen = self._seen_counts.get(worker, 0)
+                    # If we requested tail, the list is already short; still show only new items
+                    new = records[seen:] if seen < len(records) else []
+                    if new:
+                        for item in new:
+                            lines.append(_format_worker_record(worker, item))
+                        self._seen_counts[worker] = seen + len(new)
+
+                if lines:
+                    self.log_lines.emit(lines)
+
+            except Exception as e:
+                self.error.emit(f"Polling error: {e!r}")
+
+            # Sleep without blocking the GUI thread
+            time.sleep(self.poll_interval_ms / 1000.0)
+
+        # Cleanup
+        try:
+            if self._client is not None:
+                self._client.close()
+        except Exception:
+            pass
+
+    def stop(self):
+        self._running = False
+
+from PyQt5.QtWidgets import QTextEdit
+
+class DaskLogsPanel(QTextEdit):
+    def __init__(self, scheduler_address: str, parent=None):
+        super().__init__(parent)
+        self.setReadOnly(True)
+        self._thread = QThread(self)      # owns the worker thread
+        self._worker = DaskLogWorker(scheduler_address)
+
+        # Wire signals
+        self._worker.log_lines.connect(self._append_lines)
+        self._worker.error.connect(self._append_error)
+        self._worker.connected.connect(self._on_connected)
+
+        # Move worker to thread and start
+        self._worker.moveToThread(self._thread)
+        self._thread.started.connect(self._worker.start)
+        self._thread.start()
+
+    def _append_lines(self, lines: list[str]):
+        # Append efficiently
+        self.append("\n".join(lines))
+
+    def _append_error(self, msg: str):
+        self.append(f"<span style='color:#b00;'>[ERROR] {msg}</span>")
+
+    def _on_connected(self, dash_link: str):
+        self.append(f"<i>Connected. Dashboard: {dash_link}</i>")
+
+    def closeEvent(self, event):
+        try:
+            self._worker.stop()
+            self._thread.quit()
+            self._thread.wait(2000)
+        finally:
+            super().closeEvent(event)
+
 class EmittingStream(QObject):
     text_written = pyqtSignal(str)
 
@@ -87,7 +235,6 @@ class SidpyBandExcitationProcessor(QMainWindow):
         # Text area to display raw data
         self.raw_data_display = QTextEdit()
         self.raw_data_display.setReadOnly(True)
-        layout.addWidget(self.raw_data_display)
 
         tab.setLayout(layout)
         return tab
@@ -103,7 +250,7 @@ class SidpyBandExcitationProcessor(QMainWindow):
                 patcher = belib.translators.LabViewH5Patcher()
                 patcher.translate(filename)
                 reader = sr.Usid_reader(filename)
-                self.beps_raw = reader.read()[:5,:5,:,:,:]#TODO: temporary for testing only!!
+                self.beps_raw = reader.read()[:30,:30,:,:,:]
                 self.freq_axis = self.beps_raw.labels.index('Frequency (Hz)')
                 self.freq_vec = self.beps_raw._axes[self.freq_axis].values
                 self.all_dims = np.arange(len(self.beps_raw.shape))
@@ -210,6 +357,7 @@ class SidpyBandExcitationProcessor(QMainWindow):
 
         main_layout.addLayout(controls_layout, 1)
         main_layout.addLayout(self.right_layout, 2)
+        main_layout = main_layout
 
         tab.setLayout(main_layout)
         return tab
@@ -277,9 +425,20 @@ class SidpyBandExcitationProcessor(QMainWindow):
                                      guess_fn = SHOestimateGuess,ind_dims=self.ind_dims,
                            threads=1, return_cov=False, return_fit=True, return_std=False,
                            km_guess=kmeans_guess,num_fit_parms = 4, n_clus = num_clusters)
-
+        address = self.fitter.client.dashboard_link
+        #start outputting the logs of the Dask client here
+        self._output_dask_client_logs(address)
         self.fitter.do_guess()
         self.do_fit_button.setEnabled(True)
+
+    def _output_dask_client_logs(self, address):
+        """
+        Start outputting the code for the stuff here
+        """
+        import webbrowser
+        # This will open the default system browser at that address:
+        webbrowser.open(address)
+        return
 
     def append_output_text(self, text):
         """Append new text to the output box and scroll to the end."""
