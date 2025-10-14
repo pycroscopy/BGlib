@@ -17,6 +17,7 @@ from scipy.optimize import leastsq
 from scipy.spatial import ConvexHull
 from scipy.special import erf, erfinv
 import warnings
+from scipy.optimize import curve_fit
 
 # switching32 = np.dtype([('V+', np.float32),
 #                         ('V-', np.float32),
