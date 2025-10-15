@@ -519,23 +519,34 @@ class SidpyBandExcitationProcessor(QMainWindow):
         return lower, upper
 
     def show_loop_visualizer(self):
-        from loop_visualizer_widget import LoopVisualizerWidget
+        """
+        Embed the Loop Visualizer (map + loop plot) into the Loop Fit tab,
+        similar in structure to the SHO visualizer.
+        """
+        from jc3_loop_visualizer_widget import LoopVisualizerWidget
         try:
             nx, ny, nfield, ncycle, _ = self.loop_fit_curves.shape
     
-            # Remove previous visualizer if exists
-            if self.loop_vis_widget:
+            # --- Remove previous visualizer if it exists ---
+            if hasattr(self, "loop_vis_widget") and self.loop_vis_widget:
                 self.loop_vis_container.removeWidget(self.loop_vis_widget)
                 self.loop_vis_widget.deleteLater()
                 self.loop_vis_widget = None
     
-            # Create and add the new visualizer
-            self.loop_vis_widget = LoopVisualizerWidget(self.loop_fit_switching_coef, nfield, ncycle)
+            # --- Create and add the new visualizer ---
+            self.loop_vis_widget = LoopVisualizerWidget(
+                switching_coef=self.loop_fit_switching_coef,
+                nfield=nfield,
+                ncycle=ncycle,
+                loop_fit_curves=self.loop_fit_curves,
+                loop_dset=self.loop_dset,
+            )
             self.loop_vis_container.addWidget(self.loop_vis_widget)
     
             self.loop_output_box.append("✅ Loop Map visualization loaded below.")
         except Exception as e:
-            self.loop_output_box.append(f"Error in show_loop_visualizer: {e}")
+            self.loop_output_box.append(f"❌ Error in show_loop_visualizer: {e}")
+
     
     def on_do_loop_fit(self):
         try:
@@ -543,11 +554,12 @@ class SidpyBandExcitationProcessor(QMainWindow):
             self.loop_fitter_output = self.loop_fitter.do_fit(bounds=(self.loop_lower_bounds, self.loop_upper_bounds))
             self.loop_fit_params = np.array(self.loop_fitter_output[0].compute())
             self.loop_fit_curves = np.array(self.loop_fitter_output[1].compute())
-            self.loop_fit_switching_coef = calc_switching_coef_vec(self.loop_fit_params.reshape(-1, 9))            
+            switch_coef_struct = calc_switching_coef_vec(self.loop_fit_params.reshape(-1, 9))[:, 0]
+            self.loop_fit_switching_coef = np.vstack([list(x) for x in switch_coef_struct]).reshape(self.loop_fit_params.shape)           
             self.loop_output_box.append(f'loop_fit_params.shape: {self.loop_fit_params.shape}')
             self.loop_output_box.append(f'loop_fit_curves.shape: {self.loop_fit_curves.shape}')
             self.loop_output_box.append(f'loop_fit_switching_coef.shape: {self.loop_fit_switching_coef.shape}')
-            self.loop_output_box.append(f'loop_fit_switching_coef: {self.loop_fit_switching_coef}')     
+            self.loop_output_box.append(f'loop_fit_switching_coef: {self.loop_fit_switching_coef}')  
             self.show_loop_visualizer()            
         except Exception as e:
             self.loop_output_box.append(f"Error in on_do_loop_fit: {e}")            
