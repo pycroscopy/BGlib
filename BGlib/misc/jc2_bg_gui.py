@@ -417,13 +417,23 @@ class SidpyBandExcitationProcessor(QMainWindow):
         controls_layout.addWidget(other_frame)
         controls_layout.addStretch()
     
-        # ===== RIGHT SIDE: Output Box =====
+        # Right side: vertical stack — logs (top) + visualization (bottom)
+        right_layout = QVBoxLayout()
+        
+        # Output box (logs) on top
         self.loop_output_box = QTextEdit()
         self.loop_output_box.setReadOnly(True)
         self.loop_output_box.setPlaceholderText("Loop fitting output will appear here...")
-    
+        right_layout.addWidget(self.loop_output_box, 2)
+        
+        # Visualization container (bottom)
+        self.loop_vis_container = QVBoxLayout()
+        self.loop_vis_widget = None  # placeholder for LoopVisualizerWidget
+        right_layout.addLayout(self.loop_vis_container, 3)
+        
+        # Add both sides
         main_layout.addLayout(controls_layout, 1)
-        main_layout.addWidget(self.loop_output_box, 2)
+        main_layout.addLayout(right_layout, 2)
         tab.setLayout(main_layout)
         return tab                
     
@@ -507,6 +517,25 @@ class SidpyBandExcitationProcessor(QMainWindow):
             lower.append(lb)
             upper.append(ub)
         return lower, upper
+
+    def show_loop_visualizer(self):
+        from loop_visualizer_widget import LoopVisualizerWidget
+        try:
+            nx, ny, nfield, ncycle, _ = self.loop_fit_curves.shape
+    
+            # Remove previous visualizer if exists
+            if self.loop_vis_widget:
+                self.loop_vis_container.removeWidget(self.loop_vis_widget)
+                self.loop_vis_widget.deleteLater()
+                self.loop_vis_widget = None
+    
+            # Create and add the new visualizer
+            self.loop_vis_widget = LoopVisualizerWidget(self.loop_fit_switching_coef, nfield, ncycle)
+            self.loop_vis_container.addWidget(self.loop_vis_widget)
+    
+            self.loop_output_box.append("✅ Loop Map visualization loaded below.")
+        except Exception as e:
+            self.loop_output_box.append(f"Error in show_loop_visualizer: {e}")
     
     def on_do_loop_fit(self):
         try:
@@ -518,7 +547,8 @@ class SidpyBandExcitationProcessor(QMainWindow):
             self.loop_output_box.append(f'loop_fit_params.shape: {self.loop_fit_params.shape}')
             self.loop_output_box.append(f'loop_fit_curves.shape: {self.loop_fit_curves.shape}')
             self.loop_output_box.append(f'loop_fit_switching_coef.shape: {self.loop_fit_switching_coef.shape}')
-            self.loop_output_box.append(f'loop_fit_switching_coef: {self.loop_fit_switching_coef}')            
+            self.loop_output_box.append(f'loop_fit_switching_coef: {self.loop_fit_switching_coef}')     
+            self.show_loop_visualizer()            
         except Exception as e:
             self.loop_output_box.append(f"Error in on_do_loop_fit: {e}")            
         return
