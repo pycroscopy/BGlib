@@ -34,7 +34,7 @@ from PyQt5.QtCore import QObject, pyqtSignal
 # from BGlib.be.analysis.utils.jc1_be_loop import *
 # from BGlib.be.analysis.be_loop_fitter import BELoopFitter
 # from BGlib.be.viz.be_viz_utils import *
-from BGlib.be.analysis.utils.jc1_be_loop import projectLoop, loop_fit_function, generate_guess, generate_shallow_guess, generate_deep_guess
+from BGlib.be.analysis.utils.jc1_be_loop import projectLoop, loop_fit_function, generate_guess, generate_shallow_guess, generate_deep_guess, calc_switching_coef_vec
 # ## changeE
 
 
@@ -398,7 +398,7 @@ class SidpyBandExcitationProcessor(QMainWindow):
         other_layout.addWidget(self.loop_kmeans_dropdown, 3, 1)
     
         # Guess function type
-        other_layout.addWidget(QLabel("Guess Function"), 4, 0)
+        other_layout.addWidget(QLabel("p0 Guess Function"), 4, 0)
         self.loop_guess_dropdown = QComboBox()
         self.loop_guess_dropdown.addItems(["Basic", "Shallow", "Deep"])
         other_layout.addWidget(self.loop_guess_dropdown, 4, 1)
@@ -514,8 +514,11 @@ class SidpyBandExcitationProcessor(QMainWindow):
             self.loop_fitter_output = self.loop_fitter.do_fit(bounds=(self.loop_lower_bounds, self.loop_upper_bounds))
             self.loop_fit_params = np.array(self.loop_fitter_output[0].compute())
             self.loop_fit_curves = np.array(self.loop_fitter_output[1].compute())
+            self.loop_fit_switching_coef = calc_switching_coef_vec(self.loop_fit_params.reshape(-1, 9))            
             self.loop_output_box.append(f'loop_fit_params.shape: {self.loop_fit_params.shape}')
-            self.loop_output_box.append(f'loop_fit_curves.shape: {self.loop_fit_curves.shape}')            
+            self.loop_output_box.append(f'loop_fit_curves.shape: {self.loop_fit_curves.shape}')
+            self.loop_output_box.append(f'loop_fit_switching_coef.shape: {self.loop_fit_switching_coef.shape}')
+            self.loop_output_box.append(f'loop_fit_switching_coef: {self.loop_fit_switching_coef}')            
         except Exception as e:
             self.loop_output_box.append(f"Error in on_do_loop_fit: {e}")            
         return
