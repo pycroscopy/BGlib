@@ -360,13 +360,13 @@ class SidpyBandExcitationProcessor(QMainWindow):
         self.loop_param_labels = [f"p0{i}" for i in range(9)]
         self.loop_lower_fields, self.loop_upper_fields = [], []
     
-        default_lower = [-np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf]
-        default_upper = [np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf]
+        self.loop_default_lower = [-1, -1, -30, -30, -1, -30, -30, -30, -30]
+        self.loop_default_upper = [1, 1, 30, 30, 1, 30, 30, 30, 30]
     
         for i, label in enumerate(self.loop_param_labels):
             bounds_layout.addWidget(QLabel(label), i + 2, 0)
-            lower_edit = QLineEdit(str(default_lower[i]))
-            upper_edit = QLineEdit(str(default_upper[i]))
+            lower_edit = QLineEdit(str(self.loop_default_lower[i]))
+            upper_edit = QLineEdit(str(self.loop_default_upper[i]))
             self.loop_lower_fields.append(lower_edit)
             self.loop_upper_fields.append(upper_edit)
             bounds_layout.addWidget(lower_edit, i + 2, 1)
@@ -500,6 +500,17 @@ class SidpyBandExcitationProcessor(QMainWindow):
                 km_guess=loop_kmeans_guess, num_fit_parms = 9, n_clus = loop_num_clusters
             )
             self.loop_fitter.do_guess()
+            prior = self.loop_fitter.prior  # shape (n_guess, 9)
+            lower_bounds1 = np.min(prior, axis=0)
+            upper_bounds1 = np.max(prior, axis=0)
+            lower_bounds2 = np.array(self.loop_default_lower, dtype=float)
+            upper_bounds2 = np.array(self.loop_default_upper, dtype=float)
+            lower_bounds = np.minimum(lower_bounds1, lower_bounds2)
+            upper_bounds = np.maximum(upper_bounds1, upper_bounds2)
+            for i in range(len(self.loop_lower_fields)):
+                self.loop_lower_fields[i].setText(f"{lower_bounds[i]:.6g}")
+                self.loop_upper_fields[i].setText(f"{upper_bounds[i]:.6g}")
+            self.loop_output_box.append("Bounds updated from prior distribution.")
             self.loop_output_box.append(f"Guess shape: {self.loop_fitter.prior.shape}")
             self.loop_output_box.append(f"{self.loop_fitter.prior[0:3]}")            
             self.do_loop_fit_button.setEnabled(True)
