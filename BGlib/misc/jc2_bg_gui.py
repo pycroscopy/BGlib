@@ -501,8 +501,8 @@ class SidpyBandExcitationProcessor(QMainWindow):
             )
             self.loop_fitter.do_guess()
             prior = self.loop_fitter.prior  # shape (n_guess, 9)
-            lower_bounds1 = np.min(prior, axis=0)
-            upper_bounds1 = np.max(prior, axis=0)
+            lower_bounds1 = np.min(prior, axis=0) - 1e-5
+            upper_bounds1 = np.max(prior, axis=0) + 1e-5
             lower_bounds2 = np.array(self.loop_default_lower, dtype=float)
             upper_bounds2 = np.array(self.loop_default_upper, dtype=float)
             lower_bounds = np.minimum(lower_bounds1, lower_bounds2)
