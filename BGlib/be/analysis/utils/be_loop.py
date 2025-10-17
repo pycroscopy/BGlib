@@ -17,6 +17,7 @@ from scipy.optimize import leastsq
 from scipy.spatial import ConvexHull
 from scipy.special import erf, erfinv
 import warnings
+from scipy.optimize import curve_fit
 
 # switching32 = np.dtype([('V+', np.float32),
 #                         ('V-', np.float32),
@@ -30,7 +31,7 @@ import warnings
 field_names = ['V+', 'V-', 'Imprint', 'R+', 'R-', 'Switchable Polarization',
                'Work of Switching', 'Nucleation Bias 1', 'Nucleation Bias 2']
 switching32 = np.dtype({'names': field_names,
-                        'formats': [np.float32 for name in field_names]})
+                        'formats': [float for name in field_names]})
 
 
 ###############################################################################
@@ -247,7 +248,7 @@ def projectLoop(vdc, amp_vec, phase_vec):
 ###############################################################################
 
 
-def loop_fit_function(vdc, coef_vec):
+def loop_fit_function(vdc, *coef_vec):
     """
     9 parameter fit function
     
@@ -309,7 +310,7 @@ def loop_fit_jacobian(vdc, coef_vec):
     vdc = np.squeeze(np.array(vdc))
     num_steps = vdc.size
 
-    J = np.zeros([num_steps, 9], dtype=np.float32)
+    J = np.zeros([num_steps, 9], dtype=float)
 
     V1 = vdc[:int(num_steps / 2)]
     V2 = vdc[int(num_steps / 2):]
@@ -473,7 +474,7 @@ def get_switching_coefs(loop_centroid, loop_coef_vec):
 ##############################################################################
 
 
-def calc_switching_coef_vec(loop_coef_vec, nuc_threshold):
+def calc_switching_coef_vec(loop_coef_vec, nuc_threshold=0.03):
     """
     Calculates the physical loop parameters from the array of loop parameters.
 
@@ -602,8 +603,8 @@ def generate_guess(vdc, pr_vec, show_plots=False):
             return intersection(line(A, B), line(C, D))
 
     # start and end coordinates of each line segment defining the convex hull
-    outline_1 = np.zeros((hull.simplices.shape[0], 2), dtype=np.float)
-    outline_2 = np.zeros((hull.simplices.shape[0], 2), dtype=np.float)
+    outline_1 = np.zeros((hull.simplices.shape[0], 2), dtype=float)
+    outline_2 = np.zeros((hull.simplices.shape[0], 2), dtype=float)
     for index, pair in enumerate(hull.simplices):
         outline_1[index, :] = points[pair[0]]
         outline_2[index, :] = points[pair[1]]
@@ -662,21 +663,374 @@ def generate_guess(vdc, pr_vec, show_plots=False):
     init_guess_coef_vec[8] = 2  # 0.2
 
     if show_plots:
-        fig, ax = plt.subplots()
-        ax.plot(points[:, 0], points[:, 1], 'o')
-        ax.plot(geom_centroid[0], geom_centroid[1], 'r*')
-        ax.plot([geom_centroid[0], geom_centroid[0]], [hull.max_bound[1], hull.min_bound[1]], 'g')
-        ax.plot([hull.min_bound[0], hull.max_bound[0]], [geom_centroid[1], geom_centroid[1]], 'g')
-        for simplex in hull.simplices:
-            ax.plot(points[simplex, 0], points[simplex, 1], 'k')
-        ax.plot(x_intersections[0][0], x_intersections[0][1], 'r*')
-        ax.plot(x_intersections[1][0], x_intersections[1][1], 'r*')
-        ax.plot(y_intersections[0][0], y_intersections[0][1], 'r*')
-        ax.plot(y_intersections[1][0], y_intersections[1][1], 'r*')
-        ax.plot(vdc, loop_fit_function(vdc, init_guess_coef_vec))
-
+        try:
+            fig, ax = plt.subplots()
+            ax.plot(points[:, 0], points[:, 1], 'o')
+            ax.plot(geom_centroid[0], geom_centroid[1], 'r*')
+            ax.plot([geom_centroid[0], geom_centroid[0]], [hull.max_bound[1], hull.min_bound[1]], 'g')
+            ax.plot([hull.min_bound[0], hull.max_bound[0]], [geom_centroid[1], geom_centroid[1]], 'g')
+            for simplex in hull.simplices:
+                ax.plot(points[simplex, 0], points[simplex, 1], 'k')
+            ax.plot(x_intersections[0][0], x_intersections[0][1], 'r*')
+            ax.plot(x_intersections[1][0], x_intersections[1][1], 'r*')
+            ax.plot(y_intersections[0][0], y_intersections[0][1], 'r*')
+            ax.plot(y_intersections[1][0], y_intersections[1][1], 'r*')
+            ax.plot(vdc, loop_fit_function(vdc, *init_guess_coef_vec))
+        except Exception as e:
+            print('Error: ', e)            
     return init_guess_coef_vec
 
+def generate_shallow_guess(vdc, pr_vec, show_plots=False):
+    """
+    Given a single unfolded loop and centroid, return the initial guess for fitting.
+    We first estimate the parameters by analyzing the loop centroid and its nearest
+    intersections with the loop polygon. Then, we randomly perturb the initial guess
+    multiple times and keep the set of parameters that minimizes the fitting error.    
+
+    Parameters
+    -----------
+    vdc : 1D numpy array
+        DC offsets
+    pr_vec : 1D numpy array
+        Piezoresponse or unfolded loop
+    show_plots : Boolean (Optional. Default = False)
+        Whether or not the plot the convex hull, centroid, intersection points
+
+    Returns
+    -----------------
+    init_guess_coef_vec : 1D Numpy array
+        Fit guess coefficient vector
+    """
+
+    points = np.transpose(np.array([np.squeeze(vdc), pr_vec]))  # [points,axis]
+
+    geom_centroid, geom_area = calculate_loop_centroid(points[:, 0], points[:, 1])
+
+    hull = ConvexHull(points)
+
+    """
+    Now we need to find the intersection points on the N,S,E,W
+    the simplex of the complex hull is essentially a set of line equations.
+    We need to find the two lines (top and bottom) or (left and right) that
+    interect with the vertical / horizontal lines passing through the geometric centroid
+    """
+
+    def find_intersection(A, B, C, D):
+        """
+        Finds the coordinates where two line segments intersect
+
+        Parameters
+        ------------
+        A, B, C, D : Tuple or 1D list or 1D numpy array
+            (x,y) coordinates of the points that define the two line segments AB and CD
+
+        Returns
+        ----------
+        obj : None or tuple
+            None if not intersecting. (x,y) coordinates of intersection
+        """
+
+        def ccw(A, B, C):
+            """Credit - StackOverflow"""
+            return (C[1] - A[1]) * (B[0] - A[0]) > (B[1] - A[1]) * (C[0] - A[0])
+
+        def line(p1, p2):
+            """Credit - StackOverflow"""
+            A = (p1[1] - p2[1])
+            B = (p2[0] - p1[0])
+            C = (p1[0] * p2[1] - p2[0] * p1[1])
+            return A, B, -C
+
+        def intersection(L1, L2):
+            """
+            Finds the intersection of two lines (NOT line segments).
+            Credit - StackOverflow
+            """
+            D = L1[0] * L2[1] - L1[1] * L2[0]
+            Dx = L1[2] * L2[1] - L1[1] * L2[2]
+            Dy = L1[0] * L2[2] - L1[2] * L2[0]
+            if D != 0:
+                x = Dx / D
+                y = Dy / D
+                return x, y
+            else:
+                return None
+
+        if ((ccw(A, C, D) is not ccw(B, C, D)) and (ccw(A, B, C) is not ccw(A, B, D))) is False:
+            return None
+        else:
+            return intersection(line(A, B), line(C, D))
+
+    # start and end coordinates of each line segment defining the convex hull
+    outline_1 = np.zeros((hull.simplices.shape[0], 2), dtype=float)
+    outline_2 = np.zeros((hull.simplices.shape[0], 2), dtype=float)
+    for index, pair in enumerate(hull.simplices):
+        outline_1[index, :] = points[pair[0]]
+        outline_2[index, :] = points[pair[1]]
+
+    """Find the coordinates of the points where the vertical line through the
+    centroid intersects with the convex hull"""
+    y_intersections = []
+    for pair in range(outline_1.shape[0]):
+        x_pt = find_intersection(outline_1[pair], outline_2[pair],
+                                 [geom_centroid[0], hull.min_bound[1]],
+                                 [geom_centroid[0], hull.max_bound[1]])
+        if x_pt is not None:
+            y_intersections.append(x_pt)
+
+    '''
+    Find the coordinates of the points where the horizontal line through the
+    centroid intersects with the convex hull
+    '''
+    x_intersections = []
+    for pair in range(outline_1.shape[0]):
+        x_pt = find_intersection(outline_1[pair], outline_2[pair],
+                                 [hull.min_bound[0], geom_centroid[1]],
+                                 [hull.max_bound[0], geom_centroid[1]])
+        if x_pt is not None:
+            x_intersections.append(x_pt)
+
+    '''
+    Default values if not intersections can be found.
+    '''
+    if len(y_intersections) < 2:
+        min_y_intercept = min(pr_vec)
+        max_y_intercept = max(pr_vec)
+    else:
+        min_y_intercept = min(y_intersections[0][1], y_intersections[1][1])
+        max_y_intercept = max(y_intersections[0][1], y_intersections[1][1])
+
+    if len(x_intersections) < 2:
+        min_x_intercept = min(vdc) / 2.0
+        max_x_intercept = max(vdc) / 2.0
+    else:
+        min_x_intercept = min(x_intersections[0][0], x_intersections[1][0])
+        max_x_intercept = max(x_intersections[0][0], x_intersections[1][0])
+
+    # Only the first four parameters use the information from the intercepts
+    # a3, a4 are swapped in Stephen's figure. That was causing the branches to swap during fitting
+    # the a3, a4 are fixed now below:
+    init_guess_coef_vec = np.zeros(shape=9)
+    init_guess_coef_vec[0] = min_y_intercept
+    init_guess_coef_vec[1] = max_y_intercept - min_y_intercept
+    init_guess_coef_vec[2] = min_x_intercept
+    init_guess_coef_vec[3] = max_x_intercept
+    init_guess_coef_vec[4] = 0
+    init_guess_coef_vec[5] = 2  # 0.5
+    init_guess_coef_vec[6] = 2  # 0.2
+    init_guess_coef_vec[7] = 2  # 1.0
+    init_guess_coef_vec[8] = 2  # 0.2
+
+    if show_plots:
+        try:
+            fig, ax = plt.subplots()
+            ax.plot(points[:, 0], points[:, 1], 'o')
+            ax.plot(geom_centroid[0], geom_centroid[1], 'r*')
+            ax.plot([geom_centroid[0], geom_centroid[0]], [hull.max_bound[1], hull.min_bound[1]], 'g')
+            ax.plot([hull.min_bound[0], hull.max_bound[0]], [geom_centroid[1], geom_centroid[1]], 'g')
+            for simplex in hull.simplices:
+                ax.plot(points[simplex, 0], points[simplex, 1], 'k')
+            ax.plot(x_intersections[0][0], x_intersections[0][1], 'r*')
+            ax.plot(x_intersections[1][0], x_intersections[1][1], 'r*')
+            ax.plot(y_intersections[0][0], y_intersections[0][1], 'r*')
+            ax.plot(y_intersections[1][0], y_intersections[1][1], 'r*')
+            ax.plot(vdc, loop_fit_function(vdc, *init_guess_coef_vec))
+        except Exception as e:
+            print('Error: ', e)                  
+    ##    
+    best_guess = init_guess_coef_vec.copy()
+    try:
+        best_err = np.sum((pr_vec - loop_fit_function(vdc, *best_guess)) ** 2)
+    except RuntimeError:
+        best_err = np.inf
+    for _ in range(1000):
+        guess = init_guess_coef_vec * (1 + 0.3 * np.random.randn(len(init_guess_coef_vec)))
+        try:
+            err = np.sum((pr_vec - loop_fit_function(vdc, *guess)) ** 2)
+            if err < best_err:
+                best_guess, best_err = guess, err
+        except RuntimeError:
+            continue    
+    ##
+    return best_guess    
+
+def generate_deep_guess(vdc, pr_vec, show_plots=False):
+    """
+    Given a single unfolded loop and centroid, return the best-fit parameter guess.
+    We start with an initial estimate based on the loop centroid and intersection points.
+    Then, we refine it by running the fitting program multiple times with randomized perturbations
+    around the initial guess and keeping the parameters that yield the lowest fitting error.
+
+    Parameters
+    -----------
+    vdc : 1D numpy array
+        DC offsets
+    pr_vec : 1D numpy array
+        Piezoresponse or unfolded loop
+    show_plots : Boolean (Optional. Default = False)
+        Whether or not the plot the convex hull, centroid, intersection points
+
+    Returns
+    -----------------
+    init_guess_coef_vec : 1D Numpy array
+        Fit guess coefficient vector
+    """
+
+    points = np.transpose(np.array([np.squeeze(vdc), pr_vec]))  # [points,axis]
+
+    geom_centroid, geom_area = calculate_loop_centroid(points[:, 0], points[:, 1])
+
+    hull = ConvexHull(points)
+
+    """
+    Now we need to find the intersection points on the N,S,E,W
+    the simplex of the complex hull is essentially a set of line equations.
+    We need to find the two lines (top and bottom) or (left and right) that
+    interect with the vertical / horizontal lines passing through the geometric centroid
+    """
+
+    def find_intersection(A, B, C, D):
+        """
+        Finds the coordinates where two line segments intersect
+
+        Parameters
+        ------------
+        A, B, C, D : Tuple or 1D list or 1D numpy array
+            (x,y) coordinates of the points that define the two line segments AB and CD
+
+        Returns
+        ----------
+        obj : None or tuple
+            None if not intersecting. (x,y) coordinates of intersection
+        """
+
+        def ccw(A, B, C):
+            """Credit - StackOverflow"""
+            return (C[1] - A[1]) * (B[0] - A[0]) > (B[1] - A[1]) * (C[0] - A[0])
+
+        def line(p1, p2):
+            """Credit - StackOverflow"""
+            A = (p1[1] - p2[1])
+            B = (p2[0] - p1[0])
+            C = (p1[0] * p2[1] - p2[0] * p1[1])
+            return A, B, -C
+
+        def intersection(L1, L2):
+            """
+            Finds the intersection of two lines (NOT line segments).
+            Credit - StackOverflow
+            """
+            D = L1[0] * L2[1] - L1[1] * L2[0]
+            Dx = L1[2] * L2[1] - L1[1] * L2[2]
+            Dy = L1[0] * L2[2] - L1[2] * L2[0]
+            if D != 0:
+                x = Dx / D
+                y = Dy / D
+                return x, y
+            else:
+                return None
+
+        if ((ccw(A, C, D) is not ccw(B, C, D)) and (ccw(A, B, C) is not ccw(A, B, D))) is False:
+            return None
+        else:
+            return intersection(line(A, B), line(C, D))
+
+    # start and end coordinates of each line segment defining the convex hull
+    outline_1 = np.zeros((hull.simplices.shape[0], 2), dtype=float)
+    outline_2 = np.zeros((hull.simplices.shape[0], 2), dtype=float)
+    for index, pair in enumerate(hull.simplices):
+        outline_1[index, :] = points[pair[0]]
+        outline_2[index, :] = points[pair[1]]
+
+    """Find the coordinates of the points where the vertical line through the
+    centroid intersects with the convex hull"""
+    y_intersections = []
+    for pair in range(outline_1.shape[0]):
+        x_pt = find_intersection(outline_1[pair], outline_2[pair],
+                                 [geom_centroid[0], hull.min_bound[1]],
+                                 [geom_centroid[0], hull.max_bound[1]])
+        if x_pt is not None:
+            y_intersections.append(x_pt)
+
+    '''
+    Find the coordinates of the points where the horizontal line through the
+    centroid intersects with the convex hull
+    '''
+    x_intersections = []
+    for pair in range(outline_1.shape[0]):
+        x_pt = find_intersection(outline_1[pair], outline_2[pair],
+                                 [hull.min_bound[0], geom_centroid[1]],
+                                 [hull.max_bound[0], geom_centroid[1]])
+        if x_pt is not None:
+            x_intersections.append(x_pt)
+
+    '''
+    Default values if not intersections can be found.
+    '''
+    if len(y_intersections) < 2:
+        min_y_intercept = min(pr_vec)
+        max_y_intercept = max(pr_vec)
+    else:
+        min_y_intercept = min(y_intersections[0][1], y_intersections[1][1])
+        max_y_intercept = max(y_intersections[0][1], y_intersections[1][1])
+
+    if len(x_intersections) < 2:
+        min_x_intercept = min(vdc) / 2.0
+        max_x_intercept = max(vdc) / 2.0
+    else:
+        min_x_intercept = min(x_intersections[0][0], x_intersections[1][0])
+        max_x_intercept = max(x_intersections[0][0], x_intersections[1][0])
+
+    # Only the first four parameters use the information from the intercepts
+    # a3, a4 are swapped in Stephen's figure. That was causing the branches to swap during fitting
+    # the a3, a4 are fixed now below:
+    init_guess_coef_vec = np.zeros(shape=9)
+    init_guess_coef_vec[0] = min_y_intercept
+    init_guess_coef_vec[1] = max_y_intercept - min_y_intercept
+    init_guess_coef_vec[2] = min_x_intercept
+    init_guess_coef_vec[3] = max_x_intercept
+    init_guess_coef_vec[4] = 0
+    init_guess_coef_vec[5] = 2  # 0.5
+    init_guess_coef_vec[6] = 2  # 0.2
+    init_guess_coef_vec[7] = 2  # 1.0
+    init_guess_coef_vec[8] = 2  # 0.2
+
+    if show_plots:
+        try:
+            fig, ax = plt.subplots()
+            ax.plot(points[:, 0], points[:, 1], 'o')
+            ax.plot(geom_centroid[0], geom_centroid[1], 'r*')
+            ax.plot([geom_centroid[0], geom_centroid[0]], [hull.max_bound[1], hull.min_bound[1]], 'g')
+            ax.plot([hull.min_bound[0], hull.max_bound[0]], [geom_centroid[1], geom_centroid[1]], 'g')
+            for simplex in hull.simplices:
+                ax.plot(points[simplex, 0], points[simplex, 1], 'k')
+            ax.plot(x_intersections[0][0], x_intersections[0][1], 'r*')
+            ax.plot(x_intersections[1][0], x_intersections[1][1], 'r*')
+            ax.plot(y_intersections[0][0], y_intersections[0][1], 'r*')
+            ax.plot(y_intersections[1][0], y_intersections[1][1], 'r*')
+            ax.plot(vdc, loop_fit_function(vdc, *init_guess_coef_vec))
+        except Exception as e:
+            print('Error: ', e)                  
+    ##    
+    best_guess = init_guess_coef_vec.copy()
+    try:
+        best_guess, _ = curve_fit(loop_fit_function, vdc, pr_vec, p0=init_guess_coef_vec, maxfev=5000)
+        best_err = np.sum((pr_vec - loop_fit_function(vdc, *best_guess)) ** 2)
+    except RuntimeError:
+        best_err = np.inf
+
+    for _ in range(1000):
+        p0_rand = init_guess_coef_vec * (1 + 0.3 * np.random.randn(len(init_guess_coef_vec)))
+        try:
+            guess, _ = curve_fit(loop_fit_function, vdc, pr_vec, p0=p0_rand, maxfev=5000)
+            err = np.sum((pr_vec - loop_fit_function(vdc, *guess)) ** 2)
+            if err < best_err:
+                best_guess, best_err = guess, err
+        except RuntimeError:
+            continue
+    ##
+    return best_guess    
+    
 
 ###############################################################################
 
