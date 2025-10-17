@@ -683,9 +683,10 @@ def generate_guess(vdc, pr_vec, show_plots=False):
 
 def generate_shallow_guess(vdc, pr_vec, show_plots=False):
     """
-    Given a single unfolded loop and centroid return the intial guess for the fitting.
-    We generate most of the guesses by looking at the loop centroid and looking
-    at the nearest intersection points with the loop, which is a polygon.
+    Given a single unfolded loop and centroid, return the initial guess for fitting.
+    We first estimate the parameters by analyzing the loop centroid and its nearest
+    intersections with the loop polygon. Then, we randomly perturb the initial guess
+    multiple times and keep the set of parameters that minimizes the fitting error.    
 
     Parameters
     -----------
@@ -856,9 +857,10 @@ def generate_shallow_guess(vdc, pr_vec, show_plots=False):
 
 def generate_deep_guess(vdc, pr_vec, show_plots=False):
     """
-    Given a single unfolded loop and centroid return the intial guess for the fitting.
-    We generate most of the guesses by looking at the loop centroid and looking
-    at the nearest intersection points with the loop, which is a polygon.
+    Given a single unfolded loop and centroid, return the best-fit parameter guess.
+    We start with an initial estimate based on the loop centroid and intersection points.
+    Then, we refine it by running the fitting program multiple times with randomized perturbations
+    around the initial guess and keeping the parameters that yield the lowest fitting error.
 
     Parameters
     -----------
