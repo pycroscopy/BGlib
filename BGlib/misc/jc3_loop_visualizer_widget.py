@@ -20,7 +20,7 @@ class LoopVisualizerWidget(QWidget):
         self.loop_dset = loop_dset
 
         self.param_names = [
-            "V-", "V+", "Imprint", "R+", "R-",
+            "V+", "V-", "Imprint", "R+", "R-",
             "Switchable Polarization", "Work of Switching",
             "Nucleation Bias 1", "Nucleation Bias 2"
         ]
