@@ -1012,25 +1012,32 @@ def generate_deep_guess(vdc, pr_vec, show_plots=False):
         except Exception as e:
             print('Error: ', e)                  
     ##    
+    from sklearn.metrics import r2_score
     best_guess = init_guess_coef_vec.copy()
     try:
         best_guess, _ = curve_fit(loop_fit_function, vdc, pr_vec, p0=init_guess_coef_vec, maxfev=5000)
-        best_err = np.sum((pr_vec - loop_fit_function(vdc, *best_guess)) ** 2)
+        best_pred = loop_fit_function(vdc, *best_guess)
+        best_err = np.sum((pr_vec - best_pred) ** 2)
+        best_r2 = r2_score(pr_vec, best_pred)
     except RuntimeError:
         best_err = np.inf
-
-    for _ in range(1000):
+        best_r2 = -np.inf
+        
+    for trial_no in range(1000):
+        if best_r2 >= 0.95:
+            break        
         p0_rand = init_guess_coef_vec * (1 + 0.3 * np.random.randn(len(init_guess_coef_vec)))
         try:
             guess, _ = curve_fit(loop_fit_function, vdc, pr_vec, p0=p0_rand, maxfev=5000)
-            err = np.sum((pr_vec - loop_fit_function(vdc, *guess)) ** 2)
+            pred = loop_fit_function(vdc, *guess)
+            err = np.sum((pr_vec - pred) ** 2)
+            r2 = r2_score(pr_vec, pred)
             if err < best_err:
-                best_guess, best_err = guess, err
+                best_guess, best_err, best_r2 = guess, err, r2
         except RuntimeError:
             continue
     ##
-    return best_guess    
-    
+    return best_guess        
 
 ###############################################################################
 
