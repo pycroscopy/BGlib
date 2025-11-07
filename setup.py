@@ -34,6 +34,8 @@ requirements = ['numpy>=1.13.0',
                 'pyUSID>=0.0.11',
 
                 'xlrd>=1.0.0',
+
+                'pyswarms>=1.3.0',
                 ]
 
 setup(
