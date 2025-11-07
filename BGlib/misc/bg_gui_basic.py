@@ -30,7 +30,7 @@ import SciFiReaders as sr
 from BGlib.be.analysis.utils.sidpy_sho_fitter import SHOestimateGuess, SHOestimateGuess, SHO_fit_flattened
 from PyQt5.QtGui import QTextCursor
 from PyQt5.QtCore import QObject, pyqtSignal
-from BGlib.be.analysis.utils.be_loop import projectLoop, loop_fit_function, generate_guess, generate_shallow_guess, generate_deep_guess, generate_deepGP_guess, calc_switching_coef_vec
+from BGlib.be.analysis.utils.be_loop import projectLoop, loop_fit_function, generate_guess, generate_shallow_guess, generate_deep_guess, generate_deepGP_guess, generate_deepPSO_guess, calc_switching_coef_vec
 
 
 class EmittingStream(QObject):
@@ -435,7 +435,8 @@ class SidpyBandExcitationProcessor(QMainWindow):
                 'Basic': generate_guess,
                 'Shallow': generate_shallow_guess,
                 'Deep': generate_deep_guess,
-                'DeepGP': generate_deepGP_guess
+                'DeepGP': generate_deepGP_guess,
+                'DeepPSO': generate_deepPSO_guess,                
             }
             ##
             self.do_loop_fit_button.setEnabled(False)
