@@ -22,3 +22,28 @@ BGlib
    :alt: DOI
 
 Band Excitation (BE) and General Mode (G-Mode) Scanning Probe Microscopy (SPM) data format translation, analysis and visualization codes.
+
+MCP Server
+----------
+
+BGlib now includes a small MCP server for exposing a focused set of BE tools over stdio.
+
+Install with the optional MCP dependency:
+
+.. code-block:: bash
+
+    pip install -e .[mcp]
+
+Start the server:
+
+.. code-block:: bash
+
+    bglib-mcp
+
+Exposed tools:
+
+* ``LabViewPatcher(h5_path, force_patch=False)``
+* ``projectLoop(vdc, amp_vec, phase_vec)``
+* ``calc_switching_coef_vec(loop_coef_vec, nuc_threshold)``
+* ``calculate_loop_centroid(vdc, loop_vals)``
+* ``get_rotation_matrix(theta)``
