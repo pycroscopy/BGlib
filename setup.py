@@ -23,10 +23,7 @@ requirements = ['numpy>=1.13.0',
                 'joblib>=0.11.0',
 
                 'ipywidgets>=5.2.2',
-                'ipython>=5.1.0,<6;python_version<"3.3"',  # IPython 6.0+ does not support Python 2.6, 2.7, 3.0, 3.1, or 3.2
-                'ipython>=6.0;python_version>="3.3"',  # Beginning with IPython 6.0, Python 3.3 and above is required.
-
-                'unittest2;python_version<"3.0"',
+                'ipython>=6.0',
 
                 'numpy_groupies==0.9.7',  # New build of 0.9.8.4 appears to cause build problems
 
@@ -51,13 +48,14 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Cython',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
         'Programming Language :: Python :: Implementation :: CPython',
         'Topic :: Scientific/Engineering :: Information Analysis'],
     keywords=['imaging', 'spectra', 'multidimensional', 'scientific'],
+    py_modules=['bglib_mcp_server'],
+    python_requires='>=3.10',
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*",
                                     "tests"]),
     url='https://pycroscopy.github.io/BGlib/about.html',
@@ -66,7 +64,7 @@ setup(
     author_email='pycroscopy@gmail.com',
     install_requires=requirements,
     setup_requires=['pytest-runner'],
-    tests_require=['unittest2;python_version<"3.0"', 'pytest'],
+    tests_require=['pytest'],
     platforms=['Linux', 'Mac OSX', 'Windows 10/8.1/8/7'],
     # package_data={'sample':['dataset_1.dat']}
     test_suite='pytest',
@@ -75,10 +73,10 @@ setup(
     include_package_data=True,
     # https://setuptools.readthedocs.io/en/latest/setuptools.html#declaring-dependencies
     extras_require={
+        'mcp': ['mcp>=1.0.0'],
     },
     # If there are data files included in your packages that need to be
-    # installed, specify them here.  If using Python 2.6 or less, then these
-    # have to be included in MANIFEST.in as well.
+    # installed, specify them here.
     # package_data={
     #     'sample': ['package_data.dat'],
     # },
@@ -92,9 +90,9 @@ setup(
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and allow
     # pip to create the appropriate form of executable for the target platform.
-    # entry_points={
-    #     'console_scripts': [
-    #         'sample=sample:main',
-    #     ],
-    # },
+    entry_points={
+        'console_scripts': [
+            'bglib-mcp=bglib_mcp_server:main',
+        ],
+    },
 )
