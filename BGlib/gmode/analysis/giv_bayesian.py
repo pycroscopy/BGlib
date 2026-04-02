@@ -23,7 +23,7 @@ from pyUSID import USIDataset
 from .utils.giv_utils import do_bayesian_inference, bayesian_inference_on_period
 
 cap_dtype = np.dtype({'names': ['Forward', 'Reverse'],
-                      'formats': [np.float32, np.float32]})
+                      'formats': [float, float]})
 # TODO : Take lesser used bayesian inference params from kwargs if provided
 
 
@@ -174,7 +174,7 @@ class GIVBayesian(Process):
             print(get_attributes(self.h5_results_grp))
 
         # One of those rare instances when the result is exactly the same as the source
-        self.h5_i_corrected = create_empty_dataset(self.h5_main, np.float32, 'Corrected_Current', h5_group=self.h5_results_grp)
+        self.h5_i_corrected = create_empty_dataset(self.h5_main, float, 'Corrected_Current', h5_group=self.h5_results_grp)
 
         if self.verbose and self.mpi_rank == 0:
             print('Created I Corrected')
@@ -184,7 +184,7 @@ class GIVBayesian(Process):
         # The resistance dataset requires the creation of a new spectroscopic dimension
         self.h5_resistance = write_main_dataset(self.h5_results_grp, (num_pos, self.num_x_steps), 'Resistance', 'Resistance',
                                                 'GOhms', None, Dimension('Bias', 'V', self.num_x_steps),
-                                                dtype=np.float32, # chunks=(1, self.num_x_steps), #compression='gzip',
+                                                dtype=float, # chunks=(1, self.num_x_steps), #compression='gzip',
                                                 h5_pos_inds=self.h5_main.h5_pos_inds,
                                                 h5_pos_vals=self.h5_main.h5_pos_vals)
 
@@ -196,7 +196,7 @@ class GIVBayesian(Process):
         self.h5_new_spec_vals = self.h5_resistance.h5_spec_vals
 
         # The variance is identical to the resistance dataset
-        self.h5_variance = create_empty_dataset(self.h5_resistance, np.float32, 'R_variance')
+        self.h5_variance = create_empty_dataset(self.h5_resistance, float, 'R_variance')
 
         if self.verbose and self.mpi_rank == 0:
             print('Created Variance')
@@ -236,10 +236,10 @@ class GIVBayesian(Process):
             print('Rank {} - Started accumulating results for this chunk'.format(self.mpi_rank))
 
         num_pixels = len(self.forward_results)
-        cap_mat = np.zeros((num_pixels, 2), dtype=np.float32)
-        r_inf_mat = np.zeros((num_pixels, self.num_x_steps), dtype=np.float32)
-        r_var_mat = np.zeros((num_pixels, self.num_x_steps), dtype=np.float32)
-        i_cor_sin_mat = np.zeros((num_pixels, self.single_ao.size), dtype=np.float32)
+        cap_mat = np.zeros((num_pixels, 2), dtype=float)
+        r_inf_mat = np.zeros((num_pixels, self.num_x_steps), dtype=float)
+        r_var_mat = np.zeros((num_pixels, self.num_x_steps), dtype=float)
+        i_cor_sin_mat = np.zeros((num_pixels, self.single_ao.size), dtype=float)
 
         for pix_ind, i_meas, forw_results, rev_results in zip(range(num_pixels), self.data,
                                                               self.forward_results, self.reverse_results):

@@ -66,8 +66,8 @@ class GTuneTranslator(GLineTranslator):
         matread = loadmat(parm_paths['parm_mat'],
                           variable_names=['AI_wave', 'BE_wave_AO_0', 'BE_wave_AO_1', 'BE_wave_train',
                                           'BE_wave', 'total_cols', 'total_rows'])
-        be_wave = np.float32(np.squeeze(matread['BE_wave']))
-        be_wave_train = np.float32(np.squeeze(matread['BE_wave_train']))
+        be_wave = np.array(np.squeeze(matread['BE_wave'])).astype(float)
+        be_wave_train = np.array(np.squeeze(matread['BE_wave_train'])).astype(float)
 
         num_cols = int(matread['total_cols'][0][0])
         expected_rows = int(matread['total_rows'][0][0])
@@ -148,7 +148,7 @@ class GTuneTranslator(GLineTranslator):
                                          None, None,
                                          h5_pos_inds=h5_pos_ind, h5_pos_vals=h5_pos_val,
                                          h5_spec_inds=h5_spec_inds, h5_spec_vals=h5_spec_vals,
-                                         chunks=(1, self.points_per_pixel), dtype=np.float16)
+                                         chunks=(1, self.points_per_pixel), dtype=float)
 
             # Now transfer scan data in the dat file to the h5 file:
             super(GTuneTranslator, self)._read_data(data_paths[f_index], h5_main)

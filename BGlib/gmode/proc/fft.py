@@ -222,7 +222,7 @@ def build_composite_freq_filter(frequency_filters):
     if not isinstance(frequency_filters, Iterable):
         frequency_filters = [frequency_filters]
 
-    comp_filter = np.float32(frequency_filters[0].value)
+    comp_filter = np.array(frequency_filters[0].value).astype(float)
 
     for ind in range(1, len(frequency_filters)):
         comp_filter *= frequency_filters[ind].value
@@ -352,7 +352,7 @@ class LowPassFilter(FrequencyFilter):
         sz = int(np.round(signal_length * (roll_off / samp_rate)))
         ind = int(np.round(signal_length * (f_cutoff / samp_rate)))
 
-        lpf = np.zeros(signal_length, dtype=np.float32)
+        lpf = np.zeros(signal_length, dtype=float)
 
         extent = 5.0
         t2 = np.linspace(-extent / 2, extent / 2, num=sz)
@@ -537,7 +537,7 @@ class BandPassFilter(FrequencyFilter):
         ind = int(round(signal_length * (f_center / samp_rate)))
         sz = int(round(cent * f_width / samp_rate))
 
-        bpf = np.zeros(signal_length, dtype=np.float32)
+        bpf = np.zeros(signal_length, dtype=float)
 
         # Finite Impulse Response or Boxcar
         if not fir:

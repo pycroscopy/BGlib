@@ -59,16 +59,16 @@ class GDMTranslator(Translator):
         # Add the w^2 specific parameters to this list
         parm_data = loadmat(parm_path, squeeze_me=True, struct_as_record=True)
         freq_sweep_parms = parm_data['freqSweepParms']
-        parm_dict['freq_sweep_delay'] = np.float(freq_sweep_parms['delay'].item())
+        parm_dict['freq_sweep_delay'] = np.array(freq_sweep_parms['delay'].item()).astype(float)
         gen_sig = parm_data['genSig']
         parm_dict['wfm_fix_d_fast'] = np.int32(gen_sig['restrictT'].item())
-        freq_array = np.float32(parm_data['freqArray'])
+        freq_array = np.array(parm_data['freqArray']).astype(float)
 
         # prepare and write spectroscopic values
         samp_rate = parm_dict['IO_down_samp_rate_[Hz]']
         num_bins = int(parm_dict['wfm_n_cycles'] * parm_dict['wfm_p_slow'] * samp_rate)
 
-        w_vec = np.arange(-0.5 * samp_rate, 0.5 * samp_rate, np.float32(samp_rate / num_bins))
+        w_vec = np.arange(-0.5 * samp_rate, 0.5 * samp_rate, np.array(samp_rate / num_bins)).astype(float)
 
         # There is most likely a more elegant solution to this but I don't have the time... Maybe np.meshgrid
         spec_val_mat = np.zeros((len(freq_array) * num_bins, 2), dtype=VALUES_DTYPE)
@@ -118,7 +118,7 @@ class GDMTranslator(Translator):
         h5_main = write_main_dataset(chan_grp, (num_pix, num_bins), 'Raw_Data',
                                      'Deflection', 'V',
                                      pos_dims, spec_dims,
-                                     chunks=(1, num_bins), dtype=np.float32)
+                                     chunks=(1, num_bins), dtype=float)
 
         h5_ex_freqs = chan_grp.create_dataset('Excitation_Frequencies', freq_array)
         h5_bin_freq = chan_grp.create_dataset('Bin_Frequencies', w_vec)
@@ -140,7 +140,7 @@ class GDMTranslator(Translator):
                     pix_mat = np.fft.ifft(np.fft.ifftshift(pix_mat, axes=1), axis=1)
                     # Verified with Matlab - no conjugate required here.
                     pix_vec = pix_mat.transpose().reshape(pix_mat.size)
-                    h5_main[pos_ind, :] = np.float32(pix_vec)
+                    h5_main[pos_ind, :] = np.array(pix_vec).astype(float)
                     h5_f.flush()  # flush from memory!
                 else:
                     print('File not found for: row {} col {}'.format(row_ind, col_ind))
