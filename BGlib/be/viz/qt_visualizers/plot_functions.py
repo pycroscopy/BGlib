@@ -253,23 +253,23 @@ class BEPSwindow(QtGui.QMainWindow):
         
         addWidget(WidgetName, Row,Col, RowSpan,ColSpan) 
         '''
-        l.addWidget(imv1, 0, 0, 13, 5)  # Add them at these positions
-        l.addWidget(imv2, 0, 5, 13, 5)
-        l.addWidget(imv3, 14, 0, 2, 10)
-        l.addWidget(cycle_list, 0, 10)
-        l.addWidget(plot_list, 1, 10)
-        l.addWidget(roi_list, 2, 10)
-        l.addWidget(part_list, 3, 10)
-        l.addWidget(glab, 4, 10)
-        l.addWidget(g0lab, 5, 10)
-        l.addWidget(g1lab, 6, 10)
-        l.addWidget(g2lab, 7, 10)
-        l.addWidget(g3lab, 8, 10)
-        l.addWidget(rlab, 9, 10)
-        l.addWidget(r0lab, 10, 10)
-        l.addWidget(r1lab, 11, 10)
-        l.addWidget(r2lab, 12, 10)
-        l.addWidget(r3lab, 13, 10)
+        layout.addWidget(imv1, 0, 0, 13, 5)  # Add them at these positions
+        layout.addWidget(imv2, 0, 5, 13, 5)
+        layout.addWidget(imv3, 14, 0, 2, 10)
+        layout.addWidget(cycle_list, 0, 10)
+        layout.addWidget(plot_list, 1, 10)
+        layout.addWidget(roi_list, 2, 10)
+        layout.addWidget(part_list, 3, 10)
+        layout.addWidget(glab, 4, 10)
+        layout.addWidget(g0lab, 5, 10)
+        layout.addWidget(g1lab, 6, 10)
+        layout.addWidget(g2lab, 7, 10)
+        layout.addWidget(g3lab, 8, 10)
+        layout.addWidget(rlab, 9, 10)
+        layout.addWidget(r0lab, 10, 10)
+        layout.addWidget(r1lab, 11, 10)
+        layout.addWidget(r2lab, 12, 10)
+        layout.addWidget(r3lab, 13, 10)
 
         '''
         Customize the Voltage/Current vs time plot

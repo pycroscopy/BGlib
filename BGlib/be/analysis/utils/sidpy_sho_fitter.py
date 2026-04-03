@@ -7,16 +7,6 @@ THen it should be able to do sho fitting and maybe loop fitting.
 '''
 
 # import numpy as np
-import time
-import h5py
-
-import pyNSID
-import matplotlib.pyplot as plt
-import numba
-
-import sidpy
-#Let's open up a sample dataset and see...
-
 import SciFiReaders as sr
 from scipy.optimize import curve_fit
 import numpy as np

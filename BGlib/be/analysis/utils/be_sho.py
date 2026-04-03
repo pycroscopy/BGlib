@@ -38,7 +38,8 @@ def SHOfit(parms, w_vec, resp_vec):
         Cantilever response vector as a function of frequency
     """
     # Cost function to minimize.
-    cost = lambda p: np.sum((np.abs(SHOfunc(p, w_vec)) - np.abs(resp_vec)) ** 2)
+    def cost(p):
+        return np.sum((np.abs(SHOfunc(p, w_vec)) - np.abs(resp_vec)) ** 2)
 
     popt = minimize(cost, parms, method='TNC', options={'disp':False})
 
