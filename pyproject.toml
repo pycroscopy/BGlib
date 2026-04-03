@@ -12,8 +12,5 @@ line-length = 100
 extend-exclude = ["notebooks", "docs"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B"]
+select = ["E", "F"]
 ignore = ["E501"]
-
-[tool.ruff.lint.isort]
-known-first-party = ["BGlib"]
