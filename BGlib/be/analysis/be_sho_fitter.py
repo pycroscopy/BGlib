@@ -7,8 +7,6 @@ Created on Thu Nov 20 11:48:53 2019
 
 @author: Suhas Somnath, Chris R. Smith
 """
-from __future__ import division, print_function, absolute_import, \
-    unicode_literals
 from enum import Enum
 from warnings import warn
 import numpy as np

@@ -6,8 +6,6 @@ Created on Thu Jan 05 13:29:12 2017
 
 @author: Chris R. Smith, Suhas Somnath
 """
-from __future__ import division, print_function, absolute_import, unicode_literals
-
 import os
 from warnings import warn
 

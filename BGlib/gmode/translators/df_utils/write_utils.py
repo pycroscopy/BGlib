@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Deprecated and legacy functions that supported writing USID HDF5 datasets especially for scientific modalities with
 very high number of spectroscopic dimensions
@@ -9,15 +8,11 @@ Created on Tue Nov  3 21:14:25 2015
 """
 
 from warnings import warn
-import sys
 import h5py
 import numpy as np
 
 from .virtual_data import VirtualDataset
 from pyUSID.io.write_utils import INDICES_DTYPE, VALUES_DTYPE, Dimension, build_ind_val_matrices, get_aux_dset_slicing
-
-if sys.version_info.major == 3:
-    unicode = str
 
 
 def build_reduced_spec_dsets(h5_parent_group, h5_spec_inds, h5_spec_vals, keep_dim, step_starts,
@@ -38,7 +33,7 @@ def build_reduced_spec_dsets(h5_parent_group, h5_spec_inds, h5_spec_vals, keep_d
             Array designating which rows of the input spectroscopic datasets to keep
     step_starts : Numpy Array, Unsigned Integers
             Array specifying the start of each step in the reduced datasets
-    basename : str / unicode
+    basename : str
             String to which '_Indices' and '_Values' will be appended to get the names
             of the new datasets
 
@@ -55,7 +50,7 @@ def build_reduced_spec_dsets(h5_parent_group, h5_spec_inds, h5_spec_vals, keep_d
     if not isinstance(h5_parent_group, (h5py.Group, h5py.File)):
         raise TypeError('h5_parent_group should be a h5py.File or h5py.Group object')
     if basename is not None:
-        if not isinstance(basename, (str, unicode)):
+        if not isinstance(basename, str):
             raise TypeError('basename should be a string')
 
     for sub_name in ['_Indices', '_Values']:
@@ -124,7 +119,7 @@ def build_ind_val_dsets(dimensions, is_spectral=True, verbose=False, base_name=N
         Spectroscopic (True) or Position (False)
     verbose : Boolean, optional
         Whether or not to print statements for debugging purposes
-    base_name : str / unicode, optional
+    base_name : str, optional
         Prefix for the datasets. Default: 'Position\_' when is_spectral is False, 'Spectroscopic\_' otherwise
 
     Returns
@@ -153,7 +148,7 @@ def build_ind_val_dsets(dimensions, is_spectral=True, verbose=False, base_name=N
         raise TypeError('dimensions should be a sequence of Dimension objects')
 
     if base_name is not None:
-        if not isinstance(base_name, (str, unicode)):
+        if not isinstance(base_name, str):
             raise TypeError('base_name should be a string')
         if not base_name.endswith('_'):
             base_name += '_'

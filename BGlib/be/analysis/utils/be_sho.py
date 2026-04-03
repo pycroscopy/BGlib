@@ -5,7 +5,6 @@ Created on Mon Sep 28 11:35:57 2015
 @author: Stephen Jesse, Anton Ievlev, Chris R. Smith
 """
 
-from __future__ import division, print_function, absolute_import, unicode_literals
 import numpy as np
 from numpy import exp, abs, sqrt, sum, real, imag, arctan2, append
 from scipy.optimize import minimize

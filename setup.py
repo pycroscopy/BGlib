@@ -1,12 +1,11 @@
-from codecs import open
-import os
-from setuptools import setup, find_packages
+from pathlib import Path
 
-here = os.path.abspath(os.path.dirname(__file__))
-with open(os.path.join(here, 'README.rst')) as f:
-    long_description = f.read()
+from setuptools import find_packages, setup
 
-with open(os.path.join(here, 'BGlib/__version__.py')) as f:
+here = Path(__file__).resolve().parent
+long_description = (here / "README.rst").read_text(encoding="utf-8")
+
+with (here / "BGlib" / "__version__.py").open(encoding="utf-8") as f:
     __version__ = f.read().split("'")[1]
 
 # TODO: Move requirements to requirements.txt
@@ -63,13 +62,7 @@ setup(
     author='Suhas Somnath, Chris R. Smith, Rama K. Vasudevan, Stephen Jesse, Anton Ievlev, and contributors',
     author_email='pycroscopy@gmail.com',
     install_requires=requirements,
-    setup_requires=['pytest-runner'],
-    tests_require=['pytest'],
     platforms=['Linux', 'Mac OSX', 'Windows 10/8.1/8/7'],
-    # package_data={'sample':['dataset_1.dat']}
-    test_suite='pytest',
-    # dependency='',
-    # dependency_links=[''],
     include_package_data=True,
     # https://setuptools.readthedocs.io/en/latest/setuptools.html#declaring-dependencies
     extras_require={

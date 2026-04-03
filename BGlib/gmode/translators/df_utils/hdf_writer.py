@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Deprecated and legacy :class:`~pycroscopy.io.hdf_writer.HDFwriter` that was being used to write USID HDF5 files
 
@@ -7,10 +6,9 @@ Created on Wed Oct 21 12:29:33 2015
 @author: Numan Laanait, Suhas Somnath, Chris Smith
 """
 
-from __future__ import division, print_function, absolute_import, unicode_literals
+import logging
 import os
 import subprocess
-import sys
 from time import time, sleep
 from warnings import warn
 import h5py
@@ -19,8 +17,7 @@ from pyUSID.io.hdf_utils import assign_group_index, write_simple_attrs, attempt_
 from .virtual_data import VirtualGroup, VirtualDataset, VirtualData
 from BGlib.__version__ import version
 
-if sys.version_info.major == 3:
-    unicode = str
+logger = logging.getLogger(__name__)
 
 
 class HDFwriter(object):
@@ -31,8 +28,8 @@ class HDFwriter(object):
         Parameters
         ----------
         file_handle : h5py.File object or str or unicode
-            h5py.File - handle to an open file in 'w' or 'r+' mode
-            str or unicode - Absolute path to an unopened the hdf5 file
+        h5py.File - handle to an open file in 'w' or 'r+' mode
+        str or os.PathLike - Absolute path to an unopened the hdf5 file
         force_new : bool, optional
             If true, check if the file already exists and delete it if
             it does.  Ignored if the file_handle is a h5py.File object
@@ -42,7 +39,8 @@ class HDFwriter(object):
              ':meth:`pyUSID.io.hdf_utils.write_main_dataset` instead',
              DeprecationWarning)
 
-        if type(file_handle) in [str, unicode]:
+        if isinstance(file_handle, (str, os.PathLike)):
+            file_handle = os.fspath(file_handle)
             if force_new and os.path.exists(file_handle):
                 os.remove(file_handle)
 
@@ -52,7 +50,7 @@ class HDFwriter(object):
                 self.file = h5py.File(file_handle, 'w')
 
             self.path = file_handle
-        elif type(file_handle) == h5py.File:
+        elif isinstance(file_handle, h5py.File):
             # file handle is actually an open hdf file
             try:
                 _ = file_handle.mode
@@ -102,7 +100,7 @@ class HDFwriter(object):
             while time() - os.stat(tmpfile).st_mtime <= 1:
                 sleep(0.5)
         except subprocess.CalledProcessError as err:
-            print('Could not repack hdf5 file')
+            logger.error("Could not repack hdf5 file")
             raise Exception(err.output)
         except Exception:
             raise
@@ -115,9 +113,9 @@ class HDFwriter(object):
             os.remove(self.path)
             os.rename(tmpfile, self.path)
         except Exception:
-            print('Could not copy repacked file to original path.')
-            print('The original file is located {}'.format(self.path))
-            print('The repacked file is located {}'.format(tmpfile))
+            logger.exception("Could not copy repacked file to original path.")
+            logger.error("The original file is located %s", self.path)
+            logger.error("The repacked file is located %s", tmpfile)
             raise
 
         '''
@@ -260,9 +258,11 @@ class HDFwriter(object):
             __populate(curr_child, root)
 
         if print_log:
-            print('Finished writing to h5 file.\n' +
-                  'Right now you got yourself a fancy folder structure. \n' +
-                  'Make sure you do some reference linking to take advantage of the full power of HDF5.')
+            logger.info(
+                "Finished writing to h5 file.\n"
+                "Right now you got yourself a fancy folder structure.\n"
+                "Make sure you do some reference linking to take advantage of the full power of HDF5."
+            )
         return ref_list
 
     @staticmethod
@@ -304,11 +304,11 @@ class HDFwriter(object):
         try:
             h5_new_group = h5_parent_group.create_group(micro_group.name)
             if print_log:
-                print('Created Group {}'.format(h5_new_group.name))
+                logger.info("Created Group %s", h5_new_group.name)
         except ValueError:
             h5_new_group = h5_parent_group[micro_group.name]
             if print_log:
-                print('Found Group already exists {}'.format(h5_new_group.name))
+                logger.info("Found Group already exists %s", h5_new_group.name)
         except Exception:
             HDFwriter.__safe_abort(h5_parent_group.file)
             raise
@@ -489,7 +489,7 @@ class HDFwriter(object):
             h5_dset = __create_dset(h5_group, microdset, HDFwriter._create_resizeable_dset)
 
         if print_log:
-            print('Created Dataset {}'.format(h5_dset.name))
+            logger.info("Created Dataset %s", h5_dset.name)
 
         HDFwriter._write_dset_attributes(h5_dset, microdset.attrs, print_log=print_log)
 
@@ -527,7 +527,7 @@ class HDFwriter(object):
 
         if labels_dict is None:
             if print_log:
-                print('Finished writing all attributes of dataset')
+                logger.info("Finished writing all attributes of dataset")
             return
 
         if isinstance(labels_dict, (tuple, list)):

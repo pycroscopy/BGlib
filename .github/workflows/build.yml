@@ -33,14 +33,19 @@ jobs:
       run: |
         sudo apt-get update -qq
         python -m pip install --upgrade pip
-        python -m pip install flake8 pytest coveralls
+        python -m pip install ruff flake8 pytest coveralls
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         
     - name: install package
       run: |
         pip install .
         pip list
-    
+
+    - name: Lint with ruff
+      run: |
+        ruff check .
+        ruff format --check .
+
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names

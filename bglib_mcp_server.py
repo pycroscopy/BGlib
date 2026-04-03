@@ -8,8 +8,8 @@ import argparse
 from functools import lru_cache
 from importlib import import_module
 from importlib.util import module_from_spec, spec_from_file_location
+import logging
 from pathlib import Path
-import sys
 from typing import Any
 
 TOOL_NAMES = [
@@ -19,6 +19,8 @@ TOOL_NAMES = [
     "calculate_loop_centroid",
     "get_rotation_matrix",
 ]
+
+logger = logging.getLogger(__name__)
 
 
 def _import_fastmcp():
@@ -170,11 +172,8 @@ def main() -> None:
         print("\n".join(TOOL_NAMES))
         return
 
-    print(
-        "BGlib MCP server starting on stdio; waiting for an MCP client...",
-        file=sys.stderr,
-        flush=True,
-    )
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+    logger.info("BGlib MCP server starting on stdio; waiting for an MCP client...")
     server = _build_server()
     server.run()
 

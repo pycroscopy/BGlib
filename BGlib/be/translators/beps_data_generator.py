@@ -2,6 +2,7 @@
 Utility functions for the Fake BEPS generator
 
 """
+import logging
 import os
 import numpy as np
 import h5py
@@ -26,6 +27,8 @@ from ..analysis.utils.be_sho import SHOfunc
 from ..analysis.be_sho_fitter import sho32
 from ..analysis.be_loop_fitter import loop_fit32
 from .df_utils.beps_gen_utils import get_noise_vec, beps_image_folder
+
+logger = logging.getLogger(__name__)
 
 
 class FakeBEPSGenerator(Translator):
@@ -80,7 +83,7 @@ class FakeBEPSGenerator(Translator):
         -------
 
         """
-        print('In folder {}'.format(folder))
+        logger.info("In folder %s", folder)
         file_list = self._parse_file_path(folder, self.image_ext)
 
         images = list()
@@ -257,7 +260,7 @@ class FakeBEPSGenerator(Translator):
                                  '{} was given.'.format(bin_factor))
             self.binning_func = block_reduce
             self.bin_func = bin_func
-        print('Image folder is {}'.format(image_folder))
+        logger.info("Image folder is %s", image_folder)
         images = self._read_data(image_folder)
         self.images = images
         data_gen_parms = {'N_x': self.N_x, 'N_y': self.N_y, 'n_steps;:': n_steps,
@@ -557,7 +560,7 @@ class FakeBEPSGenerator(Translator):
         None
 
         """
-        print(list(self.h5_sho_spec_vals.attrs))
+        logger.info("%s", list(self.h5_sho_spec_vals.attrs))
         vdc_vec = self.h5_sho_spec_vals[self.h5_sho_fit.spec_dim_labels.index('DC_Offset')].squeeze()
         sho_field = self.h5_sho_spec_vals[self.h5_sho_fit.spec_dim_labels.index('Field')].squeeze()
         sho_of_inds = sho_field == 0

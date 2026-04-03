@@ -4,8 +4,7 @@ Created on Thursday May 26 11:23:00 2016
 
 @author:  Rama Vasudevan, Suhas Somnath, Chris Smith
 """
-
-from __future__ import division, print_function, absolute_import, unicode_literals
+import logging
 
 from os import path, remove  # File Path formatting
 from warnings import warn
@@ -19,6 +18,8 @@ from pyUSID.io.hdf_utils import create_indexed_group, write_main_dataset
 
 from .df_utils.be_utils import trimUDVS, getSpectroscopicParmLabel, \
     generatePlotGroups, createSpecVals, maxReadPixels, nf32
+
+logger = logging.getLogger(__name__)
 
 
 class BEodfRelaxationTranslator(Translator):
@@ -288,7 +289,7 @@ class BEodfRelaxationTranslator(Translator):
             
         Outputs: None
         """
-        print('---- reading data one pixel at a time----------')
+        logger.info("---- reading data one pixel at a time----------")
 
         num_pix = int(parm_dict['grid_num_rows']) * int(parm_dict['grid_num_cols'])
         # print 'Number of rows is: ', parm_dict['grid_num_rows']
@@ -296,16 +297,16 @@ class BEodfRelaxationTranslator(Translator):
         # print 'Rows * cols is:', int(parm_dict['grid_num_rows'])*int(parm_dict['grid_num_cols'])
 
         if path.getsize(real_path) != path.getsize(imag_path):
-            print('Sizes of real and imaginary files NOT matching!!!!')
+            logger.info("Sizes of real and imaginary files NOT matching!!!!")
         if 1.0 * path.getsize(real_path) % num_pix != 0:
-            print('Incomplete dataset!!!')
+            logger.info("Incomplete dataset!!!")
 
         bytes_per_pix = path.getsize(real_path) / num_pix
         f_real = open(real_path, "rb")
         f_imag = open(imag_path, "rb")
 
         for pix_ind in range(num_pix):
-            print('Reading pixel #{}, file position {}'.format(pix_ind, hex(pix_ind * bytes_per_pix)))
+            logger.info("Reading pixel #%s, file position %s", pix_ind, hex(pix_ind * bytes_per_pix))
             pix_vec = np.fromstring(f_real.read(int(bytes_per_pix)), dtype='f') + \
                 1j * np.fromstring(f_imag.read(int(bytes_per_pix)), dtype='f')
 
@@ -327,7 +328,7 @@ class BEodfRelaxationTranslator(Translator):
         f_real.close()
         f_imag.close()
 
-        print('Finished writing data to .h5')
+        logger.info("Finished writing data to .h5")
 
     @staticmethod
     def __readOldMatBEvecs(file_path):

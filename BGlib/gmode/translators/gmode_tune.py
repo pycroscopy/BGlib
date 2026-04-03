@@ -6,8 +6,7 @@ Created on Wed Jul 27 3:19:46 2017
 @author: anugrahsaxena, Suhas Somnath, Chris R. Smith
 """
 
-from __future__ import division, print_function, absolute_import, unicode_literals
-
+import logging
 from os import path, remove
 from warnings import warn
 import h5py
@@ -23,6 +22,8 @@ from pyUSID.io.hdf_utils import create_indexed_group, write_ind_val_dsets, \
 
 from ...be.translators.df_utils.be_utils import parmsToDict
 from .gmode_line import GLineTranslator
+
+logger = logging.getLogger(__name__)
 
 
 class GTuneTranslator(GLineTranslator):
@@ -109,7 +110,7 @@ class GTuneTranslator(GLineTranslator):
 
 
         if self.num_rows != expected_rows:
-            print('Note: {} of {} lines found in data file'.format(self.num_rows, expected_rows))
+            logger.info("Note: %s of %s lines found in data file", self.num_rows, expected_rows)
 
         # Calculate number of points to read per line:
         self.__bytes_per_row__ = int(file_size / self.num_rows)
@@ -154,6 +155,6 @@ class GTuneTranslator(GLineTranslator):
             super(GTuneTranslator, self)._read_data(data_paths[f_index], h5_main)
 
         h5_file.close()
-        print('G-Tune translation complete!')
+        logger.info("G-Tune translation complete!")
 
         return h5_path

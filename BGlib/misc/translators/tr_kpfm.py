@@ -1,10 +1,9 @@
-# -*- coding: utf-8 -*-
 """
 Created on Thursday July 27 2017
 @author: Rama Vasudevan, Suhas Somnath, Chris R. Smith
 """
 
-from __future__ import division, print_function, absolute_import, unicode_literals
+import logging
 import sys
 from os import path, remove, listdir  # File Path formatting
 import re
@@ -19,8 +18,7 @@ from pyUSID.io.dimension  import Dimension
 from sidpy.hdf.prov_utils import create_indexed_group
 from pyUSID.io.hdf_utils.model import write_main_dataset
 
-if sys.version_info.major == 3:
-    unicode = str
+logger = logging.getLogger(__name__)
 
 
 class TRKPFMTranslator(Translator):
@@ -131,9 +129,9 @@ class TRKPFMTranslator(Translator):
                 cont_cond = False
 
         if len(np.unique(np.array(data_lengths))) > 1:
-            print("Unequal data lengths! Cannot continue")
+            logger.info("Unequal data lengths! Cannot continue")
         else:
-            print("Equal data lengths")
+            logger.info("Equal data lengths")
 
         return data_lengths[0], count
 
@@ -158,11 +156,11 @@ class TRKPFMTranslator(Translator):
 
         f = open(self.file_list[0], 'rb')
         spectrogram_size, count_vals = self._parse_spectrogram_size(f)
-        print("Excitation waveform shape: ", excit_wfm.shape)
-        print("spectrogram size:", spectrogram_size)
+        logger.info("Excitation waveform shape: %s", excit_wfm.shape)
+        logger.info("spectrogram size: %s", spectrogram_size)
         num_pixels = parm_dict['grid_num_rows'] * parm_dict['grid_num_cols']
-        print('Number of pixels: ', num_pixels)
-        print('Count Values: ', count_vals)
+        logger.info("Number of pixels: %s", num_pixels)
+        logger.info("Count Values: %s", count_vals)
         #if (num_pixels + 1) != count_vals:
         #    print("Data size does not match number of pixels expected. Cannot continue")
 
@@ -196,9 +194,9 @@ class TRKPFMTranslator(Translator):
         #time, voltage, field
 
         time_vec = np.linspace(0, parm_dict['IO_time'], num_time_steps)
-        print('Num time steps: {}'.format(num_time_steps))
-        print('DC Vec size: {}'.format(excit_wfm.shape))
-        print('Spectrogram size: {}'.format(spectrogram_size))
+        logger.info("Num time steps: %s", num_time_steps)
+        logger.info("DC Vec size: %s", excit_wfm.shape)
+        logger.info("Spectrogram size: %s", spectrogram_size)
 
         field_vec = np.array([0,1])
 
@@ -292,7 +290,7 @@ class TRKPFMTranslator(Translator):
             h5_main = self.raw_datasets[ifile]
 
             if real_cond[ifile]:
-                print('Dall Size is: ', dall.shape)
+                logger.info("Dall Size is: %s", dall.shape)
                 # Do some error catching. In case the last pixel is absent, then just ignore it.
                 try:
                     h5_main[:, :] = dall.reshape(h5_main.shape) + 1j * 0

@@ -4,8 +4,7 @@ Created on Sun May 29 17:58:35 2016
 
 @author: Suhas Somnath
 """
-
-from __future__ import division, print_function, absolute_import, unicode_literals
+import logging
 
 from os import path, remove  # File Path formatting
 from warnings import warn
@@ -18,6 +17,8 @@ from sidpy.hdf.hdf_utils import write_simple_attrs
 
 from pyUSID import Dimension
 from pyUSID.io.hdf_utils import write_main_dataset, create_indexed_group
+
+logger = logging.getLogger(__name__)
 
 
 class GIVTranslator(Translator):
@@ -111,7 +112,7 @@ class GIVTranslator(Translator):
 
         for line_ind in range(parm_dict['grid_num_rows']):
             if line_ind % np.round(parm_dict['grid_num_rows']/10) == 0:
-                print('Reading data in line {} of {}'.format(line_ind+1, parm_dict['grid_num_rows']))
+                logger.info("Reading data in line %s of %s", line_ind + 1, parm_dict['grid_num_rows'])
             file_path = path.join(folder_path, 'line_'+str(line_ind+1)+'.mat')
             if path.exists(file_path):
                 with h5py.File(file_path, 'r') as h5_f:
@@ -125,7 +126,7 @@ class GIVTranslator(Translator):
                         warn('No data found for Line '+str(line_ind))
             else:
                 warn('File not found for: line '+str(line_ind))
-        print('Finished reading all data!')
+        logger.info("Finished reading all data!")
 
     @staticmethod
     def _read_parms(parm_path):

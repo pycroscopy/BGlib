@@ -9,7 +9,6 @@ Created on Tue Nov 07 11:48:53 2017
 
 """
 
-from __future__ import division, print_function, absolute_import, unicode_literals
 import h5py
 import numpy as np
 from collections import Iterable

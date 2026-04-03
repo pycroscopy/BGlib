@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Deprecated and legacy :class:`~pycroscopy.io.virtual_data.VirtualDataset` and
 :class:`~pycroscopy.io.virtual_data.VirtualGroup` classes that was being used to write USID HDF5 files
@@ -11,16 +10,11 @@ The VirtualData classes
 
 """
 
-from __future__ import division, print_function, absolute_import, unicode_literals
 import socket
 from warnings import warn
 import numpy as np
-import sys
 
 from pyUSID.io.io_utils import get_time_stamp
-
-if sys.version_info.major == 3:
-    unicode = str
 
 
 class VirtualData(object):
@@ -196,7 +190,7 @@ class VirtualDataset(VirtualData):
 
         super(VirtualDataset, self).__init__(name, parent, attrs=attrs)
 
-        if not isinstance(name, (str, unicode)):
+        if not isinstance(name, str):
             raise TypeError('Name should be a string')
 
         def _make_iterable(param):

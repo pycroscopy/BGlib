@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Utilities for FFT filtering of General-mode spectral imaging datasets
 
@@ -7,7 +6,6 @@ Created on Thu May 05 13:29:12 2016
 @author: Suhas Somnath
 """
 
-from __future__ import division, print_function, absolute_import
 import sys
 from collections import Iterable
 from warnings import warn
@@ -23,9 +21,6 @@ from pyUSID import USIDataset
 from pyUSID.io.hdf_utils import check_if_main, write_main_dataset, \
     create_results_group
 from pyUSID import Dimension
-
-if sys.version_info.major == 3:
-    unicode = str
 
 
 # TODO: Phase rotation not implemented correctly. Find and use excitation frequency
@@ -54,7 +49,7 @@ def test_filter(resp_wfm, frequency_filters=None, noise_threshold=None, excit_wf
         against excit_wfm will be returned for fig_loops
     show_plots : (Optional) Boolean
         Whether or not to plot FFTs before and after filtering
-    plot_title : str / unicode (Optional)
+    plot_title : str (Optional)
         Title for the raw vs filtered plots if requested. For example - 'Row 15'
     verbose : (Optional) Boolean
         Prints extra debugging information if True.  Default False
@@ -82,7 +77,7 @@ def test_filter(resp_wfm, frequency_filters=None, noise_threshold=None, excit_wf
         if plot_title is None:
             plot_title = 'FFT Filtering'
         else:
-            assert isinstance(plot_title, (str, unicode))
+            assert isinstance(plot_title, str)
 
     if frequency_filters is None and noise_threshold is None:
         raise ValueError('Need to specify at least some noise thresholding / frequency filter')

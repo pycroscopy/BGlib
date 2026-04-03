@@ -10,8 +10,7 @@ Created on Thu Nov 20 11:48:53 2019
 
 """
 
-from __future__ import division, print_function, absolute_import, \
-    unicode_literals
+import logging
 import joblib
 import dask
 import time
@@ -33,6 +32,8 @@ from .utils.be_loop import projectLoop, fit_loop, generate_guess, \
 from .utils.tree import ClusterTree
 from .be_sho_fitter import sho32
 from .fitter import Fitter
+
+logger = logging.getLogger(__name__)
 
 '''
 Custom dtypes for the datasets created during fitting.
@@ -198,7 +199,7 @@ class BELoopFitter(Fitter):
             self.h5_main.h5_spec_inds[_fit_spec_index, :] == 0).flatten()
         tot_cycles = cycle_start_inds.size
         if self.verbose and self.mpi_rank == 0:
-            print('Found {} cycles starting at indices: {}'.format(tot_cycles,
+            logger.info('Found {} cycles starting at indices: {}'.format(tot_cycles,
                                                                    cycle_start_inds))
 
         # Make the results group
@@ -243,7 +244,7 @@ class BELoopFitter(Fitter):
         self._met_spec_inds = self.h5_loop_metrics.h5_spec_inds
 
         if self.verbose and self.mpi_rank == 0:
-            print('Finished creating Guess dataset')
+            logger.info('Finished creating Guess dataset')
 
     def _create_guess_datasets(self):
         """
@@ -302,7 +303,7 @@ class BELoopFitter(Fitter):
             return
 
         if self.verbose and self.mpi_rank == 0:
-            print('BELoopFitter got data chunk of shape {} from Fitter'
+            logger.info('BELoopFitter got data chunk of shape {} from Fitter'
                   '.'.format(self.data.shape))
 
         spec_dim_order_s2f = get_sort_order(self.h5_main.h5_spec_inds)[::-1]
@@ -316,17 +317,17 @@ class BELoopFitter(Fitter):
 
         order_to_s2f = [0] + list(1 + spec_dim_order_s2f)
         if self.verbose and self.mpi_rank == 0:
-            print('Order for reshaping to S2F: {}'.format(order_to_s2f))
+            logger.info('Order for reshaping to S2F: {}'.format(order_to_s2f))
 
         if self.verbose and self.mpi_rank == 0:
-            print(self._dim_labels_s2f, order_to_s2f)
+            logger.info("%s %s", self._dim_labels_s2f, order_to_s2f)
 
         if self._num_forcs:
             forc_pos = self.h5_main.spec_dim_labels.index(self._forc_dim_name)
             self._num_forcs = self.h5_main.spec_dim_sizes[forc_pos]
 
         if self.verbose and self.mpi_rank == 0:
-            print('Num FORCS: {}'.format(self._num_forcs))
+            logger.info('Num FORCS: {}'.format(self._num_forcs))
 
         all_but_forc_rows = []
         for ind, dim_name in enumerate(self.h5_main.spec_dim_labels):
@@ -334,7 +335,7 @@ class BELoopFitter(Fitter):
                 all_but_forc_rows.append(ind)
 
         if self.verbose and self.mpi_rank == 0:
-            print('All but FORC spec rows: {}'.format(all_but_forc_rows))
+            logger.info('All but FORC spec rows: {}'.format(all_but_forc_rows))
 
         dc_mats = []
 
@@ -343,7 +344,7 @@ class BELoopFitter(Fitter):
         num_reps = 1 if self._num_forcs == 0 else self._num_forcs
         for forc_ind in range(num_reps):
             if self.verbose and self.mpi_rank == 0:
-                print('\nWorking on FORC #{}'.format(forc_ind))
+                logger.info('\nWorking on FORC #{}'.format(forc_ind))
 
             if self._num_forcs:
                 this_forc_spec_inds = \
@@ -371,7 +372,7 @@ class BELoopFitter(Fitter):
 
             this_forc_2d = self.data[:, this_forc_spec_inds]
             if self.verbose and self.mpi_rank == 0:
-                print('2D slice shape for this FORC: {}'.format(this_forc_2d.shape))
+                logger.info('2D slice shape for this FORC: {}'.format(this_forc_2d.shape))
 
             this_forc_nd, success = reshape_to_n_dims(this_forc_2d,
                                                       h5_pos=None,
@@ -383,9 +384,9 @@ class BELoopFitter(Fitter):
                 raise ValueError('Unable to reshape data to N dimensions')
 
             if self.verbose and self.mpi_rank == 0:
-                print('After reshaping to N dimensions: shape: '
+                logger.info('After reshaping to N dimensions: shape: '
                       '{}'.format(this_forc_nd.shape))
-                print('Will reorder to slow-to-fast as: '
+                logger.info('Will reorder to slow-to-fast as: '
                       '{} and squeeze FORC out'.format(order_to_s2f))
 
             this_forc_nd_s2f = this_forc_nd.transpose(
@@ -401,7 +402,7 @@ class BELoopFitter(Fitter):
                     self._forc_dim_name)
                 # because it was never there in the first place.
             if self.verbose and self.mpi_rank == 0:
-                print('Reordered to S2F: {}, {}'.format(this_forc_nd_s2f.shape,
+                logger.info('Reordered to S2F: {}, {}'.format(this_forc_nd_s2f.shape,
                                                         dim_names_s2f))
 
             rest_dc_order = list(range(len(dim_names_s2f)))
@@ -409,7 +410,7 @@ class BELoopFitter(Fitter):
             rest_dc_order.remove(_dc_ind)
             rest_dc_order = rest_dc_order + [_dc_ind]
             if self.verbose and self.mpi_rank == 0:
-                print('Transpose for reordering to rest, DC: {}'
+                logger.info('Transpose for reordering to rest, DC: {}'
                       ''.format(rest_dc_order))
 
             rest_dc_nd = this_forc_nd_s2f.transpose(rest_dc_order)
@@ -419,14 +420,14 @@ class BELoopFitter(Fitter):
             self._pre_flattening_dim_name_order = list(rest_dc_names)
 
             if self.verbose and self.mpi_rank == 0:
-                print('After reodering: {}, {}'.format(rest_dc_nd.shape,
+                logger.info('After reodering: {}, {}'.format(rest_dc_nd.shape,
                                                        rest_dc_names))
 
             dc_rest_2d = rest_dc_nd.reshape(np.prod(rest_dc_nd.shape[:-1]),
                                             np.prod(rest_dc_nd.shape[-1]))
 
             if self.verbose and self.mpi_rank == 0:
-                print('Shape after flattening to 2D: {}'
+                logger.info('Shape after flattening to 2D: {}'
                       ''.format(dc_rest_2d.shape))
 
             forc_mats.append(dc_rest_2d)
@@ -434,7 +435,7 @@ class BELoopFitter(Fitter):
         self.data = forc_mats, dc_mats
 
         if self.verbose and self.mpi_rank == 0:
-            print('self.data loaded')
+            logger.info('self.data loaded')
 
     def _read_guess_chunk(self):
         """
@@ -452,20 +453,20 @@ class BELoopFitter(Fitter):
         super(BELoopFitter, self)._read_guess_chunk()
 
         if self.verbose and self.mpi_rank == 0:
-            print('_read_guess_chunk got guess of shape: {} from super'
+            logger.info('_read_guess_chunk got guess of shape: {} from super'
                   '.'.format(self._guess.shape))
 
         spec_dim_order_s2f = get_sort_order(self._h5_guess.h5_spec_inds)[::-1]
 
         order_to_s2f = [0] + list(1 + spec_dim_order_s2f)
         if self.verbose and self.mpi_rank == 0:
-            print('Order for reshaping to S2F: {}'.format(order_to_s2f))
+            logger.info('Order for reshaping to S2F: {}'.format(order_to_s2f))
 
         dim_labels_s2f = list(['Positions']) + list(
             np.array(self._h5_guess.spec_dim_labels)[spec_dim_order_s2f])
 
         if self.verbose and self.mpi_rank == 0:
-            print(dim_labels_s2f, order_to_s2f)
+            logger.info("%s %s", dim_labels_s2f, order_to_s2f)
 
         num_forcs = int(any([targ in self._h5_guess.spec_dim_labels for targ in
                              ['FORC', 'FORC_Cycle']]))
@@ -474,7 +475,7 @@ class BELoopFitter(Fitter):
             num_forcs = self._h5_guess.spec_dim_sizes[forc_pos]
 
         if self.verbose and self.mpi_rank == 0:
-            print('Num FORCS: {}'.format(num_forcs))
+            logger.info('Num FORCS: {}'.format(num_forcs))
 
         all_but_forc_rows = []
         for ind, dim_name in enumerate(self._h5_guess.spec_dim_labels):
@@ -482,14 +483,14 @@ class BELoopFitter(Fitter):
                 all_but_forc_rows.append(ind)
 
         if self.verbose and self.mpi_rank == 0:
-            print('All but FORC rows: {}'.format(all_but_forc_rows))
+            logger.info('All but FORC rows: {}'.format(all_but_forc_rows))
 
         forc_mats = []
 
         num_reps = 1 if num_forcs == 0 else num_forcs
         for forc_ind in range(num_reps):
             if self.verbose and self.mpi_rank == 0:
-                print('\nWorking on FORC #{}'.format(forc_ind))
+                logger.info('\nWorking on FORC #{}'.format(forc_ind))
             if num_forcs:
                 this_forc_spec_inds = \
                 np.where(self._h5_guess.h5_spec_inds[forc_pos] == forc_ind)[0]
@@ -499,7 +500,7 @@ class BELoopFitter(Fitter):
 
             this_forc_2d = self._guess[:, this_forc_spec_inds]
             if self.verbose and self.mpi_rank == 0:
-                print('2D slice shape for this FORC: {}'.format(this_forc_2d.shape))
+                logger.info('2D slice shape for this FORC: {}'.format(this_forc_2d.shape))
 
             this_forc_nd, success = reshape_to_n_dims(this_forc_2d,
                                                       h5_pos=None,
@@ -511,7 +512,7 @@ class BELoopFitter(Fitter):
                 raise ValueError('Unable to reshape 2D guess to N dimensions')
 
             if self.verbose and self.mpi_rank == 0:
-                print('N dimensional shape for this FORC: {}'.format(this_forc_nd.shape))
+                logger.info('N dimensional shape for this FORC: {}'.format(this_forc_nd.shape))
 
             this_forc_nd_s2f = this_forc_nd.transpose(
                 order_to_s2f).squeeze()  # squeeze out FORC
@@ -520,12 +521,12 @@ class BELoopFitter(Fitter):
                 dim_names_s2f.remove(self._forc_dim_name)
                 # because it was never there in the first place.
             if self.verbose and self.mpi_rank == 0:
-                print('Reordered to S2F: {}, {}'.format(this_forc_nd_s2f.shape,
+                logger.info('Reordered to S2F: {}, {}'.format(this_forc_nd_s2f.shape,
                                                         dim_names_s2f))
 
             dc_rest_2d = this_forc_nd_s2f.ravel()
             if self.verbose and self.mpi_rank == 0:
-                print('Shape after raveling: {}'.format(dc_rest_2d.shape))
+                logger.info('Shape after raveling: {}'.format(dc_rest_2d.shape))
 
             # Scipy will not understand compound values. Flatten.
             # Ignore the R2 error
@@ -534,20 +535,20 @@ class BELoopFitter(Fitter):
                                        [len(loop_fit32.names)-1],
                                  dtype=float)
             if self.verbose and self.mpi_rank == 0:
-                print('Created empty float matrix of shape: {}'
+                logger.info('Created empty float matrix of shape: {}'
                       '.'.format(float_mat.shape))
             for ind, field_name in enumerate(loop_fit32.names[:-1]):
                 float_mat[..., ind] = dc_rest_2d[field_name]
 
             if self.verbose and self.mpi_rank == 0:
-                print('Shape after flattening to float: {}'
+                logger.info('Shape after flattening to float: {}'
                       '.'.format(float_mat.shape))
 
             forc_mats.append(float_mat)
 
         self._guess = np.array(forc_mats)
         if self.verbose and self.mpi_rank == 0:
-            print('Flattened Guesses to shape: {} and dtype:'
+            logger.info('Flattened Guesses to shape: {} and dtype:'
                   '.'.format(self._guess.shape, self._guess.dtype))
 
     @staticmethod
@@ -624,7 +625,7 @@ class BELoopFitter(Fitter):
             cores = req_cores
 
         if verbose:
-            print(
+            logger.info(
                 'Rank {} starting computation on {} cores (requested {} '
                 'cores)'.format(rank, cores, req_cores))
 
@@ -638,11 +639,11 @@ class BELoopFitter(Fitter):
 
             # Finished reading the entire data set
             if verbose:
-                print('Rank {} finished parallel computation'.format(rank))
+                logger.info('Rank {} finished parallel computation'.format(rank))
 
         else:
             if verbose:
-                print("Rank {} computing serially ...".format(rank))
+                logger.info("Rank {} computing serially ...".format(rank))
             # List comprehension vs map vs for loop?
             # https://stackoverflow.com/questions/1247486/python-list-comprehension-vs-map
             results = []
@@ -651,7 +652,7 @@ class BELoopFitter(Fitter):
                             loops_2d]
 
             if verbose:
-                print('Rank {} finished serial computation'.format(rank))
+                logger.info('Rank {} finished serial computation'.format(rank))
 
         return results
 
@@ -664,15 +665,15 @@ class BELoopFitter(Fitter):
         loop metrics, and the guess parameters ready to be written to HDF5
         """
         if self.verbose and self.mpi_rank == 0:
-            print("Rank {} at _unit_compute_guess".format(self.mpi_rank))
+            logger.info("Rank {} at _unit_compute_guess".format(self.mpi_rank))
 
         resp_2d_list, dc_vec_list = self.data
 
         if self.verbose and self.mpi_rank == 0:
-            print('Unit computation found {} FORC datasets with {} '
+            logger.info('Unit computation found {} FORC datasets with {} '
                   'corresponding DC vectors'.format(len(resp_2d_list),
                                                     len(dc_vec_list)))
-            print('First dataset of shape: {}'.format(resp_2d_list[0].shape))
+            logger.info('First dataset of shape: {}'.format(resp_2d_list[0].shape))
 
         results = self.__compute_batches(resp_2d_list, dc_vec_list,
                                          self._project_loop, self._cores,
@@ -680,13 +681,13 @@ class BELoopFitter(Fitter):
 
         # Step 1: unzip the two components in results into separate arrays
         if self.verbose and self.mpi_rank == 0:
-            print('Unzipping loop projection results')
+            logger.info('Unzipping loop projection results')
         loop_mets = np.zeros(shape=len(results), dtype=loop_metrics32)
         proj_loops = np.zeros(shape=(len(results), self.data[0][0].shape[1]),
                               dtype=float)
 
         if self.verbose and self.mpi_rank == 0:
-            print(
+            logger.info(
                 'Prepared empty arrays for loop metrics of shape: {} and '
                 'projected loops of shape: {}.'
                 ''.format(loop_mets.shape, proj_loops.shape))
@@ -701,12 +702,12 @@ class BELoopFitter(Fitter):
                                         proj_loops.shape[-1]))
 
         if self.verbose and self.mpi_rank == 0:
-            print('Reshaped projected loops from {} to: {}'.format(
+            logger.info('Reshaped projected loops from {} to: {}'.format(
                 proj_loops.shape, proj_forc.shape))
 
         # Convert forc dimension to a list
         if self.verbose and self.mpi_rank == 0:
-            print('Going to compute guesses now')
+            logger.info('Going to compute guesses now')
 
         all_guesses = []
 
@@ -848,11 +849,11 @@ class BELoopFitter(Fitter):
 
         if self.mpi_size == 1:
             if self.verbose:
-                print('Using Dask for parallel computation')
+                logger.info('Using Dask for parallel computation')
             opt_func = dask.delayed(opt_func)
         else:
             if self.verbose:
-                print('Rank {} using serial computation'.format(self.mpi_rank))
+                logger.info('Rank {} using serial computation'.format(self.mpi_rank))
 
         t0 = time.time()
 
@@ -866,7 +867,7 @@ class BELoopFitter(Fitter):
             loops_2d_shifted = np.roll(loops_2d, shift_ind, axis=1)
 
             if self.verbose and self.mpi_rank == 0:
-                print('Computing on set: DC: {}<{}>, loops: {}<{}>, Guess: {}<{}>'.format(
+                logger.info('Computing on set: DC: {}<{}>, loops: {}<{}>, Guess: {}<{}>'.format(
                         vdc_shifted.shape, vdc_shifted.dtype,
                         loops_2d_shifted.shape, loops_2d_shifted.dtype,
                         guess_parms.shape, guess_parms.dtype))
@@ -881,17 +882,17 @@ class BELoopFitter(Fitter):
 
         if self.mpi_size == 1:
             if self.verbose and self.mpi_rank == 0:
-                print('Now computing delayed tasks:')
+                logger.info('Now computing delayed tasks:')
 
             self._results = dask.compute(self._results, scheduler='processes')[0]
 
             t2 = time.time()
 
             if self.verbose and self.mpi_rank == 0:
-                print('Dask Setup time: {} sec. Compute time: {} sec'.format(t1- t0, t2 - t1))
+                logger.info('Dask Setup time: {} sec. Compute time: {} sec'.format(t1- t0, t2 - t1))
         else:
             if self.verbose:
-                print('Rank {}: Serial compute time: {} sec'.format(self.mpi_rank, t1 - t0))
+                logger.info('Rank {}: Serial compute time: {} sec'.format(self.mpi_rank, t1 - t0))
 
     @staticmethod
     def extract_loop_parameters(h5_loop_fit, nuc_threshold=0.03):
@@ -944,19 +945,19 @@ class BELoopFitter(Fitter):
         self._read_guess_chunk()
 
         if self.verbose and self.mpi_rank == 0:
-            print('_unit_compute_fit got:\nobj_func: {}\n'
+            logger.info('_unit_compute_fit got:\nobj_func: {}\n'
                   'solver_options: {}'.format(obj_func, solver_options))
 
         # TODO: Generalize this bit. Use Parallel compute instead!
         if self.mpi_size > 1:
             if self.verbose:
-                print('Rank {}: About to start serial computation'
+                logger.info('Rank {}: About to start serial computation'
                       '.'.format(self.mpi_rank))
 
             self._results = list()
             for dc_vec, loops_2d, guess_parms in zip(dc_vec_list, resp_2d_list, self._guess):
                 if self.verbose:
-                    print('Setting up delayed joblib based on DC: {}<{}>, loops: {}<{}>, Guess: {}<{}>'.format(dc_vec.shape, dc_vec.dtype, loops_2d.shape, loops_2d.dtype, guess_parms.shape, guess_parms.dtype))
+                    logger.info('Setting up delayed joblib based on DC: {}<{}>, loops: {}<{}>, Guess: {}<{}>'.format(dc_vec.shape, dc_vec.dtype, loops_2d.shape, loops_2d.dtype, guess_parms.shape, guess_parms.dtype))
 
                 '''
                 Shift the loops and vdc vector
@@ -965,7 +966,7 @@ class BELoopFitter(Fitter):
                 loops_2d_shifted = np.roll(loops_2d, shift_ind, axis=1)
 
                 if self.verbose:
-                    print('Setting up delayed joblib based on DC: {}<{}>, loops: {}<{}>, Guess: {}<{}>'.format(vdc_shifted.shape, vdc_shifted.dtype, loops_2d_shifted.shape, loops_2d_shifted.dtype, guess_parms.shape, guess_parms.dtype))
+                    logger.info('Setting up delayed joblib based on DC: {}<{}>, loops: {}<{}>, Guess: {}<{}>'.format(vdc_shifted.shape, vdc_shifted.dtype, loops_2d_shifted.shape, loops_2d_shifted.dtype, guess_parms.shape, guess_parms.dtype))
 
                 for loop_resp, loop_guess in zip(loops_2d_shifted, guess_parms):
                     curr_results = least_squares(obj_func, loop_guess,
@@ -976,12 +977,12 @@ class BELoopFitter(Fitter):
             cores = recommend_cpu_cores(len(resp_2d_list) * resp_2d_list[0].shape[0],
                                         verbose=self.verbose)
             if self.verbose:
-                print('Starting parallel fitting with {} cores'.format(cores))
+                logger.info('Starting parallel fitting with {} cores'.format(cores))
 
             values = list()
             for dc_vec, loops_2d, guess_parms in zip(dc_vec_list, resp_2d_list, self._guess):
                 if self.verbose:
-                    print('Setting up delayed joblib based on DC: {} loops: {}, Guess: {}'.format(dc_vec.shape, loops_2d.shape, guess_parms.shape))
+                    logger.info('Setting up delayed joblib based on DC: {} loops: {}, Guess: {}'.format(dc_vec.shape, loops_2d.shape, guess_parms.shape))
                 '''
                 Shift the loops and vdc vector
                 '''
@@ -989,22 +990,22 @@ class BELoopFitter(Fitter):
                 loops_2d_shifted = np.roll(loops_2d, shift_ind, axis=1)
 
                 if self.verbose:
-                    print('Setting up delayed joblib based on DC: {}<{}>, loops: {}<{}>, Guess: {}<{}>'.format(vdc_shifted.shape, vdc_shifted.dtype, loops_2d_shifted.shape, loops_2d_shifted.dtype, guess_parms.shape, guess_parms.dtype))
+                    logger.info('Setting up delayed joblib based on DC: {}<{}>, loops: {}<{}>, Guess: {}<{}>'.format(vdc_shifted.shape, vdc_shifted.dtype, loops_2d_shifted.shape, loops_2d_shifted.dtype, guess_parms.shape, guess_parms.dtype))
 
                 temp = [joblib.delayed(least_squares)(obj_func, loop_guess, args=[loop_resp, vdc_shifted], **solver_options) for loop_resp, loop_guess in zip(loops_2d_shifted, guess_parms)]
 
 
                 values.append(temp)
             if self.verbose:
-                print('Finished setting up delayed computations. Starting parallel compute')
-                print(temp[0])
+                logger.info('Finished setting up delayed computations. Starting parallel compute')
+                logger.info(temp[0])
                 from pickle import dumps
                 for item in temp[0]:
-                    print(dumps(item))
+                    logger.info(dumps(item))
             self._results = joblib.Parallel(n_jobs=cores)(values)
 
         if self.verbose and self.mpi_rank == 0:
-            print(
+            logger.info(
                 'Finished computing fits on {} objects'
                 ''.format(len(self._results)))
 
@@ -1056,7 +1057,7 @@ class BELoopFitter(Fitter):
             first_n_dim_shape = [num_forcs] + first_n_dim_shape
             first_n_dim_names = [forc_dim_name] + first_n_dim_names
         if verbose:
-            print('Dimension sizes & order: {} and names: {} that flattened '
+            logger.info('Dimension sizes & order: {} and names: {} that flattened '
                   'results will be reshaped to'
                   '.'.format(first_n_dim_shape, first_n_dim_names))
 
@@ -1067,13 +1068,13 @@ class BELoopFitter(Fitter):
         map_to_s2f = [first_n_dim_names.index(dim_name) for dim_name in
                       dim_labels_s2f]
         if verbose:
-            print('Will permute as: {} to arrange dimensions from slowest to '
+            logger.info('Will permute as: {} to arrange dimensions from slowest to '
                   'fastest varying'.format(map_to_s2f))
 
         results_nd_s2f = first_n_dim_results.transpose(map_to_s2f)
 
         if verbose:
-            print('Shape: {} and dimension labels: {} of results arranged from'
+            logger.info('Shape: {} and dimension labels: {} of results arranged from'
                   ' slowest to fastest varying'
                   '.'.format(results_nd_s2f.shape, dim_labels_s2f))
 
@@ -1081,7 +1082,7 @@ class BELoopFitter(Fitter):
         spec_size = int(np.prod(results_nd_s2f.shape[1:]))
 
         if verbose:
-            print('Results will be flattend to: {}'
+            logger.info('Results will be flattend to: {}'
                   '.'.format((pos_size, spec_size)))
 
         results_2d = results_nd_s2f.reshape(pos_size, spec_size)
@@ -1096,7 +1097,7 @@ class BELoopFitter(Fitter):
         proj_loops, loop_mets, all_guesses = self._results
 
         if self.verbose:
-            print('Unzipped results into Projected loops and Metrics arrays')
+            logger.info('Unzipped results into Projected loops and Metrics arrays')
 
         # Step 2: Fold to N-D before reversing transposes:
         loops_2d = self._reformat_results_chunk(self._num_forcs, proj_loops,
@@ -1127,17 +1128,17 @@ class BELoopFitter(Fitter):
         curr_pixels = self._get_pixels_in_current_batch()
 
         if self.verbose and self.mpi_rank == 0:
-            print(
+            logger.info(
                 'Writing projected loops of shape: {} and data type: {} to a dataset of shape: {} and data type {}'.format(
                     loops_2d.shape, loops_2d.dtype,
                     self.h5_projected_loops.shape,
                     self.h5_projected_loops.dtype))
-            print(
+            logger.info(
                 'Writing loop metrics of shape: {} and data type: {} to a dataset of shape: {} and data type {}'.format(
                     mets_2d.shape, mets_2d.dtype, self.h5_loop_metrics.shape,
                     self.h5_loop_metrics.dtype))
 
-            print(
+            logger.info(
                 'Writing Guesses of shape: {} and data type: {} to a dataset of shape: {} and data type {}'.format(
                     guess_2d.shape, guess_2d.dtype, self._h5_guess.shape,
                     self._h5_guess.dtype))
@@ -1161,7 +1162,7 @@ class BELoopFitter(Fitter):
         all_fits = np.array(self._results)
 
         if self.verbose and self.mpi_rank == 0:
-            print('Results of shape: {} and dtype: {}'.format(all_fits.shape, all_fits.dtype))
+            logger.info('Results of shape: {} and dtype: {}'.format(all_fits.shape, all_fits.dtype))
 
         met_labels_s2f = self._dim_labels_s2f.copy()
         met_labels_s2f.remove(self._fit_dim_name)
@@ -1177,7 +1178,7 @@ class BELoopFitter(Fitter):
         curr_pixels = self._get_pixels_in_current_batch()
 
         if self.verbose and self.mpi_rank == 0:
-            print(
+            logger.info(
                 'Writing Fits of shape: {} and data type: {} to a dataset of shape: {} and data type {}'.format(
                     fits_2d.shape, fits_2d.dtype, self._h5_fit.shape,
                     self._h5_fit.dtype))
@@ -1264,7 +1265,7 @@ def guess_loops_hierarchically(vdc_vec, projected_loops_2d):
             Loop parameters that serve as fits for the loops in the tree
 
         """
-        # print('Now fitting cluster #{}'.format(tree.name))
+        # logger.info('Now fitting cluster #{}'.format(tree.name))
         # I already have a guess. Now fit myself
         curr_fit_results = fit_loop(vdc_shifted,
                                     np.roll(tree.value, shift_ind),

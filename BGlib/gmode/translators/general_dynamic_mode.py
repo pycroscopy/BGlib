@@ -4,8 +4,7 @@ Created on Fri Mar 04 11:12:45 2016
 
 @author: Suhas Somnath
 """
-
-from __future__ import division, print_function, absolute_import, unicode_literals
+import logging
 
 from os import path, remove  # File Path formatting
 
@@ -21,6 +20,8 @@ from pyUSID.io.anc_build_utils import VALUES_DTYPE
 from pyUSID.io.hdf_utils import create_indexed_group, write_main_dataset
 
 from .df_utils.gmode_utils import readGmodeParms
+
+logger = logging.getLogger(__name__)
 
 
 class GDMTranslator(Translator):
@@ -131,7 +132,7 @@ class GDMTranslator(Translator):
         for row_ind in range(1, num_rows + 1):
             for col_ind in range(1, num_cols + 1):
                 file_path = path.join(folder_path, 'fSweep_r' + str(row_ind) + '_c' + str(col_ind) + '.mat')
-                print('Working on row {} col {}'.format(row_ind, col_ind))
+                logger.info("Working on row %s col %s", row_ind, col_ind)
                 if path.exists(file_path):
                     # Load data file
                     pix_data = loadmat(file_path, squeeze_me=True)
@@ -143,10 +144,10 @@ class GDMTranslator(Translator):
                     h5_main[pos_ind, :] = np.array(pix_vec).astype(float)
                     h5_f.flush()  # flush from memory!
                 else:
-                    print('File not found for: row {} col {}'.format(row_ind, col_ind))
+                    logger.info("File not found for: row %s col %s", row_ind, col_ind)
                 pos_ind += 1
                 if (100.0 * pos_ind / num_pix) % 10 == 0:
-                    print('completed translating {} %'.format(int(100 * pos_ind / num_pix)))
+                    logger.info("completed translating %s %%", int(100 * pos_ind / num_pix))
 
         h5_f.close()
 

@@ -4,8 +4,7 @@ Created on Tue Mar 29 16:04:34 2016
 
 @author: Suhas Somnath
 """
-
-from __future__ import division, print_function, absolute_import, unicode_literals
+import logging
 
 from os import path, remove  # File Path formatting
 
@@ -20,6 +19,8 @@ from pyUSID.io.write_utils import Dimension, INDICES_DTYPE, VALUES_DTYPE
 from .df_utils.write_utils import build_ind_val_dsets
 from .df_utils.hdf_writer import HDFwriter
 from .df_utils.virtual_data import VirtualDataset, VirtualGroup
+
+logger = logging.getLogger(__name__)
 
 
 class SporcTranslator(Translator):
@@ -53,7 +54,7 @@ class SporcTranslator(Translator):
         h5_path = path.join(folder_path, base_name + '.h5')
 
         # Read parameters
-        print('reading parameter files')
+        logger.info("reading parameter files")
         parm_dict, excit_wfm, spec_ind_mat = self.__readparms(parm_path)
         parm_dict['data_type'] = 'SPORC'
 
@@ -122,7 +123,7 @@ class SporcTranslator(Translator):
                         'Spectroscopic_Indices', 'Spectroscopic_Values']
         link_h5_objects_as_attrs(h5_main, get_h5_obj_refs(aux_ds_names, h5_refs))
 
-        print('reading raw data now...')
+        logger.info("reading raw data now...")
 
         # Now read the raw data files:
         pos_ind = 0
@@ -139,10 +140,10 @@ class SporcTranslator(Translator):
                     h5_main[pos_ind, :] = np.array(np.real(pix_vec)).astype(float)
                     hdf.flush()  # flush from memory!
                 else:
-                    print('File for row {} col {} not found'.format(row_ind, col_ind))
+                    logger.info("File for row %s col %s not found", row_ind, col_ind)
                 pos_ind += 1
                 if (100.0 * pos_ind / num_pix) % 10 == 0:
-                    print('Finished reading {} % of data'.format(int(100 * pos_ind / num_pix)))
+                    logger.info("Finished reading %s %% of data", int(100 * pos_ind / num_pix))
 
         hdf.close()
 

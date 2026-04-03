@@ -1,13 +1,11 @@
-# -*- coding: utf-8 -*-
 """
 Created on Tue Nov  3 15:24:12 2015
 
 @author: Chris R. Smith
 """
 
-from __future__ import division, print_function, absolute_import, unicode_literals
+import logging
 from warnings import warn
-import sys
 import datetime
 import h5py
 import os
@@ -22,8 +20,7 @@ from pyUSID.io.anc_build_utils import create_spec_inds_from_vals
 
 from .df_utils.be_utils import remove_non_exist_spec_dim_labs
 
-if sys.version_info.major == 3:
-    unicode = str
+logger = logging.getLogger(__name__)
 
 def fix_BE_problem(h5_main):
     """
@@ -104,7 +101,7 @@ class LabViewH5Patcher(Translator):
             this translator is indeed capable of translating the provided file.
             Otherwise, None will be returned
         """
-        if not isinstance(file_path, (str, unicode)):
+        if not isinstance(file_path, str):
             raise TypeError('file_path should be a string object')
         if not os.path.isfile(file_path):
             return None
@@ -114,15 +111,14 @@ class LabViewH5Patcher(Translator):
         if extension not in ['h5', 'hdf5']:
             return None
         try:
-            h5_f = h5py.File(file_path, 'r+')
-        except:
-            return None
+            with h5py.File(file_path, 'r+') as h5_f:
+                # TODO: Make this check as lot stronger. Currently brittle
+                if 'DAQ_software_version_name' not in h5_f.attrs:
+                    return None
 
-        # TODO: Make this check as lot stronger. Currently brittle
-        if 'DAQ_software_version_name' not in h5_f.attrs.keys():
-            return None
-
-        if len(find_dataset(h5_f, 'Raw_Data')) < 1:
+                if len(find_dataset(h5_f, 'Raw_Data')) < 1:
+                    return None
+        except OSError:
             return None
         return file_path
 
@@ -145,77 +141,66 @@ class LabViewH5Patcher(Translator):
             path to the patched dataset
 
         """
-        #TODO: Need a way to choose which channels to apply the patcher to, 
+        #TODO: Need a way to choose which channels to apply the patcher to,
         #fails for multi-channel files where not all files are capable of being main datasets
         # Open the file and check if a patch is needed
-        h5_file = h5py.File(os.path.abspath(h5_path), 'r+')
-        if h5_file.attrs.get('translator') is not None and not force_patch:
-            print('File is already Pycroscopy ready.')
-            h5_file.close()
-            return h5_path
-
-        '''
-        Get the list of all Raw_Data Datasets
-        Loop over the list and update the needed attributes
-        '''
-        raw_list = find_dataset(h5_file, 'Raw_Data')
-        for h5_raw in raw_list:
-            if 'quantity' not in h5_raw.attrs:
-                h5_raw.attrs['quantity'] = 'quantity'
-            if 'units' not in h5_raw.attrs:
-                h5_raw.attrs['units'] = 'a.u.'
-
-            # Grab the channel and measurement group of the data to check some needed attributes
-            h5_chan = h5_raw.parent
-            try:
-                c_type = get_attr(h5_chan, 'channel_type')
-
-            except KeyError:
-                warn_str = "'channel_type' was not found as an attribute of {}.\n".format(h5_chan.name)
-                warn_str += "If this is BEPS or BELine data from the LabView aquisition software, " + \
-                            "please run the following piece of code.  Afterwards, run this function again.\n" + \
-                            "CODE: " \
-                            "hdf.file['{}'].attrs['channel_type'] = 'BE'".format(h5_chan.name)
-                warn(warn_str)
-                h5_file.close()
+        with h5py.File(os.path.abspath(h5_path), 'r+') as h5_file:
+            if h5_file.attrs.get('translator') is not None and not force_patch:
+                logger.info("File is already Pycroscopy ready.")
                 return h5_path
 
-            except:
-                raise
+            # Get the list of all Raw_Data datasets and update the needed attributes.
+            raw_list = find_dataset(h5_file, 'Raw_Data')
+            for h5_raw in raw_list:
+                if 'quantity' not in h5_raw.attrs:
+                    h5_raw.attrs['quantity'] = 'quantity'
+                if 'units' not in h5_raw.attrs:
+                    h5_raw.attrs['units'] = 'a.u.'
 
-            if c_type != 'BE':
-                continue
-
-            h5_meas = h5_chan.parent
-            h5_meas.attrs['num_UDVS_steps'] = h5_meas.attrs['num_steps']
-
-            # Get the object handles for the Indices and Values datasets
-            h5_pos_inds = h5_chan['Position_Indices']
-            h5_pos_vals = h5_chan['Position_Values']
-            h5_spec_inds = h5_chan['Spectroscopic_Indices']
-            h5_spec_vals = h5_chan['Spectroscopic_Values']
-
-            # Make sure we have correct spectroscopic indices for the given values
-            ds_spec_inds = create_spec_inds_from_vals(h5_spec_vals[()])
-            if not np.allclose(ds_spec_inds, h5_spec_inds[()]):
-                h5_spec_inds[:, :] = ds_spec_inds[:, :]
-                h5_file.flush()
-
-            # Get the labels and units for the Spectroscopic datasets
-            h5_spec_labels = h5_spec_inds.attrs['labels']
-            inds_and_vals = [h5_pos_inds, h5_pos_vals, h5_spec_inds, h5_spec_vals]
-            for dset in inds_and_vals:
-                spec_labels = dset.attrs['labels']
+                # Grab the channel and measurement group of the data to check some needed attributes.
+                h5_chan = h5_raw.parent
                 try:
-                    spec_units = dset.attrs['units']
-
-                    if len(spec_units) != len(spec_labels):
-                        raise KeyError
-
+                    c_type = get_attr(h5_chan, 'channel_type')
                 except KeyError:
-                    dset['units'] = ['' for _ in spec_labels]
-                except:
-                    raise
+                    warn_str = "'channel_type' was not found as an attribute of {}.\n".format(h5_chan.name)
+                    warn_str += "If this is BEPS or BELine data from the LabView aquisition software, " + \
+                                "please run the following piece of code.  Afterwards, run this function again.\n" + \
+                                "CODE: " \
+                                "hdf.file['{}'].attrs['channel_type'] = 'BE'".format(h5_chan.name)
+                    warn(warn_str)
+                    return h5_path
+
+                if c_type != 'BE':
+                    continue
+
+                h5_meas = h5_chan.parent
+                h5_meas.attrs['num_UDVS_steps'] = h5_meas.attrs['num_steps']
+
+                # Get the object handles for the Indices and Values datasets
+                h5_pos_inds = h5_chan['Position_Indices']
+                h5_pos_vals = h5_chan['Position_Values']
+                h5_spec_inds = h5_chan['Spectroscopic_Indices']
+                h5_spec_vals = h5_chan['Spectroscopic_Values']
+
+                # Make sure we have correct spectroscopic indices for the given values
+                ds_spec_inds = create_spec_inds_from_vals(h5_spec_vals[()])
+                if not np.allclose(ds_spec_inds, h5_spec_inds[()]):
+                    h5_spec_inds[:, :] = ds_spec_inds[:, :]
+                    h5_file.flush()
+
+                # Get the labels and units for the Spectroscopic datasets
+                h5_spec_labels = h5_spec_inds.attrs['labels']
+                inds_and_vals = [h5_pos_inds, h5_pos_vals, h5_spec_inds, h5_spec_vals]
+                for dset in inds_and_vals:
+                    spec_labels = dset.attrs['labels']
+                    try:
+                        spec_units = dset.attrs['units']
+
+                        if len(spec_units) != len(spec_labels):
+                            raise KeyError
+
+                    except KeyError:
+                        dset.attrs['units'] = ['' for _ in spec_labels]
 
             """"
             In early versions, too many spectroscopic dimension labels and 
@@ -256,9 +241,8 @@ class LabViewH5Patcher(Translator):
                 write_simple_attrs(h5_meas, missing_metadata)
 
             # Link the references to the Indices and Values datasets to the Raw_Data
-            print(h5_raw.shape,
-                  h5_pos_vals.shape, h5_spec_vals.shape)
-            print(h5_spec_inds.shape, h5_pos_inds.shape)
+            logger.debug("%s %s %s", h5_raw.shape, h5_pos_vals.shape, h5_spec_vals.shape)
+            logger.debug("%s %s", h5_spec_inds.shape, h5_pos_inds.shape)
 
 
             link_as_main(h5_raw, h5_pos_inds, h5_pos_vals, h5_spec_inds, h5_spec_vals)
@@ -288,15 +272,20 @@ class LabViewH5Patcher(Translator):
                 h5_sho_spec_labels = get_attr(h5_sho_spec_inds, 'labels')
                 h5_sho_spec_units = get_attr(h5_sho_spec_vals, 'units')
                 if h5_sho_spec_inds.shape[-1] != h5_sho_guess.shape[-1]:
-                    print('Warning! Found incorrect spectral dimension for dataset {}. Attempting a fix.'.format(h5_sho_guess))
+                    logger.warning(
+                        "Found incorrect spectral dimension for dataset %s. Attempting a fix.",
+                        h5_sho_guess,
+                    )
                     try:
                         h5_sho_spec_inds = h5_sho_guess.parent.create_dataset("h5_sho_spec_inds_fixed",
                                                                   shape=(1, 1),dtype = 'uint32')
                         h5_sho_spec_inds.attrs['labels'] = 'labels'
                         h5_sho_spec_inds.attrs['units'] = 'units'
                     except RuntimeError:
-                        print("It seems that the file has already been patched."
-                              " Will use previously computed ancilliary datasets")
+                        logger.warning(
+                            "It seems that the file has already been patched. "
+                            "Will use previously computed ancilliary datasets"
+                        )
                         h5_sho_spec_inds = h5_sho_guess.parent['h5_sho_spec_inds_fixed']
                     try:
                         h5_sho_spec_vals = h5_sho_guess.parent.create_dataset("h5_sho_spec_vals_fixed",
@@ -305,8 +294,10 @@ class LabViewH5Patcher(Translator):
                         h5_sho_spec_vals.attrs['labels'] = 'labels'
                         h5_sho_spec_vals.attrs['units'] = 'units'
                     except RuntimeError:
-                        print("It seems that the file has already been patched."
-                              " Will use previously computed ancilliary datasets")
+                        logger.warning(
+                            "It seems that the file has already been patched. "
+                            "Will use previously computed ancilliary datasets"
+                        )
 
                         h5_sho_spec_vals = h5_sho_guess.parent['h5_sho_spec_vals_fixed2']
 
@@ -325,13 +316,10 @@ class LabViewH5Patcher(Translator):
                         spec_units = [''.encode('utf-8') for _ in spec_labels]
                         dset.attrs['units'] = spec_units
 
-                    except:
+                    except Exception:
                         raise
 
             h5_file.flush()
-
-        h5_file.attrs['translator'] = 'V3patcher'.encode('utf-8')
-
-        h5_file.close()
+            h5_file.attrs['translator'] = 'V3patcher'.encode('utf-8')
 
         return h5_path

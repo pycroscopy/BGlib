@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Created on Tue Nov  3 15:07:16 2015
 
@@ -6,8 +5,7 @@ Created on Tue Nov  3 15:07:16 2015
 
 """
 
-from __future__ import division, print_function, absolute_import, unicode_literals
-
+import logging
 import sys
 from os import path, listdir, remove
 from warnings import warn
@@ -28,8 +26,7 @@ from pyUSID.io.hdf_utils import create_indexed_group, check_if_main, print_tree
 from .df_utils.be_utils import trimUDVS, getSpectroscopicParmLabel, \
     parmsToDict, generatePlotGroups, normalizeBEresponse, createSpecVals, nf32
 
-if sys.version_info.major == 3:
-    unicode = str
+logger = logging.getLogger(__name__)
 
 
 class BEPSndfTranslator(Translator):
@@ -79,7 +76,7 @@ class BEPSndfTranslator(Translator):
             this translator is indeed capable of translating the provided file.
             Otherwise, None will be returned
         """
-        if not isinstance(data_path, (str, unicode)):
+        if not isinstance(data_path, str):
             raise TypeError('data_path must be a string')
 
         data_path = path.abspath(data_path)
@@ -135,11 +132,11 @@ class BEPSndfTranslator(Translator):
         # Read the parameter files
         self._verbose = verbose
         if self._verbose:
-            print('BEndfTranslator: Getting file paths')
+            logger.info('BEndfTranslator: Getting file paths')
 
         parm_filepath, udvs_filepath, parms_mat_path = self._parse_file_path(data_filepath)
         if self._verbose:
-            print('BEndfTranslator: Reading Parms text file')
+            logger.info('BEndfTranslator: Reading Parms text file')
 
         isBEPS, self.parm_dict = parmsToDict(parm_filepath)
         self.parm_dict['data_type'] = 'BEPSData'
@@ -168,18 +165,18 @@ class BEPSndfTranslator(Translator):
             remove(h5_path)
 
         if self._verbose:
-            print('BEndfTranslator: Preparing to read parms.mat file')
+            logger.info('BEndfTranslator: Preparing to read parms.mat file')
         self.BE_wave, self.BE_wave_rev, self.BE_bin_inds = self.__get_excit_wfm(parms_mat_path)
 
         if self._verbose:
-            print('BEndfTranslator: About to read UDVS file')
+            logger.info('BEndfTranslator: About to read UDVS file')
 
         self.udvs_labs, self.udvs_units, self.udvs_mat = self.__read_udvs_table(udvs_filepath)
         # Remove the unused plot group columns before proceeding:
         self.udvs_mat, self.udvs_labs, self.udvs_units = trimUDVS(self.udvs_mat, self.udvs_labs, self.udvs_units,
                                                                   ignored_plt_grps)
         if self._verbose:
-            print('BEndfTranslator: Read UDVS file')
+            logger.info('BEndfTranslator: Read UDVS file')
 
         self.num_udvs_steps = self.udvs_mat.shape[0]
         # This is absolutely crucial for reconstructing the data chronologically
@@ -192,7 +189,7 @@ class BEPSndfTranslator(Translator):
         # print self.__num_wave_types__, 'different excitation waveforms in this experiment'
 
         if self._verbose:
-            print('BEndfTranslator: Preparing to set up parsers')
+            logger.info('BEndfTranslator: Preparing to set up parsers')
 
         # Preparing objects to parse the file(s)
         parsers = self.__assemble_parsers()
@@ -258,13 +255,13 @@ class BEPSndfTranslator(Translator):
         None
 
         """
-        print('Reading data file(s)')
+        logger.info('Reading data file(s)')
         self.dset_index = 0
         self.ds_pixel_start_indx = 0
         for pixel_ind in range(self.max_pixels):
 
             if (100.0 * (pixel_ind + 1) / self.max_pixels) % 10 == 0:
-                print('{} % complete'.format(int(100 * (pixel_ind + 1) / self.max_pixels)))
+                logger.info('{} % complete'.format(int(100 * (pixel_ind + 1) / self.max_pixels)))
 
             # First read the next pixel from all parsers:
             current_pixels = {}
@@ -291,7 +288,7 @@ class BEPSndfTranslator(Translator):
                     self.ds_pixel_start_indx = pixel_ind
                     h5_refs = self.__initialize_meas_group(self.max_pixels - pixel_ind, current_pixels)
 
-            # print('reading Pixel {} of {}'.format(pixel_ind,self.max_pixels))
+            # logger.info('reading Pixel {} of {}'.format(pixel_ind,self.max_pixels))
             self.__append_pixel_data(current_pixels)
 
             prev_pixels = current_pixels
@@ -630,7 +627,7 @@ class BEPSndfTranslator(Translator):
                 # get the noise and data from correct pixel -> address by wave_number.
 
                 if self.halve_udvs_steps and self.udvs_mat[step_index, 2] < 1E-3:  # invalid AC amplitude
-                    # print('Step index {} was skipped'.format(step_index))
+                    # logger.info('Step index {} was skipped'.format(step_index))
                     # Not sure why each wave type has its own counter but there must have been a good reason
                     internal_step_index[wave_type] += 1
                     continue  # skip
@@ -1012,7 +1009,7 @@ class BEPSndfParser(object):
                 # It is impossible to find out from the parms.txt, UD_VS, or the binary .dat file
                 num_laser_steps = 1.0 * count / (self.__num_z_steps__ * self.__num_y_steps__ * self.__num_x_steps__)
                 if num_laser_steps % 1.0 != 0:
-                    print('Some parameter changed inbetween. \
+                    logger.info('Some parameter changed inbetween. \
                           BEPS NDF Translator does not handle this usecase at the moment')
                 else:
                     self.__num_laser_steps__ = int(num_laser_steps)
@@ -1026,19 +1023,19 @@ class BEPSndfParser(object):
 
         spat_dim = 0
         if self.__num_z_steps__ > 1:
-            # print('Z is varying')
+            # logger.info('Z is varying')
             spat_dim += 1
         if self.__num_y_steps__ > 1:
-            # print('Y is varying')
+            # logger.info('Y is varying')
             spat_dim += 1
         if self.__num_x_steps__ > 1:
-            # print('X is varying')
+            # logger.info('X is varying')
             spat_dim += 1
         if self.__num_laser_steps__ > 1:
             # Laser spot position vector is junk in the .dat file
-            # print('Laser position / unknown parameter varying')
+            # logger.info('Laser position / unknown parameter varying')
             spat_dim += 1
-        # print('Total of {} spatial dimensions'.format(spat_dim))
+        # logger.info('Total of {} spatial dimensions'.format(spat_dim))
         self.__spat_dim__ = spat_dim
 
     def read_pixel(self, bin_fft=None):
@@ -1054,7 +1051,7 @@ class BEPSndfParser(object):
         """
 
         if self.__filesize__ == self.__start_point__ * 4:
-            print('BEPS NDF Parser - No more pixels left!')
+            logger.info('BEPS NDF Parser - No more pixels left!')
             return -1
 
         self.__file_handle__.seek(self.__start_point__ * 4, 0)
@@ -1066,7 +1063,7 @@ class BEPSndfParser(object):
         self.__curr_Pixel__ += 1
 
         if self.__filesize__ == self.__start_point__ * 4:
-            print('BEPS NDF Parser reached End of File')
+            logger.info('BEPS NDF Parser reached End of File')
             self.__EOF__ = True
             self.__file_handle__.close()
 
@@ -1230,32 +1227,32 @@ class BEPSndfPixel(object):
 
         if self.spectrogram_length != prev_pixel.spectrogram_length:
             if disp_on:
-                print('Spectrogram Length changed on pixel {}'.format(self.spatial_index))
+                logger.info('Spectrogram Length changed on pixel {}'.format(self.spatial_index))
             return True
 
         if self.num_bins != prev_pixel.num_bins:
             if disp_on:
-                print('Number of bins changed on on pixel {}'.format(self.spatial_index))
+                logger.info('Number of bins changed on on pixel {}'.format(self.spatial_index))
             return True
 
         if not np.array_equal(self.BE_bin_w, prev_pixel.BE_bin_w):
             if disp_on:
-                print('Bin Frequencies changed on pixel {}'.format(self.spatial_index))
+                logger.info('Bin Frequencies changed on pixel {}'.format(self.spatial_index))
             return True
 
         if not np.array_equal(self.FFT_BE_wave, prev_pixel.FFT_BE_wave):
             if disp_on:
-                print('BE FFT changed on pixel {}'.format(self.spatial_index))
+                logger.info('BE FFT changed on pixel {}'.format(self.spatial_index))
             return True
 
         if not np.array_equal(self.AC_amp_vec, prev_pixel.AC_amp_vec):
             if disp_on:
-                print('AC amplitude (UDVS) changed on pixel {}'.format(self.spatial_index))
+                logger.info('AC amplitude (UDVS) changed on pixel {}'.format(self.spatial_index))
             return True
 
         if not np.array_equal(self.DC_off_vec, prev_pixel.DC_off_vec):
             if disp_on:
-                print('DC offset (UDVS) changed on pixel {}'.format(self.spatial_index))
+                logger.info('DC offset (UDVS) changed on pixel {}'.format(self.spatial_index))
             return True
 
             # I was told that this section was just garbage in the file.
@@ -1265,7 +1262,7 @@ class BEPSndfPixel(object):
             # return True
 
         if not np.array_equal(self.deflVolt_vec, prev_pixel.deflVolt_vec):
-            print('deflVolt_vec vec was different....')
+            logger.info('deflVolt_vec vec was different....')
             return True
 
         return False

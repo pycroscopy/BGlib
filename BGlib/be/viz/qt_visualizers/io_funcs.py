@@ -4,10 +4,8 @@ Created on Apr 20, 2016
 @author: Chris Smith -- csmith55@utk.edu
 """
 
-import sys
 import numpy as np
 import h5py
-sys.path.append('../')
 from scipy.io import loadmat
 
 

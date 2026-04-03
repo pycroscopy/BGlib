@@ -1,12 +1,10 @@
-# -*- coding: utf-8 -*-
 """
 Created on Tue Nov  3 15:24:12 2015
 
 @author: Suhas Somnath, Stephen Jesse
 """
 
-from __future__ import division, print_function, absolute_import, unicode_literals
-
+import logging
 from os import path, listdir, remove
 import sys
 import datetime
@@ -29,8 +27,7 @@ from pyUSID.io.hdf_utils import write_ind_val_dsets, write_main_dataset, \
     write_reduced_anc_dsets, get_unit_values
 from pyUSID.io.usi_data import USIDataset
 
-if sys.version_info.major == 3:
-    unicode = str
+logger = logging.getLogger(__name__)
 
 
 class BEodfTranslator(Translator):
@@ -67,7 +64,7 @@ class BEodfTranslator(Translator):
             this translator is indeed capable of translating the provided file.
             Otherwise, None will be returned
         """
-        if not isinstance(data_path, (str, unicode)):
+        if not isinstance(data_path, str):
             raise TypeError('data_path must be a string')
 
         ndf = 'newdataformat'
@@ -156,12 +153,12 @@ class BEodfTranslator(Translator):
 
         if 'parm_txt' in path_dict.keys():
             if self._verbose:
-                print('\treading parameters from text file')
+                logger.info('\treading parameters from text file')
             isBEPS, parm_dict = parmsToDict(path_dict['parm_txt'])
 
         elif 'old_mat_parms' in path_dict.keys():
             if self._verbose:
-                print('\treading parameters from old mat file')
+                logger.info('\treading parameters from old mat file')
             parm_dict = self._get_parms_from_old_mat(path_dict['old_mat_parms'], verbose=self._verbose)
             if parm_dict['VS_steps_per_full_cycle'] == 0:
                 isBEPS=False
@@ -199,11 +196,11 @@ class BEodfTranslator(Translator):
         if self._verbose:
             keys = list(parm_dict.keys())
             keys.sort()
-            print('\tExperiment parameters:')
+            logger.info('\tExperiment parameters:')
             for key in keys:
-                print('\t\t{} : {}'.format(key, parm_dict[key]))
+                logger.info('\t\t{} : {}'.format(key, parm_dict[key]))
 
-            print('\n\tisBEPS = {}'.format(isBEPS))
+            logger.info('\n\tisBEPS = {}'.format(isBEPS))
 
         if parm_dict['BE_bins_per_band'] > 300:
             raise ValueError('Too many BE bins per band: {}. Translation would'
@@ -242,7 +239,7 @@ class BEodfTranslator(Translator):
 
         # Check file sizes:
         if self._verbose:
-            print('\tChecking sizes of real and imaginary data files')
+            logger.info('\tChecking sizes of real and imaginary data files')
 
         if 'read_real' in path_dict.keys():
             real_size = path.getsize(path_dict['read_real'])
@@ -261,7 +258,7 @@ class BEodfTranslator(Translator):
         # Look for the file containing the current data
 
         if self._verbose:
-            print('\tLooking for secondary channels')
+            logger.info('\tLooking for secondary channels')
         file_names = listdir(folder_path)
         aux_files = []
         current_data_exists = False
@@ -276,7 +273,7 @@ class BEodfTranslator(Translator):
         num_rows = int(parm_dict['grid_num_rows'])
         num_cols = int(parm_dict['grid_num_cols'])
         if self._verbose:
-            print('\tRows: {}, Cols: {}'.format(num_rows, num_cols))
+            logger.info('\tRows: {}, Cols: {}'.format(num_rows, num_cols))
         num_pix = num_rows * num_cols
         tot_bins = real_size / (num_pix * 4)
         # Check for case where only a single pixel is missing.
@@ -286,7 +283,7 @@ class BEodfTranslator(Translator):
             check_bins = real_size / ((num_pix - 1) * 4)
 
         if self._verbose:
-            print('\tChecking bins: Total: {}, actual: {}'.format(tot_bins,
+            logger.info('\tChecking bins: Total: {}, actual: {}'.format(tot_bins,
                                                                   check_bins))
 
         if tot_bins % 1 and check_bins % 1:
@@ -309,7 +306,7 @@ class BEodfTranslator(Translator):
                             parm_dict['VS_steps_per_full_cycle'] * \
                             parm_dict['BE_bins_per_band']
             if verbose:
-                print('\t\tNumber of bins per step: calculated: {}, actual {}'
+                logger.info('\t\tNumber of bins per step: calculated: {}, actual {}'
                       ''.format(bins_per_step, tot_bins))
             if bins_per_step > 0:
                 if bins_per_step < tot_bins and tot_bins / bins_per_step % 1 == 0:
@@ -321,18 +318,18 @@ class BEodfTranslator(Translator):
                     parm_dict['VS_number_of_cycles'] *= scale
             else:
                 if verbose:
-                    print('\t\tUnable to calculate number of bins per step '
+                    logger.info('\t\tUnable to calculate number of bins per step '
                           'since one or more parameters were 0')
 
         tot_bins = int(tot_bins) * tot_bins_multiplier
 
         if isBEPS:
             if self._verbose:
-                print('\tBuilding UDVS table for BEPS')
+                logger.info('\tBuilding UDVS table for BEPS')
             UDVS_labs, UDVS_units, UDVS_mat = self._build_udvs_table(parm_dict)
 
             if self._verbose:
-                print('\tTrimming UDVS table to remove unused plot group columns')
+                logger.info('\tTrimming UDVS table to remove unused plot group columns')
 
             UDVS_mat, UDVS_labs, UDVS_units = trimUDVS(UDVS_mat, UDVS_labs, UDVS_units, ignored_plt_grps)
 
@@ -342,11 +339,11 @@ class BEodfTranslator(Translator):
             num_actual_udvs_steps = UDVS_mat.shape[0] / udvs_denom
             bins_per_step = tot_bins / num_actual_udvs_steps
             if self._verbose:
-                print('\t# UDVS steps: {}, # bins/step: {}'
+                logger.info('\t# UDVS steps: {}, # bins/step: {}'
                       ''.format(num_actual_udvs_steps, bins_per_step))
 
             if bins_per_step % 1:
-                print('UDVS mat shape: {}, total bins: {}, bins per step: {}'.format(UDVS_mat.shape, tot_bins,
+                logger.info('UDVS mat shape: {}, total bins: {}, bins per step: {}'.format(UDVS_mat.shape, tot_bins,
                                                                                      bins_per_step))
                 raise ValueError('Non integer number of bins per step!')
 
@@ -369,7 +366,7 @@ class BEodfTranslator(Translator):
 
         else:  # BE Line
             if self._verbose:
-                print('\tPreparing supporting variables since BE-Line')
+                logger.info('\tPreparing supporting variables since BE-Line')
             self.signal_type = 1
             self.expt_type = 1  # Stephen has not used this index for some reason
             num_actual_udvs_steps = 1
@@ -384,11 +381,11 @@ class BEodfTranslator(Translator):
 
         if 'parm_mat' in path_dict.keys():
             if self._verbose:
-                print('\treading BE arrays from parameters text file')
+                logger.info('\treading BE arrays from parameters text file')
             bin_inds, bin_freqs, bin_FFT, ex_wfm = self._read_parms_mat(path_dict['parm_mat'], isBEPS)
         elif 'old_mat_parms' in path_dict.keys():
             if self._verbose:
-                print('\treading BE arrays from old mat text file')
+                logger.info('\treading BE arrays from old mat text file')
             bin_inds, bin_freqs, bin_FFT, ex_wfm, dc_amp_vec = self._read_old_mat_be_vecs(path_dict['old_mat_parms'], verbose=verbose)
         else:
             warn('No secondary parameters file (.mat) provided. Generating '
@@ -399,7 +396,7 @@ class BEodfTranslator(Translator):
             bin_freqs = np.linspace(st_f, en_f, bins_per_step, dtype=float)
 
             if verbose:
-                print('\tGenerating BE arrays of length: '
+                logger.info('\tGenerating BE arrays of length: '
                       '{}'.format(bins_per_step))
             bin_inds = np.zeros(shape=bins_per_step, dtype=np.int32)
             bin_FFT = np.zeros(shape=bins_per_step, dtype=np.complex64)
@@ -420,7 +417,7 @@ class BEodfTranslator(Translator):
         parm_dict['num_steps'] = num_actual_udvs_steps
 
         if self._verbose:
-            print('\tPreparing UDVS slices for region references')
+            logger.info('\tPreparing UDVS slices for region references')
         udvs_slices = dict()
         for col_ind, col_name in enumerate(UDVS_labs):
             udvs_slices[col_name] = (slice(None), slice(col_ind, col_ind + 1))
@@ -430,7 +427,7 @@ class BEodfTranslator(Translator):
 
         if self.expt_type == 2:
             if self._verbose:
-                print('\tExperiment type = 2. Doubling BE vectors')
+                logger.info('\tExperiment type = 2. Doubling BE vectors')
             exec_bin_vec = np.hstack((exec_bin_vec, -1 * exec_bin_vec))
             bin_inds = np.hstack((bin_inds, bin_inds))
             bin_freqs = np.hstack((bin_freqs, bin_freqs))
@@ -440,20 +437,20 @@ class BEodfTranslator(Translator):
         # Create Spectroscopic Values and Spectroscopic Values Labels datasets
         # This is an old and legacy way of doing things. Ideally, all we would need ot do is just get the unit values
         if self._verbose:
-            print('\tCalculating spectroscopic values')
+            logger.info('\tCalculating spectroscopic values')
         ret_vals = createSpecVals(UDVS_mat, old_spec_inds, bin_freqs,
                                   exec_bin_vec, parm_dict, UDVS_labs,
                                   UDVS_units, verbose=verbose)
         spec_vals, spec_inds, spec_vals_labs, spec_vals_units, spec_vals_labs_names = ret_vals
 
         if self._verbose:
-            print('\t\tspec_vals_labs: {}'.format(spec_vals_labs))
+            logger.info('\t\tspec_vals_labs: {}'.format(spec_vals_labs))
             unit_vals = get_unit_values(spec_inds, spec_vals,
                                         all_dim_names=spec_vals_labs,
                                         is_spec=True, verbose=False)
-            print('\tUnit spectroscopic values')
+            logger.info('\tUnit spectroscopic values')
             for key, val in unit_vals.items():
-                print('\t\t{} : length: {}, values:\n\t\t\t{}'.format(key, len(val), val))
+                logger.info('\t\t{} : length: {}, values:\n\t\t\t{}'.format(key, len(val), val))
 
         if spec_inds.shape[1] != tot_bins:
             raise ValueError('Second axis of spectroscopic indices: {} not '
@@ -472,7 +469,7 @@ class BEodfTranslator(Translator):
 
         if path.exists(h5_path):
             if self._verbose:
-                print('\tRemoving existing / old translated file: ' + h5_path)
+                logger.info('\tRemoving existing / old translated file: ' + h5_path)
             remove(h5_path)
 
         # First create the file
@@ -493,7 +490,7 @@ class BEodfTranslator(Translator):
         global_parms['data_type'] = parm_dict['data_type']
         global_parms['translator'] = 'ODF'
         if self._verbose:
-            print('\tWriting attributes to HDF5 file root')
+            logger.info('\tWriting attributes to HDF5 file root')
         write_simple_attrs(h5_f, global_parms)
         write_book_keeping_attrs(h5_f)
 
@@ -502,7 +499,7 @@ class BEodfTranslator(Translator):
 
         # Write attributes at the measurement group level
         if self._verbose:
-            print('\twriting attributes to Measurement group')
+            logger.info('\twriting attributes to Measurement group')
         write_simple_attrs(h5_meas_group, parm_dict)
 
         # Create the Channel group
@@ -514,7 +511,7 @@ class BEodfTranslator(Translator):
 
         # Now the datasets!
         if self._verbose:
-            print('\tCreating ancillary datasets')
+            logger.info('\tCreating ancillary datasets')
         h5_chan_grp.create_dataset('Excitation_Waveform', data=ex_wfm)
 
         h5_udvs = h5_chan_grp.create_dataset('UDVS', data=UDVS_mat)
@@ -533,16 +530,16 @@ class BEodfTranslator(Translator):
         h5_chan_grp.create_dataset('Bin_Wfm_Type', data=exec_bin_vec)
 
         if self._verbose:
-            print('\tWriting Position datasets')
+            logger.info('\tWriting Position datasets')
 
         pos_dims = [Dimension('X', 'm', np.arange(num_cols)),
                     Dimension('Y', 'm', np.arange(num_rows))]
         h5_pos_ind, h5_pos_val = write_ind_val_dsets(h5_chan_grp, pos_dims, is_spectral=False, verbose=self._verbose)
         if self._verbose:
-            print('\tPosition datasets of shape: {}'.format(h5_pos_ind.shape))
+            logger.info('\tPosition datasets of shape: {}'.format(h5_pos_ind.shape))
 
         if self._verbose:
-            print('\tWriting Spectroscopic datasets of shape: {}'.format(spec_inds.shape))
+            logger.info('\tWriting Spectroscopic datasets of shape: {}'.format(spec_inds.shape))
         h5_spec_inds = h5_chan_grp.create_dataset('Spectroscopic_Indices', data=spec_inds, dtype=INDICES_DTYPE)        
         h5_spec_vals = h5_chan_grp.create_dataset('Spectroscopic_Values', data=np.array(spec_vals), dtype=VALUES_DTYPE)
         for dset in [h5_spec_inds, h5_spec_vals]:
@@ -553,7 +550,7 @@ class BEodfTranslator(Translator):
 
         # Noise floor should be of shape: (udvs_steps x 3 x positions)
         if self._verbose:
-            print('\tWriting noise floor dataset')
+            logger.info('\tWriting noise floor dataset')
         h5_chan_grp.create_dataset('Noise_Floor', (num_pix, num_actual_udvs_steps), dtype=nf32)
 
         """
@@ -567,36 +564,36 @@ class BEodfTranslator(Translator):
                                   np.complex64(0).itemsize,
                                   unit_chunks=(1, bins_per_step))
         if self._verbose:
-            print('\tHDF5 dataset will have chunks of size: {}'.format(BEPS_chunks))
-            print('\tCreating empty main dataset of shape: ({}, {})'.format(num_pix, tot_bins))
+            logger.info('\tHDF5 dataset will have chunks of size: {}'.format(BEPS_chunks))
+            logger.info('\tCreating empty main dataset of shape: ({}, {})'.format(num_pix, tot_bins))
         self.h5_raw = write_main_dataset(h5_chan_grp, (num_pix, tot_bins), 'Raw_Data', 'Piezoresponse', 'V', None, None,
                                          dtype=np.complex64,
                                          h5_pos_inds=h5_pos_ind, h5_pos_vals=h5_pos_val, h5_spec_inds=h5_spec_inds,
                                          h5_spec_vals=h5_spec_vals, verbose=self._verbose)
 
         if self._verbose:
-            print('\tReading data from binary data files into raw HDF5')
+            logger.info('\tReading data from binary data files into raw HDF5')
         self._read_data(parm_dict, path_dict, real_size, isBEPS,
                         add_pix)
 
         if self._verbose:
-            print('\tGenerating plot groups')
+            logger.info('\tGenerating plot groups')
         generatePlotGroups(self.h5_raw, self.mean_resp, folder_path, basename,
                            self.max_resp, self.min_resp, max_mem_mb=self.max_ram,
                            spec_label=spec_label, show_plots=show_plots, save_plots=save_plots,
                            do_histogram=do_histogram, debug=self._verbose)
         if self._verbose:
-            print('\tUpgrading to USIDataset')
+            logger.info('\tUpgrading to USIDataset')
         self.h5_raw = USIDataset(self.h5_raw)
 
         # Go ahead and read the current data in the second (current) channel
         if current_data_exists:                     #If a .dat file matches
             if self._verbose:
-                print('\tReading data in secondary channels (current)')
+                logger.info('\tReading data in secondary channels (current)')
             self._read_secondary_channel(h5_meas_group, aux_files)
 
         if self._verbose:
-            print('\tClosing HDF5 file')
+            logger.info('\tClosing HDF5 file')
         h5_f.close()
 
         return h5_path
@@ -627,7 +624,7 @@ class BEodfTranslator(Translator):
         if not isBEPS:
             # Do this for all BE-Line (always small enough to read in one shot)
             if self._verbose:
-                print('\t\tReading all raw data for BE-Line in one shot')
+                logger.info('\t\tReading all raw data for BE-Line in one shot')
             self._quick_read_data(path_dict['read_real'],
                                   path_dict['read_imag'],
                                   parm_dict['num_udvs_steps'])
@@ -635,7 +632,7 @@ class BEodfTranslator(Translator):
                 parm_dict['VS_measure_in_field_loops'] == 'out-of-field':
             # Do this for out-of-field BEPS ONLY that is also small (256 MB)
             if self._verbose:
-                print('\t\tReading all raw BEPS (out-of-field) data at once')
+                logger.info('\t\tReading all raw BEPS (out-of-field) data at once')
             self._quick_read_data(path_dict['read_real'],
                                   path_dict['read_imag'],
                                   parm_dict['num_udvs_steps'])
@@ -643,14 +640,14 @@ class BEodfTranslator(Translator):
                 parm_dict['VS_measure_in_field_loops'] == 'in-field':
             # Do this for in-field only
             if self._verbose:
-                print('\t\tReading all raw BEPS (in-field only) data at once')
+                logger.info('\t\tReading all raw BEPS (in-field only) data at once')
             self._quick_read_data(path_dict['write_real'],
                                   path_dict['write_imag'],
                                   parm_dict['num_udvs_steps'])
         else:
             # Large BEPS datasets OR those with in-and-out of field
             if self._verbose:
-                print('\t\tReading all raw data for in-and-out-of-field OR '
+                logger.info('\t\tReading all raw data for in-and-out-of-field OR '
                       'very large file one pixel at a time')
             self._read_beps_data(path_dict,
                                  parm_dict['num_udvs_steps'],
@@ -678,7 +675,7 @@ class BEodfTranslator(Translator):
         None
         """
 
-        print('---- reading pixel-by-pixel ----------')
+        logger.info('---- reading pixel-by-pixel ----------')
 
         bytes_per_pix = self.h5_raw.shape[1] * 4
         step_size = self.h5_raw.shape[1] / udvs_steps
@@ -725,7 +722,7 @@ class BEodfTranslator(Translator):
         for pix_indx in range(numpix):
             if self.h5_raw.shape[0] > 5:
                 if pix_indx % int(round(self.h5_raw.shape[0] / 10)) == 0:
-                    print('Reading... {} complete'.format(round(100 * pix_indx / self.h5_raw.shape[0])))
+                    logger.info('Reading... {} complete'.format(round(100 * pix_indx / self.h5_raw.shape[0])))
 
             # get the raw stream from each parser
             pxl_data = list()
@@ -759,7 +756,7 @@ class BEodfTranslator(Translator):
         if add_pixel:
             self.h5_raw[-1, :] = 0 + 0j
 
-        print('---- Finished reading files -----')
+        logger.info('---- Finished reading files -----')
 
     def _quick_read_data(self, real_path, imag_path, udvs_steps):
         """
@@ -784,12 +781,12 @@ class BEodfTranslator(Translator):
                                                 num_spectra=self.num_rand_spectra,
                                                 verbose=self._verbose)
         if self._verbose:
-            print('\t\t\tChecking if conjugate is required')
+            logger.info('\t\t\tChecking if conjugate is required')
         take_conjugate = requires_conjugate(rand_spectra, cores=self._cores)
         raw_vec = parser.read_all_data()
         if take_conjugate:
             if self._verbose:
-                print('\t'*4 + 'Taking conjugate for positive quality factors')
+                logger.info('\t'*4 + 'Taking conjugate for positive quality factors')
             raw_vec = np.conjugate(raw_vec)
 
         if raw_vec.shape != np.prod(self.h5_raw.shape):
@@ -811,7 +808,7 @@ class BEodfTranslator(Translator):
         self.h5_raw[:, :] = np.complex64(raw_mat)
         self.h5_raw.file.flush()
 
-        print('---- Finished reading files -----')
+        logger.info('---- Finished reading files -----')
 
     @staticmethod
     def _parse_file_path(data_filepath):
@@ -881,7 +878,7 @@ class BEodfTranslator(Translator):
             Absolute file path of the secondary channel file.
         """
         if self._verbose:
-            print('\t---------- Reading Secondary Channel  ----------')
+            logger.info('\t---------- Reading Secondary Channel  ----------')
         if isinstance(aux_file_path, (list, tuple)):
             aux_file_paths = aux_file_path
         else:
@@ -907,9 +904,9 @@ class BEodfTranslator(Translator):
 
         num_pix = self.h5_raw.shape[0]
         if self._verbose:
-            print('\t\tExpecting this channel to be of shape: ({}, {})'
+            logger.info('\t\tExpecting this channel to be of shape: ({}, {})'
                   ''.format(num_pix, spectral_len))
-            print('\t\tis_in_out_field: {}'.format(is_in_out_field))
+            logger.info('\t\tis_in_out_field: {}'.format(is_in_out_field))
 
         # create a new channel
         h5_current_channel_group = create_indexed_group(h5_meas_group,
@@ -932,7 +929,7 @@ class BEodfTranslator(Translator):
         h5_current_spec_inds, h5_current_spec_values = ret_vals
 
         if self._verbose:
-            print('\t\tCreated groups, wrote attributes and spec datasets')
+            logger.info('\t\tCreated groups, wrote attributes and spec datasets')
 
         h5_current_main = write_main_dataset(h5_current_channel_group,  # parent HDF5 group
                                              (num_pix, spectral_len),  # shape of Main dataset
@@ -950,12 +947,12 @@ class BEodfTranslator(Translator):
                                              verbose=self._verbose)
 
         if self._verbose:
-            print('\t\tCreated empty main dataset:\n{}'
+            logger.info('\t\tCreated empty main dataset:\n{}'
                   ''.format(h5_current_main))
 
         if is_in_out_field:
             if self._verbose:
-                print('\t\tHalving the spectral length per binary file to: {} '
+                logger.info('\t\tHalving the spectral length per binary file to: {} '
                       'since this measurement has in and out of field'
                       ''.format(spectral_len // 2))
             spectral_len = spectral_len // 2
@@ -966,9 +963,9 @@ class BEodfTranslator(Translator):
         max_pos_per_read = int(np.floor((get_available_memory()) / b_per_position))
 
         if self._verbose:
-            print('\t\tAllowed to read {} pixels per chunk'
+            logger.info('\t\tAllowed to read {} pixels per chunk'
                   ''.format(max_pos_per_read))
-            print('\t\tStarting to read raw binary data')
+            logger.info('\t\tStarting to read raw binary data')
 
         # Open the read and write files and write them to the hdf5 file
         for aux_file in aux_file_paths:
@@ -978,7 +975,7 @@ class BEodfTranslator(Translator):
                 infield = False
 
             if self._verbose:
-                print('\t' * 3 + 'Reading file: {}'.format(aux_file))
+                logger.info('\t' * 3 + 'Reading file: {}'.format(aux_file))
 
             cur_file = open(aux_file, "rb")
 
@@ -993,16 +990,16 @@ class BEodfTranslator(Translator):
                 bytes_to_read = pos_to_read * b_per_position
 
                 if self._verbose:
-                    print('\t' * 4 + 'Reading pixels {} to {} - {} bytes'
+                    logger.info('\t' * 4 + 'Reading pixels {} to {} - {} bytes'
                           ''.format(start_pix, end_pix, bytes_to_read))
 
                 cur_data = np.frombuffer(cur_file.read(bytes_to_read),
                                          dtype='f')
 
                 if self._verbose:
-                    print('\t' * 4 + 'Read vector of shape: {}'
+                    logger.info('\t' * 4 + 'Read vector of shape: {}'
                                      ''.format(cur_data.shape))
-                    print('\t' * 4 + 'Reshaping to ({}, {})'
+                    logger.info('\t' * 4 + 'Reshaping to ({}, {})'
                                      ''.format(pos_to_read, spectral_len))
 
                 data_2d = cur_data.reshape(pos_to_read, spectral_len)
@@ -1022,7 +1019,7 @@ class BEodfTranslator(Translator):
                 start_pix = end_pix
 
             if self._verbose:
-                print('\t' * 4 + 'Done reading binary file')
+                logger.info('\t' * 4 + 'Done reading binary file')
 
             cur_file.close()
 
@@ -1061,7 +1058,7 @@ class BEodfTranslator(Translator):
         if verbose:
             for vec, var_name in zip([BE_wave, bin_inds, bin_w, dc_amp_vec_full],
                                      ['BE_wave', 'bin_inds', 'bin_w', 'dc_amp_vec_full']):
-                print('\t\t{} has shape: {} and dtype: {}'.format(var_name, vec.shape, vec.dtype))
+                logger.info('\t\t{} has shape: {} and dtype: {}'.format(var_name, vec.shape, vec.dtype))
         try:
             FFT_full = np.fft.fftshift(np.fft.fft(BE_wave))
         except ValueError:
@@ -1094,7 +1091,7 @@ class BEodfTranslator(Translator):
         matread = loadmat(file_path, squeeze_me=True)
 
         if verbose:
-            print('\t\tEstimating File params from path: {}'.format(file_path))
+            logger.info('\t\tEstimating File params from path: {}'.format(file_path))
         parent, _ = path.split(file_path)
         parent, expt_name = path.split(parent)
         if expt_name.endswith('_c'):
@@ -1106,7 +1103,7 @@ class BEodfTranslator(Translator):
             try:
                 suffix = int(expt_name[ind + 1:])
             except ValueError:
-                # print('Could not convert "' + suffix + '" to integer')
+                # logger.info('Could not convert "' + suffix + '" to integer')
                 pass
             expt_name = expt_name[:ind]
 
@@ -1116,7 +1113,7 @@ class BEodfTranslator(Translator):
 
         header = matread['__header__'].decode("utf-8")
         if verbose:
-            print('\t\tEstimating experiment date and time from .mat file '
+            logger.info('\t\tEstimating experiment date and time from .mat file '
                   'header: {} '.format(header))
         targ_str = 'Created on: '
         try:
@@ -1154,8 +1151,8 @@ class BEodfTranslator(Translator):
             BE_parm_vec_2 = None
 
         if verbose:
-            print('\t\tBE_parm_vec_1: {}'.format(BE_parm_vec_1))
-            print('\t\tBE_parm_vec_2: {}'.format(BE_parm_vec_2))
+            logger.info('\t\tBE_parm_vec_1: {}'.format(BE_parm_vec_1))
+            logger.info('\t\tBE_parm_vec_2: {}'.format(BE_parm_vec_2))
 
         # Not required for translation but necessary to have
         if BE_parm_vec_1[0] == 3 or BE_parm_vec_2[0] == 3:
@@ -1178,7 +1175,7 @@ class BEodfTranslator(Translator):
 
         assembly_parm_vec = matread['assembly_parm_vec']
         if verbose:
-            print('\t\tassembly_parm_vec: {}'.format(assembly_parm_vec))
+            logger.info('\t\tassembly_parm_vec: {}'.format(assembly_parm_vec))
 
         parm_dict['IO_Analog_Input_1'] = '+/- 10V, FFT'
         if assembly_parm_vec[3] == 0:
@@ -1191,7 +1188,7 @@ class BEodfTranslator(Translator):
 
         if 'SS_parm_vec' not in matread.keys():
             if verbose:
-                print('\t\tBE-Line dataset')
+                logger.info('\t\tBE-Line dataset')
             return parm_dict
 
         if assembly_parm_vec[2] == 0:
@@ -1205,8 +1202,8 @@ class BEodfTranslator(Translator):
         dc_amp_vec_full = matread['dc_amp_vec_full']
 
         if verbose:
-            print('\t\tVS_parms: {}'.format(VS_parms))
-            print('\t\tdc_amp_vec_full: {}'.format(dc_amp_vec_full))
+            logger.info('\t\tVS_parms: {}'.format(VS_parms))
+            logger.info('\t\tdc_amp_vec_full: {}'.format(dc_amp_vec_full))
 
         VS_start_V = VS_parms[4]
         VS_start_loop_amp = VS_parms[5]
@@ -1230,12 +1227,12 @@ class BEodfTranslator(Translator):
 
         if VS_parms[0] in [0, 8, 9, 11]:
             if verbose:
-                print('\t\tDC modulation or current mode based on VS_parms[0]:'
+                logger.info('\t\tDC modulation or current mode based on VS_parms[0]:'
                       ' {}'.format(VS_parms[0]))
             parm_dict['VS_mode'] = 'DC modulation mode'
             if VS_parms[0] == 9:
                 if verbose:
-                    print('\t\tcurrent mode based on VS parms[0]')
+                    logger.info('\t\tcurrent mode based on VS parms[0]')
                 parm_dict['VS_mode'] = 'current mode'
             parm_dict['VS_amplitude_[V]'] = 0.5 * (max(dc_amp_vec_full) - np.min(dc_amp_vec_full))  # SS_max_offset_amplitude
             parm_dict['VS_offset_[V]'] = np.max(dc_amp_vec_full) + np.min(
@@ -1243,7 +1240,7 @@ class BEodfTranslator(Translator):
 
         elif VS_parms[0] in [1, 6, 7]:
             if verbose:
-                print('\t\tFORC, based on VS_parms[0]: {}'.format(VS_parms[0]))
+                logger.info('\t\tFORC, based on VS_parms[0]: {}'.format(VS_parms[0]))
             # Could not tell difference between mode = 1 or 6
             # mode 7 = multiple FORC cycles
             parm_dict['VS_mode'] = 'DC modulation mode'
@@ -1251,17 +1248,17 @@ class BEodfTranslator(Translator):
             parm_dict['VS_offset_[V]'] = 0
             if VS_parms[0] == 7:
                 if verbose:
-                    print('\t\t\tFORC with 2 cycles')
+                    logger.info('\t\t\tFORC with 2 cycles')
                 parm_dict['VS_number_of_cycles'] = 2
                 parm_dict['FORC_num_of_FORC_cycles'] = VS_parms[2] // 2
             else:
                 if verbose:
-                    print('\t\t\tFORC with 1 cycle')
+                    logger.info('\t\t\tFORC with 1 cycle')
                 parm_dict['VS_number_of_cycles'] = 1
                 parm_dict['FORC_num_of_FORC_cycles'] = VS_parms[2]
             if True:
                 if verbose:
-                    print('\t\t\tMeasuring FORC high and low vals from DC vec')
+                    logger.info('\t\t\tMeasuring FORC high and low vals from DC vec')
                 # Grabbing hi lo values directly from the vec
                 left = dc_amp_vec_full[:parm_dict['VS_steps_per_full_cycle']]
                 right = dc_amp_vec_full[
@@ -1272,7 +1269,7 @@ class BEodfTranslator(Translator):
                 parm_dict['FORC_V_low2_[V]'] = np.min(right)
             else:
                 if verbose:
-                    print('\t\t\tGrabbing FORC high and low vals from parms')
+                    logger.info('\t\t\tGrabbing FORC high and low vals from parms')
                 # Not getting correct values with prescribed method
                 parm_dict['FORC_V_high1_[V]'] = VS_start_V
                 parm_dict['FORC_V_high2_[V]'] = VS_start_V
@@ -1281,7 +1278,7 @@ class BEodfTranslator(Translator):
 
         elif VS_parms[0] in [2, 3, 4]:
             if verbose:
-                print('\t\tAC Spectroscopy with time reversal, based on '
+                logger.info('\t\tAC Spectroscopy with time reversal, based on '
                       'VS_parms[0]: {}'.format(VS_parms[0]))
             if VS_parms[0] == 3:
                 # These numbers seemed to match with the v_dc vector
@@ -1307,16 +1304,16 @@ class BEodfTranslator(Translator):
         # Assigning the phase and fraction for bi-polar triangular waveforms
         if VS_parms[0] not in [2, 3, 4]:
             if verbose:
-                print('\t\tEstimating phase and fraction based on slopes of first cycle')
+                logger.info('\t\tEstimating phase and fraction based on slopes of first cycle')
             slopes = []
             for ind in range(4):
                 subsection = dc_amp_vec_full[ind * parm_dict['VS_steps_per_full_cycle'] // 4: (ind + 1) * parm_dict['VS_steps_per_full_cycle'] // 4]
                 slopes.append(np.mean(np.diff(subsection)))
             if verbose:
-                print('\t\t\tslopes for quarters: {}'.format(slopes))
+                logger.info('\t\t\tslopes for quarters: {}'.format(slopes))
             frac, phas = infer_bipolar_triangular_fraction_phase(slopes)
             if verbose:
-                print('\t\t\tCycle fraction: {}, Phase: {}'.format(frac, phas))
+                logger.info('\t\t\tCycle fraction: {}, Phase: {}'.format(frac, phas))
 
             for str_val, num_val in zip(['full', '1/2', '1/4', '3/4'],
                                         [1., 0.5, 0.25, 0.75]):
@@ -1330,7 +1327,7 @@ class BEodfTranslator(Translator):
                     parm_dict['VS_cycle_phase_shift'] = str_val
                     break
             if verbose:
-                print('\t\t\tCycle fraction: {}, Phase: {}'
+                logger.info('\t\t\tCycle fraction: {}, Phase: {}'
                       ''.format(parm_dict['VS_cycle_fraction'],
                                 parm_dict['VS_cycle_phase_shift']))
 
@@ -1457,7 +1454,7 @@ class BEodfTranslator(Translator):
 
         if VS_shift != 0:
             if self._verbose:
-                print('\tVS_shift = {}'.format(VS_shift))
+                logger.info('\tVS_shift = {}'.format(VS_shift))
             VS_shift = translate_val(VS_shift,
                                      ['1/4', '1/2', '3/4'],
                                      [0.25, 0.5, 0.75])
@@ -1494,13 +1491,13 @@ class BEodfTranslator(Translator):
 
         # % build vector of voltage spectroscopy values
         if self._verbose:
-            print('\t\tBuilding spectroscopy waveform')
+            logger.info('\t\tBuilding spectroscopy waveform')
         if VS_ACDC_cond == 0 or VS_ACDC_cond == 4:
             if self._verbose:
-                print('\t\t\tDC voltage spectroscopy or current mode for:')
+                logger.info('\t\t\tDC voltage spectroscopy or current mode for:')
                 for key in ['VS_steps', 'VS_fraction', 'VS_shift', 'VS_cycles',
                             'VS_amp', 'VS_offset']:
-                    print('\t'*4 + '{} = {}'.format(key, repr(eval(key))))
+                    logger.info('\t'*4 + '{} = {}'.format(key, repr(eval(key))))
 
             vs_amp_vec = generate_bipolar_triangular_waveform(VS_steps,
                                                               cycle_frac=VS_fraction,
@@ -1509,12 +1506,12 @@ class BEodfTranslator(Translator):
                                                               cycles=VS_cycles,
                                                               offset=VS_offset)
             if self._verbose:
-                print('\t\t\tgenerated triangular waveform of size: {}'
+                logger.info('\t\t\tgenerated triangular waveform of size: {}'
                       ''.format(len(vs_amp_vec)))
 
         elif VS_ACDC_cond == 2:
             if self._verbose:
-                print('\t\t\tAC voltage spectroscopy with time reversal')
+                logger.info('\t\t\tAC voltage spectroscopy with time reversal')
             # Temporarily scale up the number of points in a cycle
             actual_cycle_pts = int(VS_steps // VS_fraction)
             vs_amp_vec = np.linspace(VS_amp / actual_cycle_pts, VS_amp,
@@ -1530,7 +1527,7 @@ class BEodfTranslator(Translator):
 
         if FORC_cycles > 1:
             if self._verbose:
-                print('\t\t\tWorking on adding FORC')
+                logger.info('\t\t\tWorking on adding FORC')
             vs_amp_vec = vs_amp_vec / np.max(np.abs(vs_amp_vec))
             FORC_cycle_vec = np.arange(0, FORC_cycles + 1, FORC_cycles / (FORC_cycles - 1))
             FORC_A_vec = FORC_cycle_vec * (FORC_A2 - FORC_A1) / FORC_cycles + FORC_A1
@@ -1546,16 +1543,16 @@ class BEodfTranslator(Translator):
 
         # Build UDVS table:
         if self._verbose:
-            print('\t\tBuilding UDVS table')
+            logger.info('\t\tBuilding UDVS table')
         if VS_ACDC_cond == 0 or VS_ACDC_cond == 4:
 
             if VS_ACDC_cond == 0:
                 if self._verbose:
-                    print('\t'*3 + 'DC Spectroscopy mode. Appending zeros')
+                    logger.info('\t'*3 + 'DC Spectroscopy mode. Appending zeros')
                 UD_dc_vec = np.vstack((vs_amp_vec, np.zeros(len(vs_amp_vec))))
             if VS_ACDC_cond == 4:
                 if self._verbose:
-                    print('\t'*3 + 'Current mode. Tiling vs amp vec')
+                    logger.info('\t'*3 + 'Current mode. Tiling vs amp vec')
                 UD_dc_vec = np.vstack((vs_amp_vec, vs_amp_vec))
 
             UD_dc_vec = UD_dc_vec.transpose().reshape(UD_dc_vec.size)
@@ -1595,7 +1592,7 @@ class BEodfTranslator(Translator):
 
         elif VS_ACDC_cond == 2:
             if self._verbose:
-                print('\t\t\tAC voltage spectroscopy')
+                logger.info('\t\t\tAC voltage spectroscopy')
 
             num_VS_steps = vs_amp_vec.size
             half = int(0.5 * num_VS_steps)
@@ -1648,8 +1645,8 @@ class BEodfTranslator(Translator):
             spectrogram or spectra arranged as [instance, spectrum]
         """
         if verbose:
-            print('\t' * 4 + 'Getting random spectra for Q factor testing')
-            print('\t' * 4 + 'num_pixels: {} num_udvs_steps: {}, num_bins: {},'
+            logger.info('\t' * 4 + 'Getting random spectra for Q factor testing')
+            logger.info('\t' * 4 + 'num_pixels: {} num_udvs_steps: {}, num_bins: {},'
                   ' num_spectra: {}'.format(num_pixels, num_udvs_steps,
                                             num_bins, num_spectra))
         num_pixels = int(num_pixels)
@@ -1662,12 +1659,12 @@ class BEodfTranslator(Translator):
         selected_parsers = np.random.randint(0, len(parsers), size=num_spectra)
 
         if verbose and False:
-            print('\t' * 4 + 'Selecting the following random pixels, '
+            logger.info('\t' * 4 + 'Selecting the following random pixels, '
                              'UDVS steps, parsers')
-            print('\t' * 4 + 'num_spectra: {}'.format(num_spectra))
-            print('\t' * 4 + 'selected_pixels:\n{}'.format(selected_pixels))
-            print('\t' * 4 + 'selected_steps:\n{}'.format(selected_steps))
-            print('\t' * 4 + 'selected_parsers:\n{}'.format(selected_parsers))
+            logger.info('\t' * 4 + 'num_spectra: {}'.format(num_spectra))
+            logger.info('\t' * 4 + 'selected_pixels:\n{}'.format(selected_pixels))
+            logger.info('\t' * 4 + 'selected_steps:\n{}'.format(selected_steps))
+            logger.info('\t' * 4 + 'selected_parsers:\n{}'.format(selected_parsers))
 
         chosen_spectra = list()
         # np.zeros(shape=(num_spectra, num_bins), dtype=np.complex64)
@@ -1676,7 +1673,7 @@ class BEodfTranslator(Translator):
             prsr = parsers[selected_parsers[spectra_index]]
             prsr.seek_to_pixel(selected_pixels[spectra_index])
             if verbose and False:
-                print('\t' * 5 + 'Seeking and reading pixel #{}'
+                logger.info('\t' * 5 + 'Seeking and reading pixel #{}'
                                  ''.format(selected_pixels[spectra_index]))
             raw_vec = prsr.read_pixel()
             if len(raw_vec) < 1:
@@ -1684,7 +1681,7 @@ class BEodfTranslator(Translator):
                 continue
             spectrogram = raw_vec.reshape(num_udvs_steps, -1)
             if verbose and False:
-                print('\t' * 5 + 'reshaped raw vector for pixel of shape {} by'
+                logger.info('\t' * 5 + 'reshaped raw vector for pixel of shape {} by'
                                  ' UDVS step to: {} and taking spectrum at '
                                  'index: {}'.format(raw_vec.shape,
                                                     spectrogram.shape,
@@ -1698,7 +1695,7 @@ class BEodfTranslator(Translator):
         chosen_spectra = np.array(chosen_spectra)
 
         if verbose:
-            print('\t' * 5 + 'chosen spectra of shape: {}'
+            logger.info('\t' * 5 + 'chosen spectra of shape: {}'
                              ''.format(chosen_spectra.shape))
 
         return chosen_spectra

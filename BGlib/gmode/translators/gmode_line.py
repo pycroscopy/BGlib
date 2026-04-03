@@ -1,11 +1,9 @@
-# -*- coding: utf-8 -*-
 """
 Created on Sat Nov 07 15:21:46 2015
 
 @author: Suhas Somnath
 """
-from __future__ import division, print_function, absolute_import, unicode_literals
-import sys
+import logging
 from os import path, listdir, remove
 from warnings import warn
 import h5py
@@ -22,8 +20,7 @@ from pyUSID.io.hdf_utils import write_main_dataset, create_indexed_group, \
 
 from ...be.translators.df_utils.be_utils import parmsToDict
 
-if sys.version_info.major == 3:
-    unicode = str
+logger = logging.getLogger(__name__)
 
 
 class GLineTranslator(Translator):
@@ -90,12 +87,12 @@ class GLineTranslator(Translator):
         
         Parameters
         ----------
-        file_path : String / unicode
+        file_path : str
             Absolute path of any file in the directory
 
         Returns
         -------
-        h5_path : String / unicode
+        h5_path : str
             Absolute path of the h5 file
         """
         file_path = path.abspath(file_path)
@@ -160,7 +157,7 @@ class GLineTranslator(Translator):
         parm_dict['data_type'] = 'G_mode_line'
             
         if self.num_rows != expected_rows:
-            print('Note: {} of {} lines found in data file'.format(self.num_rows, expected_rows))
+            logger.info("Note: %s of %s lines found in data file", self.num_rows, expected_rows)
         
         # Calculate number of points to read per line:
         self.__bytes_per_row__ = int(file_size/self.num_rows)
@@ -213,7 +210,7 @@ class GLineTranslator(Translator):
             self._read_data(data_paths[key], h5_main)
             
         h5_f.close()
-        print('G-Line translation complete!')
+        logger.info("G-Line translation complete!")
 
         return h5_path
 
@@ -285,11 +282,11 @@ class GLineTranslator(Translator):
             for row_indx in range(self.num_rows):
                 
                 if row_indx % 10 == 0:
-                    print('Reading line {} of {}'.format(row_indx, self.num_rows))
+                    logger.info("Reading line %s of %s", row_indx, self.num_rows)
                 
                 file_handl.seek(row_indx*self.__bytes_per_row__, 0)
                 data_vec = np.fromstring(file_handl.read(self.__bytes_per_row__), dtype='f')
                 h5_dset[row_indx] = np.array(data_vec).astype(float)
                 h5_dset.file.flush()
         
-        print('Finished reading file: {}!'.format(filepath))
+        logger.info("Finished reading file: %s!", filepath)
