@@ -42,8 +42,6 @@ def readData(h5_path, dset_name='SHO_Fit_Guess'):
 
     h5_file = h5py.File(h5_path, 'r')
 
-    exp_type = h5_file.attrs['data_type']
-
     h5_group = h5_file['Measurement_000']
 
     data_type = h5_group.attrs['VS_mode']
@@ -89,7 +87,6 @@ def readDCData(h5_group):
     ndims = len(np.where(np.array(h5_pos.shape) > 1)[0])
 
     num_cycles = h5_group.attrs['VS_number_of_cycles']
-    num_steps = len(np.unique(h5_indices[:, 1]))
     num_bins = len(np.unique(h5_bins))
 
     data_xvec = h5_sho_specv[h5_sho_specv.attrs['DC_Offset']].flatten()
@@ -236,7 +233,6 @@ def readACData(h5_group):
     ndims = len(np.where(np.array(h5_pos.shape) > 1)[0])
 
     num_cycles = h5_group.attrs['VS_number_of_cycles']
-    num_steps = len(np.unique(h5_indices[:, 1]))
     num_bins = len(np.unique(h5_bins))
 
     data_xvec = h5_sho_specv[h5_sho_specv.attrs['AC_Amplitude']].flatten()

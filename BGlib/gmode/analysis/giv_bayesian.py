@@ -12,7 +12,7 @@ Created on Thu Nov 02 11:48:53 2017
 import numpy as np
 from pyUSID.processing.comp_utils import parallel_compute
 from sidpy.hdf.dtype_utils import stack_real_to_compound
-from sidpy.hdf.hdf_utils import write_simple_attrs, print_tree, get_attributes
+from sidpy.hdf.hdf_utils import write_simple_attrs, get_attributes
 from pyUSID import Dimension
 from pyUSID.processing.process import Process
 from pyUSID.io.hdf_utils import write_main_dataset, create_results_group, \

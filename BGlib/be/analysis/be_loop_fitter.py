@@ -380,7 +380,7 @@ class BELoopFitter(Fitter):
                                                               :,
                                                               this_forc_spec_inds])
 
-            if success != True:
+            if not success:
                 raise ValueError('Unable to reshape data to N dimensions')
 
             if self.verbose and self.mpi_rank == 0:
@@ -508,7 +508,7 @@ class BELoopFitter(Fitter):
                                                               :,
                                                               this_forc_spec_inds])
 
-            if success != True:
+            if not success:
                 raise ValueError('Unable to reshape 2D guess to N dimensions')
 
             if self.verbose and self.mpi_rank == 0:
@@ -548,8 +548,11 @@ class BELoopFitter(Fitter):
 
         self._guess = np.array(forc_mats)
         if self.verbose and self.mpi_rank == 0:
-            logger.info('Flattened Guesses to shape: {} and dtype:'
-                  '.'.format(self._guess.shape, self._guess.dtype))
+            logger.info(
+                'Flattened Guesses to shape: %s and dtype: %s',
+                self._guess.shape,
+                self._guess.dtype,
+            )
 
     @staticmethod
     def _project_loop(sho_response, dc_offset):

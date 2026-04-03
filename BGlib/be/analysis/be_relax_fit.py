@@ -21,8 +21,13 @@ def fit_double_exp(x, y):
     """
     time_ax = x
     spectrum = y
+
     def cost_func_double_exp(params):
-        a = params[0]; k = params[1]; a2 = params[2]; k2 = params[3]; c = params[4]
+        a = params[0]
+        k = params[1]
+        a2 = params[2]
+        k2 = params[3]
+        c = params[4]
         double_exp_model = double_exp(time_ax, a, k, a2, k2, c)
         return np.sum((spectrum - double_exp_model)**2)
     popt = differential_evolution(cost_func_double_exp,

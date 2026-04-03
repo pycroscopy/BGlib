@@ -200,8 +200,8 @@ class BEPSwindow(QtGui.QMainWindow):
         '''
         cw = QtGui.QWidget()  # Add the plotting widget
         self.setCentralWidget(cw)  # What does this do?
-        l = QtGui.QGridLayout()  # Use a layout
-        cw.setLayout(l)
+        layout = QtGui.QGridLayout()  # Use a layout
+        cw.setLayout(layout)
 
         '''
         Create the Image and plot widgets
