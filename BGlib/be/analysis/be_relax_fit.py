@@ -1,6 +1,11 @@
+import logging
+
 import numpy as np
 from scipy.optimize import curve_fit, differential_evolution
 import pyUSID as usid
+
+
+logger = logging.getLogger(__name__)
 
 def exp(x, a, k, c):
     return (a * np.exp(-(x/k))) + c
@@ -66,7 +71,7 @@ class BERelaxFit(usid.Process):
 
         **Currently, the BE software does not consistently encode whether spectra start with a read or write step
         """
-        if h5_main == None:
+        if h5_main is None:
             h5_main = self.h5_main
         super(BERelaxFit, self).__init__(h5_main, variables, **kwargs)
         self.starts_with = starts_with
@@ -102,7 +107,7 @@ class BERelaxFit(usid.Process):
                 self.write_dc_offset_values = self.all_dc_offset_values[::2]
 
                 #if there is only one RS spectrum
-                if type(self.write_dc_offset_values) == float:
+                if isinstance(self.write_dc_offset_values, float):
                     self.write_dc_offset_values = [self.write_dc_offset_values]
 
         if self.starts_with == 'read':
@@ -112,7 +117,7 @@ class BERelaxFit(usid.Process):
                                                                         np.argwhere(self.h5_main.h5_spec_vals[
                                                                                         0] == self.no_read_steps)]
                 # if there is only one RS spectrum
-                if type(self.write_dc_offset_values) == float:
+                if isinstance(self.write_dc_offset_values, float):
                     self.write_dc_offset_values = [self.write_dc_offset_values]
 
         self.no_read_offset = len(self.all_dc_offset_values) - self.no_rs_spectra
@@ -131,8 +136,8 @@ class BERelaxFit(usid.Process):
         if self.fit_method == 'Exponential':
             scalar = 1000
             popt_init = fit_exp_curve(x * scalar, y)
-            a_init = popt_init[0];
-            tau_init = popt_init[1] / scalar;
+            a_init = popt_init[0]
+            tau_init = popt_init[1] / scalar
             c_init = popt_init[2]
             popt, _ = curve_fit(exp, x, y, maxfev=2500, p0=[a_init, tau_init, c_init])
         if self.fit_method == 'Double_Exp':
@@ -215,7 +220,7 @@ class BERelaxFit(usid.Process):
         # 1. make HDF5 group to hold results
         self.h5_results_grp = usid.hdf_utils.create_results_group(self.h5_main, self.process_name)
         if self.verbose:
-            print('Results to be written to Group: {}'.format(self.h5_results_grp))
+            logger.info('Results to be written to Group: %s', self.h5_results_grp)
         # 2. write relevant meta data to group
         usid.hdf_utils.write_simple_attrs(self.h5_results_grp,
                                           {'last_pixel': 0, 'algorithm': str(self.fit_method)})

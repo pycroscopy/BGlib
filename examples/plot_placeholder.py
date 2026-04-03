@@ -10,10 +10,8 @@ Hello World
 **UNDER CONSTRUCTION**
 """
 
-# Ensure python 3 compatibility:
-from __future__ import division, print_function, absolute_import, unicode_literals
-
 # The package for accessing files in directories, etc.:
+import importlib
 import os
 import zipfile
 
@@ -28,12 +26,11 @@ def install(package):
 # Package for downloading online files:
 try:
     # This package is not part of anaconda and may need to be installed.
-    import wget
+    importlib.import_module('wget')
 except ImportError:
     warn('wget not found.  Will install with pip.')
-    import pip
-    install(wget)
-    import wget
+    install('wget')
+    importlib.import_module('wget')
 
 # The mathematical computation package:
 import numpy as np
@@ -41,17 +38,13 @@ import numpy as np
 # The package used for creating and manipulating HDF5 files:
 import h5py
 
-# Packages for plotting:
-import matplotlib.pyplot as plt
-
 # import sidpy - supporting package for pyUSID:
 try:
-    import sidpy
+    importlib.import_module('sidpy')
 except ImportError:
     warn('sidpy not found.  Will install with pip.')
-    import pip
     install('sidpy')
-    import sidpy
+    importlib.import_module('sidpy')
 
 ###############################################################################
 # Better documentation to follow
