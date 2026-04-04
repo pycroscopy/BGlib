@@ -8,8 +8,8 @@ import argparse
 from functools import lru_cache
 from importlib import import_module
 from importlib.util import module_from_spec, spec_from_file_location
+import logging
 from pathlib import Path
-import sys
 from typing import Any
 
 TOOL_NAMES = [
@@ -19,6 +19,8 @@ TOOL_NAMES = [
     "calculate_loop_centroid",
     "get_rotation_matrix",
 ]
+
+logger = logging.getLogger(__name__)
 
 
 def _import_fastmcp():
@@ -60,7 +62,9 @@ def _to_jsonable(value: Any) -> Any:
 
 @lru_cache(maxsize=1)
 def _load_be_loop_module():
-    module_path = Path(__file__).resolve().parent / "BGlib" / "be" / "analysis" / "utils" / "be_loop.py"
+    module_path = (
+        Path(__file__).resolve().parent / "BGlib" / "be" / "analysis" / "utils" / "be_loop.py"
+    )
     spec = spec_from_file_location("_bglib_be_loop_mcp", module_path)
     if spec is None or spec.loader is None:
         raise RuntimeError("Unable to load BGlib be_loop module for MCP server.")
@@ -114,19 +118,13 @@ def _build_server():
         try:
             import numpy as np
         except ImportError as exc:
-            raise RuntimeError(
-                "numpy is required to use calc_switching_coef_vec."
-            ) from exc
+            raise RuntimeError("numpy is required to use calc_switching_coef_vec.") from exc
 
         result = be_loop.calc_switching_coef_vec(
             np.asarray(loop_coef_vec, dtype=float),
             nuc_threshold,
         )
-        return {
-            "switching_coefficients": [
-                _to_jsonable(row) for row in result
-            ]
-        }
+        return {"switching_coefficients": [_to_jsonable(row) for row in result]}
 
     @mcp.tool()
     def calculate_loop_centroid(
@@ -170,11 +168,8 @@ def main() -> None:
         print("\n".join(TOOL_NAMES))
         return
 
-    print(
-        "BGlib MCP server starting on stdio; waiting for an MCP client...",
-        file=sys.stderr,
-        flush=True,
-    )
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+    logger.info("BGlib MCP server starting on stdio; waiting for an MCP client...")
     server = _build_server()
     server.run()
 

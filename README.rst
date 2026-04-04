@@ -1,8 +1,8 @@
 BGlib
 =====
 
-.. image:: https://github.com/pycroscopy/BGlib/workflows/build/badge.svg?branch=main
-    :target: https://github.com/pycroscopy/BGlib/actions?query=workflow%3Abuild
+.. image:: https://github.com/pycroscopy/BGlib/actions/workflows/build.yml/badge.svg?branch=main
+    :target: https://github.com/pycroscopy/BGlib/actions/workflows/build.yml?query=branch%3Amain
     :alt: GitHub Actions
 
 .. image:: https://img.shields.io/pypi/v/BGlib.svg

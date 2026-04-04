@@ -8,4 +8,4 @@ Created on Fri Jan 07 16:25:00 2022
 
 from .tr_kpfm import TRKPFMTranslator
 
-__all__ = ['TRKPFMTranslator']
+__all__ = ["TRKPFMTranslator"]

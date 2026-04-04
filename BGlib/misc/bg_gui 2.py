@@ -1,43 +1,56 @@
-
 import os
+
 # 1) Force Qt-backed Matplotlib (avoid MacOSX backend which must run on main thread)
-os.environ.setdefault("MPLBACKEND", "QtAgg")   # or "Qt5Agg"
+os.environ.setdefault("MPLBACKEND", "QtAgg")  # or "Qt5Agg"
 
 # 2) Tame inner BLAS/OpenMP thread storms (critical on macOS + Accelerate/OpenBLAS/MKL)
-for var in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS",
-            "VECLIB_MAXIMUM_THREADS", "NUMEXPR_NUM_THREADS"):
+for var in (
+    "OMP_NUM_THREADS",
+    "OPENBLAS_NUM_THREADS",
+    "MKL_NUM_THREADS",
+    "VECLIB_MAXIMUM_THREADS",
+    "NUMEXPR_NUM_THREADS",
+):
     os.environ.setdefault(var, "1")
 
 # (optional but helpful) make Qt explicit
 os.environ.setdefault("QT_API", "pyqt5")
-import sys
-import faulthandler
+import sys  # noqa: E402
+import faulthandler  # noqa: E402
+
 faulthandler.enable()
 
-from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QTabWidget, QFileDialog, QPushButton, QTextEdit, QFrame,
-    QGridLayout, QLineEdit, QComboBox, QSizePolicy
+from PyQt5.QtWidgets import (  # noqa: E402
+    QApplication,
+    QMainWindow,
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QLabel,
+    QTabWidget,
+    QFileDialog,
+    QPushButton,
+    QTextEdit,
+    QFrame,
+    QGridLayout,
+    QLineEdit,
+    QComboBox,
 )
-from PyQt5.QtCore import Qt, QThread, pyqtSignal
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from PyQt5.QtGui import QDoubleValidator
-import BGlib.be as belib
-import numpy as np
-import os
-import sidpy
-import SciFiReaders as sr
-from BGlib.be.analysis.utils.sidpy_sho_fitter import SHOestimateGuess, SHOestimateGuess, SHO_fit_flattened
-from PyQt5.QtGui import QTextCursor
-from PyQt5.QtCore import QObject, pyqtSignal
+from PyQt5.QtCore import QObject, Qt, QThread, pyqtSignal  # noqa: E402
+from matplotlib.figure import Figure  # noqa: E402
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas  # noqa: E402
+import BGlib.be as belib  # noqa: E402
+import numpy as np  # noqa: E402
+import sidpy  # noqa: E402
+import SciFiReaders as sr  # noqa: E402
+from BGlib.be.analysis.utils.sidpy_sho_fitter import SHOestimateGuess, SHO_fit_flattened  # noqa: E402
+from PyQt5.QtGui import QTextCursor  # noqa: E402
 
 # pip install dask distributed
-import time
-from typing import Optional, Sequence, Tuple
+import time  # noqa: E402
+from typing import Optional, Sequence, Tuple  # noqa: E402
+from dask.distributed import Client  # noqa: E402
 
-from PyQt5.QtCore import QObject, pyqtSignal, QThread  # PyQt6: use PyQt6.QtCore
-from dask.distributed import Client
 
 # Helper to normalize log records across dask versions
 def _format_sched_record(rec) -> str:
@@ -46,6 +59,7 @@ def _format_sched_record(rec) -> str:
         return f"[SCHEDULER] {ts} {level}: {msg}"
     except Exception:
         return f"[SCHEDULER] {rec}"
+
 
 def _format_worker_record(worker: str, item) -> str:
     # item might be (ts, msg), (ts, level, msg), or (level, msg)
@@ -64,14 +78,20 @@ def _format_worker_record(worker: str, item) -> str:
         pass
     return f"[{worker}] {item}"
 
+
 class DaskLogWorker(QObject):
     # Emits batches of log lines to append
     log_lines = pyqtSignal(list)
     error = pyqtSignal(str)
-    connected = pyqtSignal(str)   # emits dashboard link when ready
+    connected = pyqtSignal(str)  # emits dashboard link when ready
 
-    def __init__(self, scheduler_address: str, poll_interval_ms: int = 1000,
-                 worker_tail: int = 2000, parent=None):
+    def __init__(
+        self,
+        scheduler_address: str,
+        poll_interval_ms: int = 1000,
+        worker_tail: int = 2000,
+        parent=None,
+    ):
         super().__init__(parent)
         self.address = scheduler_address
         self.poll_interval_ms = max(200, poll_interval_ms)
@@ -143,13 +163,12 @@ class DaskLogWorker(QObject):
     def stop(self):
         self._running = False
 
-from PyQt5.QtWidgets import QTextEdit
 
 class DaskLogsPanel(QTextEdit):
     def __init__(self, scheduler_address: str, parent=None):
         super().__init__(parent)
         self.setReadOnly(True)
-        self._thread = QThread(self)      # owns the worker thread
+        self._thread = QThread(self)  # owns the worker thread
         self._worker = DaskLogWorker(scheduler_address)
 
         # Wire signals
@@ -180,6 +199,7 @@ class DaskLogsPanel(QTextEdit):
         finally:
             super().closeEvent(event)
 
+
 class EmittingStream(QObject):
     text_written = pyqtSignal(str)
 
@@ -191,6 +211,7 @@ class EmittingStream(QObject):
     def flush(self):
         """Needed for Python 3 compatibility."""
         pass
+
 
 class SidpyBandExcitationProcessor(QMainWindow):
     def __init__(self):
@@ -210,12 +231,12 @@ class SidpyBandExcitationProcessor(QMainWindow):
         self.tabs.addTab(self.create_sho_tab(), "Fit and View SHO")
         self.tabs.addTab(self.create_fit_loops_tab(), "Fit Loops")
         # Loop dataset placeholders (shape: x, y, V, C, F)
-        self.loop_data = None          # numpy array
-        self.loop_voltage = None       # 1D array of voltages (length V)
+        self.loop_data = None  # numpy array
+        self.loop_voltage = None  # 1D array of voltages (length V)
         self.loop_cycle_values = None  # list/array of cycle indices (length C)
         self.loop_field_values = None  # list/array of field labels or 0/1 (length F)
-    
-        self.setup_output_redirect()  
+
+        self.setup_output_redirect()
 
     def setup_output_redirect(self):
         """Redirect sys.stdout to output_box."""
@@ -223,7 +244,7 @@ class SidpyBandExcitationProcessor(QMainWindow):
         self.stdout_stream.text_written.connect(self.append_output_text)
         sys.stdout = self.stdout_stream
         sys.stderr = self.stdout_stream  # Optional: also redirect errors
-        
+
     # ==============================
     # Tab 1: Loading / View Raw Data
     # ==============================
@@ -248,25 +269,29 @@ class SidpyBandExcitationProcessor(QMainWindow):
         return tab
 
     def load_raw_data(self):
-        """Open a file dialog and load a h5 BEPS file, and convert it to a sidpy dataset """
+        """Open a file dialog and load a h5 BEPS file, and convert it to a sidpy dataset"""
         options = QFileDialog.Options()
         filename, _ = QFileDialog.getOpenFileName(
-            self, "Open Raw HDF5 BEPS Data File", "", "All Files (*);;h5 (*.h5);;hdf5 (*.hdf5)", options=options
+            self,
+            "Open Raw HDF5 BEPS Data File",
+            "",
+            "All Files (*);;h5 (*.h5);;hdf5 (*.hdf5)",
+            options=options,
         )
         if filename:
             try:
                 patcher = belib.translators.LabViewH5Patcher()
                 patcher.translate(filename)
                 reader = sr.Usid_reader(filename)
-                self.beps_raw = reader.read()[:10,:10,:,:,:]
-                self.freq_axis = self.beps_raw.labels.index('Frequency (Hz)')
+                self.beps_raw = reader.read()[:10, :10, :, :, :]
+                self.freq_axis = self.beps_raw.labels.index("Frequency (Hz)")
                 self.freq_vec = self.beps_raw._axes[self.freq_axis].values
                 self.all_dims = np.arange(len(self.beps_raw.shape))
                 self.ind_dims = np.delete(self.all_dims, self.freq_axis)
-                #TODO: Only for BE datasets. Need to check that the vector is correct
+                # TODO: Only for BE datasets. Need to check that the vector is correct
                 self.lower_bound_fields[1].setText(f"{self.freq_vec.min() / 1e3:.2f}")
                 self.upper_bound_fields[1].setText(f"{self.freq_vec.max() / 1e3:.2f}")
-                
+
             except Exception as e:
                 self.raw_data_display.setText(f"Error loading file:\n{e}")
 
@@ -291,12 +316,17 @@ class SidpyBandExcitationProcessor(QMainWindow):
         fit_layout.addWidget(QLabel("Lower Bound"), 1, 1)
         fit_layout.addWidget(QLabel("Upper Bound"), 1, 2)
 
-        self.param_labels = ["Amplitude (a.u.)", "Resonant Frequency (kHz)", "Quality Factor", "Phase (rad.)"]
+        self.param_labels = [
+            "Amplitude (a.u.)",
+            "Resonant Frequency (kHz)",
+            "Quality Factor",
+            "Phase (rad.)",
+        ]
         self.lower_bound_fields = []
         self.upper_bound_fields = []
 
-        default_lower = [1E-6, self.freq_vec.min(), 50, -2*np.pi]
-        default_upper = [1E-3, self.freq_vec.max(), 500, 2*np.pi]
+        default_lower = [1e-6, self.freq_vec.min(), 50, -2 * np.pi]
+        default_upper = [1e-3, self.freq_vec.max(), 500, 2 * np.pi]
 
         for i, label in enumerate(self.param_labels):
             fit_layout.addWidget(QLabel(label), i + 2, 0)
@@ -353,9 +383,9 @@ class SidpyBandExcitationProcessor(QMainWindow):
         controls_layout.addStretch()
         self.do_fit_button.setEnabled(False)
 
-    # ===== Right side: visualization + output =====
+        # ===== Right side: visualization + output =====
         self.right_layout = QVBoxLayout()
-        
+
         # Output box for logs
         self.output_box = QTextEdit()
         self.output_box.setReadOnly(True)
@@ -375,7 +405,8 @@ class SidpyBandExcitationProcessor(QMainWindow):
         """
         Embed the visualizer directly into the right side of the Fit and View SHO tab.
         """
-        from sho_visualizer_widget import SHOVisualizerWidget            
+        from sho_visualizer_widget import SHOVisualizerWidget
+
         if hasattr(self, "sho_visualizer_widget"):
             # Remove old visualizer if it exists
             self.right_layout.removeWidget(self.sho_visualizer_widget)
@@ -385,11 +416,10 @@ class SidpyBandExcitationProcessor(QMainWindow):
         self.sho_visualizer_widget = SHOVisualizerWidget(fit_data, freq_vec, dc_vec)
         self.right_layout.addWidget(self.sho_visualizer_widget)
 
-        
     # ==============================
     # Tab 3: Fit Loops
     # ==============================
-    
+
     def create_fit_loops_tab(self):
         tab = QWidget()
         main_layout = QHBoxLayout(tab)
@@ -404,7 +434,7 @@ class SidpyBandExcitationProcessor(QMainWindow):
         left_container.addWidget(self.loop_map_canvas)
 
         # Connect click
-        #self.loop_map_canvas.mpl_connect("button_press_event", self._on_loop_map_click)
+        # self.loop_map_canvas.mpl_connect("button_press_event", self._on_loop_map_click)
 
         # ===== Right: controls + plot =====
         right_container = QVBoxLayout()
@@ -430,7 +460,7 @@ class SidpyBandExcitationProcessor(QMainWindow):
 
         # Fit button
         self.fit_individual_btn = QPushButton("Fit Individual Loop")
-        #self.fit_individual_btn.clicked.connect(self._call_Ffit_individual_loop)
+        # self.fit_individual_btn.clicked.connect(self._call_Ffit_individual_loop)
         right_container.addWidget(self.fit_individual_btn)
 
         # Combine layouts
@@ -438,12 +468,11 @@ class SidpyBandExcitationProcessor(QMainWindow):
         main_layout.addLayout(right_container, 1)
 
         # Initialize combos and map (if data already present)
-        #self._refresh_fit_loops_ui()
+        # self._refresh_fit_loops_ui()
 
         tab.setLayout(main_layout)
         return tab
 
-    
     def get_fitting_bounds(self):
         """Get the numeric fitting bounds, converting frequency back to Hz."""
         lower = []
@@ -456,7 +485,7 @@ class SidpyBandExcitationProcessor(QMainWindow):
                 # Convert back from kHz to Hz
                 lb *= 1e3
                 ub *= 1e3
-            
+
             lower.append(lb)
             upper.append(ub)
         return lower, upper
@@ -469,13 +498,23 @@ class SidpyBandExcitationProcessor(QMainWindow):
         num_workers = int(self.num_workers_edit.text())
         kmeans_guess = self.kmeans_dropdown.currentText() == "Yes"
         self.lower_bounds, self.upper_bounds = self.get_fitting_bounds()
-        
-        self.fitter = sidpy.proc.fitter.SidFitter(self.beps_raw, SHO_fit_flattened, num_workers=num_workers,
-                                        guess_fn = SHOestimateGuess,ind_dims=self.ind_dims,
-                            threads=1, return_cov=False, return_fit=True, return_std=False,
-                            km_guess=kmeans_guess,num_fit_parms = 4, n_clus = num_clusters)
+
+        self.fitter = sidpy.proc.fitter.SidFitter(
+            self.beps_raw,
+            SHO_fit_flattened,
+            num_workers=num_workers,
+            guess_fn=SHOestimateGuess,
+            ind_dims=self.ind_dims,
+            threads=1,
+            return_cov=False,
+            return_fit=True,
+            return_std=False,
+            km_guess=kmeans_guess,
+            num_fit_parms=4,
+            n_clus=num_clusters,
+        )
         address = self.fitter.client.dashboard_link
-        #start outputting the logs of the Dask client here
+        # start outputting the logs of the Dask client here
         self._output_dask_client_logs(address)
         self.fitter.do_guess()
         self.do_fit_button.setEnabled(True)
@@ -485,6 +524,7 @@ class SidpyBandExcitationProcessor(QMainWindow):
         Start outputting the code for the stuff here
         """
         import webbrowser
+
         # This will open the default system browser at that address:
         webbrowser.open(address)
         return
@@ -499,12 +539,15 @@ class SidpyBandExcitationProcessor(QMainWindow):
     def on_do_fit(self):
         self.lower_bounds, self.upper_bounds = self.get_fitting_bounds()
         self.fitter_output = self.fitter.do_fit()
-        self.fitter_output[0].data_type = 'spectral_image'
+        self.fitter_output[0].data_type = "spectral_image"
         dc_vec = self.fitter_output[0]._axes[2].values
         fit_params = np.array(self.fitter_output[0].compute())
         self.show_visualizer(fit_params, np.array(self.freq_vec), dc_vec)
         return
+
     # ==============================
+
+
 # Main application entry point
 # ==============================
 if __name__ == "__main__":

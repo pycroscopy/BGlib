@@ -6,19 +6,25 @@ Created on Mar 1, 2016
 @author: Chris Smith -- cmsith55@utk.edu
 """
 
-from __future__ import division, print_function, absolute_import
 import numpy as np
-import sys
+from numpy_groupies import aggregate_np
 
-if sys.version_info.major == 3 and sys.version_info.minor >= 6:
-    disable_histogram = True
-else:
-    disable_histogram = False
-    from numpy_groupies import aggregate_np
+disable_histogram = False
 
 
-def build_histogram(x_hist, data_mat, N_x_bins, N_y_bins, weighting_vec=1, min_resp=None, max_resp=None, func=None,
-                    debug=False, *args, **kwargs):
+def build_histogram(
+    x_hist,
+    data_mat,
+    N_x_bins,
+    N_y_bins,
+    weighting_vec=1,
+    min_resp=None,
+    max_resp=None,
+    func=None,
+    debug=False,
+    *args,
+    **kwargs,
+):
     """
     Creates histogram for a single block of pixels
 
@@ -56,21 +62,21 @@ def build_histogram(x_hist, data_mat, N_x_bins, N_y_bins, weighting_vec=1, min_r
     else:
         y_hist = data_mat
 
-    '''
+    """
     Get the min_resp and max_resp from y_hist if they are none
-    '''
+    """
     if min_resp is None:
         min_resp = np.min(y_hist)
     if max_resp is None:
         max_resp = np.max(y_hist)
     if debug:
-        print('min_resp', min_resp, 'max_resp', max_resp)
+        print("min_resp", min_resp, "max_resp", max_resp)
 
     y_hist = __scale_and_discretize(y_hist, N_y_bins, max_resp, min_resp, debug)
 
-    '''
+    """
     Combine x_hist and y_hist into one matrix
-    '''
+    """
     if debug:
         print(np.shape(x_hist))
         print(np.shape(y_hist))
@@ -82,9 +88,9 @@ def build_histogram(x_hist, data_mat, N_x_bins, N_y_bins, weighting_vec=1, min_r
     except:
         raise
 
-    '''
+    """
     Aggregate matrix for histogram of current chunk
-    '''
+    """
     if debug:
         print(np.shape(group_idx))
         print(np.shape(weighting_vec))
@@ -92,7 +98,9 @@ def build_histogram(x_hist, data_mat, N_x_bins, N_y_bins, weighting_vec=1, min_r
 
     try:
         if not disable_histogram:
-            pixel_hist = aggregate_np(group_idx, weighting_vec, func='sum', size=(N_x_bins, N_y_bins), dtype=np.int32)
+            pixel_hist = aggregate_np(
+                group_idx, weighting_vec, func="sum", size=(N_x_bins, N_y_bins), dtype=np.int32
+            )
         else:
             pixel_hist = None
     except:
@@ -121,11 +129,11 @@ def __scale_and_discretize(y_hist, N_y_bins, max_resp, min_resp, debug=False):
     y_hist = np.clip(y_hist, min_resp, max_resp)
     y_hist = np.add(y_hist, -min_resp)
     y_hist = np.dot(y_hist, 1.0 / (max_resp - min_resp))
-    '''
+    """
     Discretize y_hist
-    '''
+    """
     y_hist = np.rint(y_hist * (N_y_bins - 1))
     if debug:
-        print('ymin', min(y_hist), 'ymax', max(y_hist))
+        print("ymin", min(y_hist), "ymax", max(y_hist))
 
     return y_hist

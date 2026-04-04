@@ -14,4 +14,4 @@ Submodules
 from . import utils
 from .giv_bayesian import GIVBayesian
 
-__all__ = ['GIVBayesian', 'utils']
+__all__ = ["GIVBayesian", "utils"]

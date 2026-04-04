@@ -1,1 +1,1 @@
-from . import gmode_utils
+from . import gmode_utils as gmode_utils

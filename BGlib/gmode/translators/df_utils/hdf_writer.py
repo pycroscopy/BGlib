@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Deprecated and legacy :class:`~pycroscopy.io.hdf_writer.HDFwriter` that was being used to write USID HDF5 files
 
@@ -7,20 +6,23 @@ Created on Wed Oct 21 12:29:33 2015
 @author: Numan Laanait, Suhas Somnath, Chris Smith
 """
 
-from __future__ import division, print_function, absolute_import, unicode_literals
+import logging
 import os
 import subprocess
-import sys
 from time import time, sleep
 from warnings import warn
 import h5py
 
-from pyUSID.io.hdf_utils import assign_group_index, write_simple_attrs, attempt_reg_ref_build, write_region_references
+from pyUSID.io.hdf_utils import (
+    assign_group_index,
+    write_simple_attrs,
+    attempt_reg_ref_build,
+    write_region_references,
+)
 from .virtual_data import VirtualGroup, VirtualDataset, VirtualData
 from BGlib.__version__ import version
 
-if sys.version_info.major == 3:
-    unicode = str
+logger = logging.getLogger(__name__)
 
 
 class HDFwriter(object):
@@ -31,40 +33,45 @@ class HDFwriter(object):
         Parameters
         ----------
         file_handle : h5py.File object or str or unicode
-            h5py.File - handle to an open file in 'w' or 'r+' mode
-            str or unicode - Absolute path to an unopened the hdf5 file
+        h5py.File - handle to an open file in 'w' or 'r+' mode
+        str or os.PathLike - Absolute path to an unopened the hdf5 file
         force_new : bool, optional
             If true, check if the file already exists and delete it if
             it does.  Ignored if the file_handle is a h5py.File object
         """
-        warn('HDFWriter is available only for legacy purposes and will be REMOVED in a future release.\n'
-             'Please consider using a combination of functions in :module:`pyUSID.io.hdf_utils` such as '
-             ':meth:`pyUSID.io.hdf_utils.write_main_dataset` instead',
-             DeprecationWarning)
+        warn(
+            "HDFWriter is available only for legacy purposes and will be REMOVED in a future release.\n"
+            "Please consider using a combination of functions in :module:`pyUSID.io.hdf_utils` such as "
+            ":meth:`pyUSID.io.hdf_utils.write_main_dataset` instead",
+            DeprecationWarning,
+        )
 
-        if type(file_handle) in [str, unicode]:
+        if isinstance(file_handle, (str, os.PathLike)):
+            file_handle = os.fspath(file_handle)
             if force_new and os.path.exists(file_handle):
                 os.remove(file_handle)
 
             try:
-                self.file = h5py.File(file_handle, 'r+')
+                self.file = h5py.File(file_handle, "r+")
             except IOError:
-                self.file = h5py.File(file_handle, 'w')
+                self.file = h5py.File(file_handle, "w")
 
             self.path = file_handle
-        elif type(file_handle) == h5py.File:
+        elif isinstance(file_handle, h5py.File):
             # file handle is actually an open hdf file
             try:
                 _ = file_handle.mode
             except ValueError:
-                raise ValueError('A closed h5py.File was provided')
+                raise ValueError("A closed h5py.File was provided")
 
-            if file_handle.mode == 'r':
-                raise TypeError('HDFWriter cannot work with open HDF5 files in read mode. Change to r+ or w')
+            if file_handle.mode == "r":
+                raise TypeError(
+                    "HDFWriter cannot work with open HDF5 files in read mode. Change to r+ or w"
+                )
             self.file = file_handle.file
             self.path = file_handle.filename
         else:
-            raise TypeError('Please provide a file path as a string or a valid h5py.File object')
+            raise TypeError("Please provide a file path as a string or a valid h5py.File object")
 
     def clear(self):
         """
@@ -75,7 +82,7 @@ class HDFwriter(object):
         Because the file must be closed and reopened, it is best to call this
         function immediately after the creation of the HDFWriter object.
         """
-        warn('This is unlikely to work on Windows due to driver issues')
+        warn("This is unlikely to work on Windows due to driver issues")
         self.file.clear()
         self.repack()
 
@@ -85,45 +92,43 @@ class HDFwriter(object):
         h5repack can also be used to change chunking and compression, but these options have
         not yet been implemented here.
         """
-        warn('This is unlikely to work on Windows due to driver issues')
+        warn("This is unlikely to work on Windows due to driver issues")
         self.close()
-        tmpfile = self.path + '.tmp'
+        tmpfile = self.path + ".tmp"
 
-        '''
+        """
         Repack the opened hdf5 file into a temporary file
-        '''
+        """
         try:
-            repack_line = ' '.join(['h5repack', '"' + self.path + '"', '"' + tmpfile + '"'])
-            subprocess.check_output(repack_line,
-                                    stderr=subprocess.STDOUT,
-                                    shell=True)
+            repack_line = " ".join(["h5repack", '"' + self.path + '"', '"' + tmpfile + '"'])
+            subprocess.check_output(repack_line, stderr=subprocess.STDOUT, shell=True)
             # Check that the file is done being modified
             sleep(0.5)
             while time() - os.stat(tmpfile).st_mtime <= 1:
                 sleep(0.5)
         except subprocess.CalledProcessError as err:
-            print('Could not repack hdf5 file')
+            logger.error("Could not repack hdf5 file")
             raise Exception(err.output)
         except Exception:
             raise
 
-        '''
+        """
         Delete the original file and move the temporary file to the originals path
-        '''
+        """
         # TODO Find way to get the real OS error that works in and out of Spyder
         try:
             os.remove(self.path)
             os.rename(tmpfile, self.path)
         except Exception:
-            print('Could not copy repacked file to original path.')
-            print('The original file is located {}'.format(self.path))
-            print('The repacked file is located {}'.format(tmpfile))
+            logger.exception("Could not copy repacked file to original path.")
+            logger.error("The original file is located %s", self.path)
+            logger.error("The repacked file is located %s", tmpfile)
             raise
 
-        '''
+        """
         Open the repacked file
-        '''
-        self.file = h5py.File(self.path, mode='r+')
+        """
+        self.file = h5py.File(self.path, mode="r+")
 
     def close(self):
         """
@@ -137,7 +142,7 @@ class HDFwriter(object):
         """
         self.close()
         os.remove(self.path)
-        self.file = h5py.File(self.path, 'w')
+        self.file = h5py.File(self.path, "w")
 
     def flush(self):
         """
@@ -163,8 +168,10 @@ class HDFwriter(object):
         newer revelations are revealed
         """
         if not isinstance(h5_file, h5py.File):
-            raise TypeError('h5_obj should be a h5py File object but is instead of type '
-                            '{}. UNABLE to safely abort'.format(type(h5_file)))
+            raise TypeError(
+                "h5_obj should be a h5py File object but is instead of type "
+                "{}. UNABLE to safely abort".format(type(h5_file))
+            )
         h5_file.flush()
         h5_file.close()
 
@@ -188,19 +195,24 @@ class HDFwriter(object):
 
         h5_file = self.file
 
-        h5_file.attrs['Pycroscopy version'] = version
+        h5_file.attrs["Pycroscopy version"] = version
 
         # Checking if the data is a VirtualGroup object
         if not isinstance(data, VirtualData):
-            raise TypeError('Input expected to be of type MicroData but is of type: {} \n'.format(type(data)))
+            raise TypeError(
+                "Input expected to be of type MicroData but is of type: {} \n".format(type(data))
+            )
 
         if isinstance(data, VirtualDataset):
             # just want to write a single dataset:
             try:
                 h5_parent = h5_file[data.parent]
             except KeyError:
-                raise KeyError('Parent ({}) of provided VirtualDataset ({}) does not exist in the '
-                               'file'.format(data.parent, data.name))
+                raise KeyError(
+                    "Parent ({}) of provided VirtualDataset ({}) does not exist in the file".format(
+                        data.parent, data.name
+                    )
+                )
             h5_dset = HDFwriter._create_dataset(h5_parent, data, print_log=print_log)
             return [h5_dset]
 
@@ -210,9 +222,9 @@ class HDFwriter(object):
         ref_list = []
 
         # Figuring out if the first item in VirtualGroup tree is file or group
-        if data.name == '' and data.parent == '/':
+        if data.name == "" and data.parent == "/":
             # For file we just write the attributes
-            write_simple_attrs(h5_file, data.attrs, obj_type='file', verbose=print_log)
+            write_simple_attrs(h5_file, data.attrs, obj_type="file", verbose=print_log)
             root = h5_file.name
             ref_list.append(h5_file)
         else:
@@ -247,7 +259,7 @@ class HDFwriter(object):
                 h5_obj = HDFwriter._create_group(h5_parent_group, child, print_log=print_log)
                 # here we do the recursive function call
                 for ch in child.children:
-                    __populate(ch, parent + '/' + child.name)
+                    __populate(ch, parent + "/" + child.name)
             else:
                 h5_obj = HDFwriter._create_dataset(h5_parent_group, child, print_log=print_log)
 
@@ -260,9 +272,11 @@ class HDFwriter(object):
             __populate(curr_child, root)
 
         if print_log:
-            print('Finished writing to h5 file.\n' +
-                  'Right now you got yourself a fancy folder structure. \n' +
-                  'Make sure you do some reference linking to take advantage of the full power of HDF5.')
+            logger.info(
+                "Finished writing to h5 file.\n"
+                "Right now you got yourself a fancy folder structure.\n"
+                "Make sure you do some reference linking to take advantage of the full power of HDF5."
+            )
         return ref_list
 
     @staticmethod
@@ -286,35 +300,45 @@ class HDFwriter(object):
         """
         if not isinstance(micro_group, VirtualGroup):
             HDFwriter.__safe_abort(h5_parent_group.file)
-            raise TypeError('micro_group should be a VirtualGroup object but is instead of type '
-                            '{}'.format(type(micro_group)))
+            raise TypeError(
+                "micro_group should be a VirtualGroup object but is instead of type {}".format(
+                    type(micro_group)
+                )
+            )
         if not isinstance(h5_parent_group, h5py.Group):
-            raise TypeError('h5_parent_group should be a h5py.Group object but is instead of type '
-                            '{}'.format(type(h5_parent_group)))
+            raise TypeError(
+                "h5_parent_group should be a h5py.Group object but is instead of type {}".format(
+                    type(h5_parent_group)
+                )
+            )
 
-        if micro_group.name == '':
+        if micro_group.name == "":
             HDFwriter.__safe_abort(h5_parent_group.file)
-            raise ValueError('VirtualGroup object with empty name will not be handled by this function')
+            raise ValueError(
+                "VirtualGroup object with empty name will not be handled by this function"
+            )
 
         # First complete the name of the group by adding the index suffix
         if micro_group.indexed:
-            micro_group.name = assign_group_index(h5_parent_group, micro_group.name, verbose=print_log)
+            micro_group.name = assign_group_index(
+                h5_parent_group, micro_group.name, verbose=print_log
+            )
 
         # Now, try to write the group
         try:
             h5_new_group = h5_parent_group.create_group(micro_group.name)
             if print_log:
-                print('Created Group {}'.format(h5_new_group.name))
+                logger.info("Created Group %s", h5_new_group.name)
         except ValueError:
             h5_new_group = h5_parent_group[micro_group.name]
             if print_log:
-                print('Found Group already exists {}'.format(h5_new_group.name))
+                logger.info("Found Group already exists %s", h5_new_group.name)
         except Exception:
             HDFwriter.__safe_abort(h5_parent_group.file)
             raise
 
         # Write attributes
-        write_simple_attrs(h5_new_group, micro_group.attrs, 'group', verbose=print_log)
+        write_simple_attrs(h5_new_group, micro_group.attrs, "group", verbose=print_log)
 
         return h5_new_group
 
@@ -338,17 +362,24 @@ class HDFwriter(object):
         """
         if not isinstance(microdset, VirtualDataset):
             HDFwriter.__safe_abort(h5_group.file)
-            raise TypeError('microdset should be a VirtualGroup object but is instead of type '
-                            '{}'.format(type(microdset)))
+            raise TypeError(
+                "microdset should be a VirtualGroup object but is instead of type {}".format(
+                    type(microdset)
+                )
+            )
         if not isinstance(h5_group, (h5py.Group, h5py.File)):
-            raise TypeError('h5_group should be a h5py.Group or h5py.File object but is instead of type '
-                            '{}. UNABLE to safely abort'.format(type(h5_group)))
+            raise TypeError(
+                "h5_group should be a h5py.Group or h5py.File object but is instead of type "
+                "{}. UNABLE to safely abort".format(type(h5_group))
+            )
 
-        h5_dset = h5_group.create_dataset(microdset.name,
-                                          data=microdset.data,
-                                          compression=microdset.compression,
-                                          dtype=microdset.dtype,
-                                          chunks=microdset.chunking)
+        h5_dset = h5_group.create_dataset(
+            microdset.name,
+            data=microdset.data,
+            compression=microdset.compression,
+            dtype=microdset.dtype,
+            chunks=microdset.chunking,
+        )
         return h5_dset
 
     @staticmethod
@@ -372,16 +403,24 @@ class HDFwriter(object):
         """
         if not isinstance(microdset, VirtualDataset):
             HDFwriter.__safe_abort(h5_group.file)
-            raise TypeError('microdset should be a VirtualGroup object but is instead of type '
-                            '{}'.format(type(microdset)))
+            raise TypeError(
+                "microdset should be a VirtualGroup object but is instead of type {}".format(
+                    type(microdset)
+                )
+            )
         if not isinstance(h5_group, (h5py.Group, h5py.File)):
-            raise TypeError('h5_group should be a h5py.Group or h5py.File object but is instead of type '
-                            '{}. UNABLE to safely abort'.format(type(h5_group)))
+            raise TypeError(
+                "h5_group should be a h5py.Group or h5py.File object but is instead of type "
+                "{}. UNABLE to safely abort".format(type(h5_group))
+            )
 
-        h5_dset = h5_group.create_dataset(microdset.name, microdset.maxshape,
-                                          compression=microdset.compression,
-                                          dtype=microdset.dtype,
-                                          chunks=microdset.chunking)
+        h5_dset = h5_group.create_dataset(
+            microdset.name,
+            microdset.maxshape,
+            compression=microdset.compression,
+            dtype=microdset.dtype,
+            chunks=microdset.chunking,
+        )
         return h5_dset
 
     @staticmethod
@@ -404,11 +443,16 @@ class HDFwriter(object):
         """
         if not isinstance(microdset, VirtualDataset):
             HDFwriter.__safe_abort(h5_group.file)
-            raise TypeError('microdset should be a VirtualGroup object but is instead of type '
-                            '{}'.format(type(microdset)))
+            raise TypeError(
+                "microdset should be a VirtualGroup object but is instead of type {}".format(
+                    type(microdset)
+                )
+            )
         if not isinstance(h5_group, (h5py.Group, h5py.File)):
-            raise TypeError('h5_group should be a h5py.Group or h5py.File object but is instead of type '
-                            '{}. UNABLE to safely abort'.format(type(h5_group)))
+            raise TypeError(
+                "h5_group should be a h5py.Group or h5py.File object but is instead of type "
+                "{}. UNABLE to safely abort".format(type(h5_group))
+            )
 
         # Allow user to specify maxshape to grow in specific dimensions only
         max_shape = microdset.maxshape
@@ -418,18 +462,24 @@ class HDFwriter(object):
         if microdset.data is not None:
             shape = microdset.data.shape
         elif microdset.chunking is not None:
-            warn('No data was given.  The base shape of of the dataset will be set to the chunk size.')
+            warn(
+                "No data was given.  The base shape of of the dataset will be set to the chunk size."
+            )
             shape = microdset.chunking
         else:
-            raise ValueError("You must provide an initial data array or a chunk size to create a resizeable dataset.")
+            raise ValueError(
+                "You must provide an initial data array or a chunk size to create a resizeable dataset."
+            )
 
-        h5_dset = h5_group.create_dataset(microdset.name,
-                                          data=microdset.data,
-                                          shape=shape,
-                                          compression=microdset.compression,
-                                          dtype=microdset.dtype,
-                                          chunks=microdset.chunking,
-                                          maxshape=max_shape)
+        h5_dset = h5_group.create_dataset(
+            microdset.name,
+            data=microdset.data,
+            shape=shape,
+            compression=microdset.compression,
+            dtype=microdset.dtype,
+            chunks=microdset.chunking,
+            maxshape=max_shape,
+        )
         return h5_dset
 
     @staticmethod
@@ -453,17 +503,24 @@ class HDFwriter(object):
         """
         if not isinstance(microdset, VirtualDataset):
             HDFwriter.__safe_abort(h5_group.file)
-            raise TypeError('microdset should be a VirtualGroup object but is instead of type '
-                            '{}'.format(type(microdset)))
+            raise TypeError(
+                "microdset should be a VirtualGroup object but is instead of type {}".format(
+                    type(microdset)
+                )
+            )
         if not isinstance(h5_group, (h5py.Group, h5py.File)):
-            raise TypeError('h5_group should be a h5py.Group or h5py.File object but is instead of type '
-                            '{}. UNABLE to safely abort'.format(type(h5_group)))
+            raise TypeError(
+                "h5_group should be a h5py.Group or h5py.File object but is instead of type "
+                "{}. UNABLE to safely abort".format(type(h5_group))
+            )
 
         h5_file = h5_group.file
 
         if microdset.name in h5_group.keys():
             HDFwriter.__safe_abort(h5_file)
-            raise ValueError('Dataset named {} already exists in group!'.format(h5_group[microdset.name].name))
+            raise ValueError(
+                "Dataset named {} already exists in group!".format(h5_group[microdset.name].name)
+            )
 
         # A standardized procedure for safely creating any kind of dataset:
         def __create_dset(h5_parent_group, microdset_obj, build_func):
@@ -489,7 +546,7 @@ class HDFwriter(object):
             h5_dset = __create_dset(h5_group, microdset, HDFwriter._create_resizeable_dset)
 
         if print_log:
-            print('Created Dataset {}'.format(h5_dset.name))
+            logger.info("Created Dataset %s", h5_dset.name)
 
         HDFwriter._write_dset_attributes(h5_dset, microdset.attrs, print_log=print_log)
 
@@ -512,22 +569,25 @@ class HDFwriter(object):
         """
         if not isinstance(attrs, dict):
             HDFwriter.__safe_abort(h5_dset.file)
-            raise TypeError('attrs should be a dictionary but is instead of type '
-                            '{}'.format(type(attrs)))
+            raise TypeError(
+                "attrs should be a dictionary but is instead of type {}".format(type(attrs))
+            )
         if not isinstance(h5_dset, h5py.Dataset):
-            raise TypeError('h5_dset should be a h5py Dataset object but is instead of type '
-                            '{}. UNABLE to safely abort'.format(type(h5_dset)))
+            raise TypeError(
+                "h5_dset should be a h5py Dataset object but is instead of type "
+                "{}. UNABLE to safely abort".format(type(h5_dset))
+            )
 
         # First, set aside the complicated attribute(s)
         attr_dict = attrs.copy()
-        labels_dict = attr_dict.pop('labels', None)
+        labels_dict = attr_dict.pop("labels", None)
 
         # Next, write the simple ones using a centralized function
-        write_simple_attrs(h5_dset, attr_dict, obj_type='dataset', verbose=print_log)
+        write_simple_attrs(h5_dset, attr_dict, obj_type="dataset", verbose=print_log)
 
         if labels_dict is None:
             if print_log:
-                print('Finished writing all attributes of dataset')
+                logger.info("Finished writing all attributes of dataset")
             return
 
         if isinstance(labels_dict, (tuple, list)):
@@ -537,7 +597,7 @@ class HDFwriter(object):
 
         if len(labels_dict) == 0:
             if print_log:
-                warn('No region references to write')
+                warn("No region references to write")
             return
         # Now, handle the region references attribute:
         write_region_references(h5_dset, labels_dict, verbose=print_log)

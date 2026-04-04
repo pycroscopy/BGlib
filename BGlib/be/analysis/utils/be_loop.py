@@ -7,8 +7,6 @@ Created on Wed Jun 29 11:13:22 2016
 Various helper functions for aiding loop fitting and projection
 """
 
-from __future__ import division, print_function, absolute_import, unicode_literals
-
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import stats
@@ -27,10 +25,18 @@ import warnings
 #                         ('Work of Switching', float),
 #                         ('Nucleation Bias 1', float),
 #                         ('Nucleation Bias 2', float)])
-field_names = ['V+', 'V-', 'Imprint', 'R+', 'R-', 'Switchable Polarization',
-               'Work of Switching', 'Nucleation Bias 1', 'Nucleation Bias 2']
-switching32 = np.dtype({'names': field_names,
-                        'formats': [float for name in field_names]})
+field_names = [
+    "V+",
+    "V-",
+    "Imprint",
+    "R+",
+    "R-",
+    "Switchable Polarization",
+    "Work of Switching",
+    "Nucleation Bias 1",
+    "Nucleation Bias 2",
+]
+switching32 = np.dtype({"names": field_names, "formats": [float for name in field_names]})
 
 
 ###############################################################################
@@ -38,16 +44,16 @@ switching32 = np.dtype({'names': field_names,
 
 def calculate_loop_centroid(vdc, loop_vals):
     """
-    Calculates the centroid of a single given loop. Uses polyogonal centroid, 
+    Calculates the centroid of a single given loop. Uses polyogonal centroid,
     see wiki article for details.
-    
+
     Parameters
     -----------
     vdc : 1D list or numpy array
         DC voltage steps
     loop_vals : 1D list or numpy array
         unfolded loop
-    
+
     Returns
     -----------
     cent : tuple
@@ -71,7 +77,7 @@ def calculate_loop_centroid(vdc, loop_vals):
 
         x_vals[index] = (x_i + x_i1) * (x_i * y_i1 - x_i1 * y_i)
         y_vals[index] = (y_i + y_i1) * (x_i * y_i1 - x_i1 * y_i)
-        area_vals[index] = (x_i * y_i1 - x_i1 * y_i)
+        area_vals[index] = x_i * y_i1 - x_i1 * y_i
 
     area = 0.50 * np.sum(area_vals)
     cent_x = (1.0 / (6.0 * area)) * np.sum(x_vals)
@@ -81,6 +87,7 @@ def calculate_loop_centroid(vdc, loop_vals):
 
 
 ###############################################################################
+
 
 def get_rotation_matrix(theta):
     """
@@ -96,11 +103,11 @@ def get_rotation_matrix(theta):
     mat : 2D numpy array
         rotation matrix
     """
-    return np.array([[np.cos(theta), -1 * np.sin(theta)],
-                     [np.sin(theta), np.cos(theta)]])
+    return np.array([[np.cos(theta), -1 * np.sin(theta)], [np.sin(theta), np.cos(theta)]])
 
 
 ###############################################################################
+
 
 def projectLoop(vdc, amp_vec, phase_vec):
     """
@@ -146,7 +153,7 @@ def projectLoop(vdc, amp_vec, phase_vec):
     XYZ = np.vstack((vdc, a_cos_phi, a_sin_phi))  # Data points in 3D
 
     # Initial guess of the plane
-    p0 = [1, .5, -1, .5]
+    p0 = [1, 0.5, -1, 0.5]
 
     # do the fitting
     sol = leastsq(residuals, p0, args=(None, XYZ))[0]
@@ -163,15 +170,15 @@ def projectLoop(vdc, amp_vec, phase_vec):
     xx, yy = np.meshgrid(x, y)  # x and y limits
     zz = (-D - A * xx - B * yy) / C
 
-    '''Number of points in the linear fit.
-    This will make the offset more accurate, but 100 is reasonable.'''
+    """Number of points in the linear fit.
+    This will make the offset more accurate, but 100 is reasonable."""
     num_pt_fit = 100
 
-    '''Plot the a_cos_phi/a_sin_phi part of the plane as well.
+    """Plot the a_cos_phi/a_sin_phi part of the plane as well.
     This is the projection onto the y-z plane.
     Given the equation Ax + By + Cz =D, and given x is the voltage,
     we want only the By and Cz = D part.
-    so, yproj = D-Cz/B and and zproj = D-By/C'''
+    so, yproj = D-Cz/B and and zproj = D-By/C"""
 
     # Now we need to calculate the perpendicular distance to the origin
     y_proj = (-D - C * zz[:, 0]) / B
@@ -188,8 +195,9 @@ def projectLoop(vdc, amp_vec, phase_vec):
 
     pdist_vals = np.zeros(shape=len(xdat_fit))
     for point in range(len(xdat_fit)):
-        pdist_vals[point] = np.linalg.norm(np.array([0, 0]) -
-                                           np.array([xdat_fit[point], ydat_fit[point]]))
+        pdist_vals[point] = np.linalg.norm(
+            np.array([0, 0]) - np.array([xdat_fit[point], ydat_fit[point]])
+        )
 
     min_point_ind = np.where(pdist_vals == pdist_vals.min())[0][0]
     min_point = np.array([xdat_fit[min_point_ind], ydat_fit[min_point_ind]])
@@ -205,8 +213,9 @@ def projectLoop(vdc, amp_vec, phase_vec):
     R_orth = get_rotation_matrix(np.pi + rot_angle)
 
     ydat_new = np.dot(R, [xdata_minus_off, ydata_minus_off])  # This has the rotated components
-    ydat_new_orth = np.dot(R_orth, [xdata_minus_off,
-                                    ydata_minus_off])  # This has rotated components, but using the other angle.
+    ydat_new_orth = np.dot(
+        R_orth, [xdata_minus_off, ydata_minus_off]
+    )  # This has rotated components, but using the other angle.
 
     # taking only the first index, since this is all that was being used.
     ydat_new = ydat_new[0, :]
@@ -238,8 +247,12 @@ def projectLoop(vdc, amp_vec, phase_vec):
         geo_area = geo_area_loop_orth
         rot_angle = rot_angle + np.pi
 
-    results = {'Projected Loop': pr_vec.ravel(), 'Rotation Matrix': (rot_angle, offset_dist),
-               'Centroid': centroid, 'Geometric Area': geo_area}  # Dictionary of Results from projecting
+    results = {
+        "Projected Loop": pr_vec.ravel(),
+        "Rotation Matrix": (rot_angle, offset_dist),
+        "Centroid": centroid,
+        "Geometric Area": geo_area,
+    }  # Dictionary of Results from projecting
 
     return results
 
@@ -250,14 +263,14 @@ def projectLoop(vdc, amp_vec, phase_vec):
 def loop_fit_function(vdc, coef_vec):
     """
     9 parameter fit function
-    
+
     Parameters
     -----------
     vdc : 1D numpy array or list
         DC voltages
     coef_vec : 1D numpy array or list
         9 parameter coefficient vector
-        
+
     Returns
     ---------
     loop_eval : 1D numpy array
@@ -268,8 +281,8 @@ def loop_fit_function(vdc, coef_vec):
     b = coef_vec[5:]
     d = 1000
 
-    v1 = np.asarray(vdc[:int(len(vdc) / 2)])
-    v2 = np.asarray(vdc[int(len(vdc) / 2):])
+    v1 = np.asarray(vdc[: int(len(vdc) / 2)])
+    v2 = np.asarray(vdc[int(len(vdc) / 2) :])
 
     g1 = (b[1] - b[0]) / 2 * (erf((v1 - a[2]) * d) + 1) + b[0]
     g2 = (b[3] - b[2]) / 2 * (erf((v2 - a[3]) * d) + 1) + b[2]
@@ -311,8 +324,8 @@ def loop_fit_jacobian(vdc, coef_vec):
 
     J = np.zeros([num_steps, 9], dtype=float)
 
-    V1 = vdc[:int(num_steps / 2)]
-    V2 = vdc[int(num_steps / 2):]
+    V1 = vdc[: int(num_steps / 2)]
+    V2 = vdc[int(num_steps / 2) :]
 
     g1 = (b[1] - b[0]) / 2 * (erf((V1 - a[2]) * d) + 1) + b[0]
     g2 = (b[3] - b[2]) / 2 * (erf((V2 - a[3]) * d) + 1) + b[2]
@@ -323,8 +336,8 @@ def loop_fit_jacobian(vdc, coef_vec):
     oob23 = 1.0 / (b[2] + b[3])
 
     # Derivatives of g1 and g2
-    dg1a2 = -(b[1] - b[0]) / oosqpi * d * np.exp(-(V1 - a[2]) ** 2)
-    dg2a3 = -(b[3] - b[2]) / oosqpi * d * np.exp(-(V2 - a[3]) ** 2)
+    dg1a2 = -(b[1] - b[0]) / oosqpi * d * np.exp(-((V1 - a[2]) ** 2))
+    dg2a3 = -(b[3] - b[2]) / oosqpi * d * np.exp(-((V2 - a[3]) ** 2))
     dg1b0 = -0.5 * (erf(V1 - a[2]) * d + 1)
     dg1b1 = -dg1b0
     dg2b2 = -0.5 * (erf(V2 - a[3]) * d + 1)
@@ -334,12 +347,12 @@ def loop_fit_jacobian(vdc, coef_vec):
     Y2 = oob23 * (g2 * erf((V2 - a[3]) / g2) + b[2])
 
     # Derivatives of Y1 and Y2
-    dY1g1 = oob01 * (erf((V1 - a[2]) / g1) - 2 * oosqpi * np.exp(-(V1 - a[2]) ** 2 / g1 ** 2))
-    dY2g2 = oob23 * (erf((V2 - a[4]) / g2) - 2 * oosqpi * np.exp(-(V2 - a[4]) ** 2 / g2 ** 2))
+    dY1g1 = oob01 * (erf((V1 - a[2]) / g1) - 2 * oosqpi * np.exp(-((V1 - a[2]) ** 2) / g1**2))
+    dY2g2 = oob23 * (erf((V2 - a[4]) / g2) - 2 * oosqpi * np.exp(-((V2 - a[4]) ** 2) / g2**2))
 
-    dY1a2 = -2 * oosqpi * oob01 * np.exp(-(V1 - a[2]) ** 2 / g1 ** 2)
+    dY1a2 = -2 * oosqpi * oob01 * np.exp(-((V1 - a[2]) ** 2) / g1**2)
 
-    dY2a3 = -2 * oosqpi * oob01 * np.exp(-(V2 - a[3]) ** 2 / g2 ** 2)
+    dY2a3 = -2 * oosqpi * oob01 * np.exp(-((V2 - a[3]) ** 2) / g2**2)
 
     dY1b0 = oob01 * (1 - Y1)
     dY1b1 = -oob01 * Y1
@@ -347,9 +360,9 @@ def loop_fit_jacobian(vdc, coef_vec):
     dY2b2 = oob23 * (1 - Y2)
     dY2b3 = -oob23 * Y2
 
-    '''
+    """
     Jacobian terms
-    '''
+    """
     zeroV = np.zeros_like(V1)
     # Derivative with respect to a[0] is always 1
     J[:, 0] = 1
@@ -404,7 +417,7 @@ def get_switching_coefs(loop_centroid, loop_coef_vec):
         [x,y] position of loop centroid
     loop_coef_vec : 1D list or numpy array
         a 9 length vector of coefficients describing the loop via the 9 loop parmeter fit
-    
+
     Returns
     --------
     switching_labels_dict : dictionary
@@ -413,16 +426,20 @@ def get_switching_coefs(loop_centroid, loop_coef_vec):
     # calculate nucleation bias
     anv = loop_coef_vec[0:5]
     bnv = loop_coef_vec[5:]
-    nuc_threshold = .97
+    nuc_threshold = 0.97
 
     lc_x = loop_centroid[0]
 
     # Upper Branch
     B = bnv[2]
-    nuc_v01a = B * erfinv((nuc_threshold * bnv[2] + nuc_threshold * bnv[3] - bnv[2]) / B) - abs(anv[2])
+    nuc_v01a = B * erfinv((nuc_threshold * bnv[2] + nuc_threshold * bnv[3] - bnv[2]) / B) - abs(
+        anv[2]
+    )
 
     B = bnv[3]
-    nuc_v01b = B * erfinv((nuc_threshold * bnv[2] + nuc_threshold * bnv[3] - bnv[2]) / B) - abs(anv[2])
+    nuc_v01b = B * erfinv((nuc_threshold * bnv[2] + nuc_threshold * bnv[3] - bnv[2]) / B) - abs(
+        anv[2]
+    )
 
     # Choose the voltage which is closer to the centroid x value.
     if abs(nuc_v01a - lc_x) <= abs(nuc_v01b - lc_x):
@@ -435,10 +452,14 @@ def get_switching_coefs(loop_centroid, loop_coef_vec):
 
     # Lower Branch
     B = bnv[0]
-    nuc_v02a = B * erfinv(((1 - nuc_threshold) * bnv[0] + (1 - nuc_threshold) * bnv[1] - bnv[0]) / B) + abs(anv[3])
+    nuc_v02a = B * erfinv(
+        ((1 - nuc_threshold) * bnv[0] + (1 - nuc_threshold) * bnv[1] - bnv[0]) / B
+    ) + abs(anv[3])
 
     B = bnv[1]
-    nuc_v02b = B * erfinv(((1 - nuc_threshold) * bnv[0] + (1 - nuc_threshold) * bnv[1] - bnv[0]) / B) + abs(anv[3])
+    nuc_v02b = B * erfinv(
+        ((1 - nuc_threshold) * bnv[0] + (1 - nuc_threshold) * bnv[1] - bnv[0]) / B
+    ) + abs(anv[3])
 
     if abs(nuc_v02a - lc_x) <= abs(nuc_v02b - lc_x):
         nuc_2 = nuc_v02a
@@ -461,11 +482,17 @@ def get_switching_coefs(loop_centroid, loop_coef_vec):
     switching_coef_vec[7] = nuc_1
     switching_coef_vec[8] = nuc_2
 
-    switching_labels_dict = {'V-': switching_coef_vec[0], 'V+': switching_coef_vec[1],
-                             'Imprint': switching_coef_vec[2], 'R+': switching_coef_vec[3],
-                             'R-': switching_coef_vec[4], 'Switchable Polarization': switching_coef_vec[5],
-                             'Work of Switching': switching_coef_vec[6],
-                             'Nucleation Bias 1': nuc_1, 'Nucleation Bias 2': nuc_2}
+    switching_labels_dict = {
+        "V-": switching_coef_vec[0],
+        "V+": switching_coef_vec[1],
+        "Imprint": switching_coef_vec[2],
+        "R+": switching_coef_vec[3],
+        "R-": switching_coef_vec[4],
+        "Switchable Polarization": switching_coef_vec[5],
+        "Work of Switching": switching_coef_vec[6],
+        "Nucleation Bias 1": nuc_1,
+        "Nucleation Bias 2": nuc_2,
+    }
 
     return switching_labels_dict
 
@@ -494,29 +521,46 @@ def calc_switching_coef_vec(loop_coef_vec, nuc_threshold):
     anv = loop_coef_vec[:, :5].T
     bnv = loop_coef_vec[:, 5:].T
 
-    nuc_v01a = bnv[2] * erfinv((nuc_threshold * bnv[2] + nuc_threshold * bnv[3] - bnv[2]) / bnv[2]) + anv[3]
-    nuc_v01b = bnv[3] * erfinv((nuc_threshold * bnv[2] + nuc_threshold * bnv[3] - bnv[2]) / bnv[3]) + anv[3]
+    nuc_v01a = (
+        bnv[2] * erfinv((nuc_threshold * bnv[2] + nuc_threshold * bnv[3] - bnv[2]) / bnv[2])
+        + anv[3]
+    )
+    nuc_v01b = (
+        bnv[3] * erfinv((nuc_threshold * bnv[2] + nuc_threshold * bnv[3] - bnv[2]) / bnv[3])
+        + anv[3]
+    )
 
-    nuc_v01 = np.where(np.isfinite(nuc_v01a), nuc_v01a,
-                       np.where(np.isfinite(nuc_v01b), nuc_v01b, -1E-10))
+    nuc_v01 = np.where(
+        np.isfinite(nuc_v01a), nuc_v01a, np.where(np.isfinite(nuc_v01b), nuc_v01b, -1e-10)
+    )
 
-    nuc_v02a = bnv[0] * erfinv(((1 - nuc_threshold) * bnv[0] + (1 - nuc_threshold) * bnv[1] - bnv[0]) / bnv[0]) + anv[2]
-    nuc_v02b = bnv[1] * erfinv(((1 - nuc_threshold) * bnv[0] + (1 - nuc_threshold) * bnv[1] - bnv[0]) / bnv[1]) + anv[2]
+    nuc_v02a = (
+        bnv[0]
+        * erfinv(((1 - nuc_threshold) * bnv[0] + (1 - nuc_threshold) * bnv[1] - bnv[0]) / bnv[0])
+        + anv[2]
+    )
+    nuc_v02b = (
+        bnv[1]
+        * erfinv(((1 - nuc_threshold) * bnv[0] + (1 - nuc_threshold) * bnv[1] - bnv[0]) / bnv[1])
+        + anv[2]
+    )
 
-    nuc_v02 = np.where(np.isfinite(nuc_v02a), nuc_v02a,
-                       np.where(np.isfinite(nuc_v02b), nuc_v02b, -1E-10))
+    nuc_v02 = np.where(
+        np.isfinite(nuc_v02a), nuc_v02a, np.where(np.isfinite(nuc_v02b), nuc_v02b, -1e-10)
+    )
 
-    switching_coef_vec['V+'] = loop_coef_vec[:, 3]
-    switching_coef_vec['V-'] = loop_coef_vec[:, 2]
-    switching_coef_vec['Imprint'] = (loop_coef_vec[:, 2] + loop_coef_vec[:, 3]) / 2
-    switching_coef_vec['R+'] = loop_coef_vec[:, 0] + loop_coef_vec[:, 1]
-    switching_coef_vec['R-'] = loop_coef_vec[:, 0]
-    switching_coef_vec['Switchable Polarization'] = loop_coef_vec[:, 1]
-    switching_coef_vec['Work of Switching'] = np.abs(loop_coef_vec[:, 3] -
-                                                     loop_coef_vec[:, 2]) * np.abs(loop_coef_vec[:, 1])
+    switching_coef_vec["V+"] = loop_coef_vec[:, 3]
+    switching_coef_vec["V-"] = loop_coef_vec[:, 2]
+    switching_coef_vec["Imprint"] = (loop_coef_vec[:, 2] + loop_coef_vec[:, 3]) / 2
+    switching_coef_vec["R+"] = loop_coef_vec[:, 0] + loop_coef_vec[:, 1]
+    switching_coef_vec["R-"] = loop_coef_vec[:, 0]
+    switching_coef_vec["Switchable Polarization"] = loop_coef_vec[:, 1]
+    switching_coef_vec["Work of Switching"] = np.abs(
+        loop_coef_vec[:, 3] - loop_coef_vec[:, 2]
+    ) * np.abs(loop_coef_vec[:, 1])
 
-    switching_coef_vec['Nucleation Bias 1'] = nuc_v01
-    switching_coef_vec['Nucleation Bias 2'] = nuc_v02
+    switching_coef_vec["Nucleation Bias 1"] = nuc_v01
+    switching_coef_vec["Nucleation Bias 2"] = nuc_v02
 
     return switching_coef_vec.reshape([-1, 1])
 
@@ -576,9 +620,9 @@ def generate_guess(vdc, pr_vec, show_plots=False):
 
         def line(p1, p2):
             """Credit - StackOverflow"""
-            A = (p1[1] - p2[1])
-            B = (p2[0] - p1[0])
-            C = (p1[0] * p2[1] - p2[0] * p1[1])
+            A = p1[1] - p2[1]
+            B = p2[0] - p1[0]
+            C = p1[0] * p2[1] - p2[0] * p1[1]
             return A, B, -C
 
         def intersection(L1, L2):
@@ -612,27 +656,33 @@ def generate_guess(vdc, pr_vec, show_plots=False):
     centroid intersects with the convex hull"""
     y_intersections = []
     for pair in range(outline_1.shape[0]):
-        x_pt = find_intersection(outline_1[pair], outline_2[pair],
-                                 [geom_centroid[0], hull.min_bound[1]],
-                                 [geom_centroid[0], hull.max_bound[1]])
+        x_pt = find_intersection(
+            outline_1[pair],
+            outline_2[pair],
+            [geom_centroid[0], hull.min_bound[1]],
+            [geom_centroid[0], hull.max_bound[1]],
+        )
         if x_pt is not None:
             y_intersections.append(x_pt)
 
-    '''
+    """
     Find the coordinates of the points where the horizontal line through the
     centroid intersects with the convex hull
-    '''
+    """
     x_intersections = []
     for pair in range(outline_1.shape[0]):
-        x_pt = find_intersection(outline_1[pair], outline_2[pair],
-                                 [hull.min_bound[0], geom_centroid[1]],
-                                 [hull.max_bound[0], geom_centroid[1]])
+        x_pt = find_intersection(
+            outline_1[pair],
+            outline_2[pair],
+            [hull.min_bound[0], geom_centroid[1]],
+            [hull.max_bound[0], geom_centroid[1]],
+        )
         if x_pt is not None:
             x_intersections.append(x_pt)
 
-    '''
+    """
     Default values if not intersections can be found.
-    '''
+    """
     if len(y_intersections) < 2:
         min_y_intercept = min(pr_vec)
         max_y_intercept = max(pr_vec)
@@ -663,16 +713,16 @@ def generate_guess(vdc, pr_vec, show_plots=False):
 
     if show_plots:
         fig, ax = plt.subplots()
-        ax.plot(points[:, 0], points[:, 1], 'o')
-        ax.plot(geom_centroid[0], geom_centroid[1], 'r*')
-        ax.plot([geom_centroid[0], geom_centroid[0]], [hull.max_bound[1], hull.min_bound[1]], 'g')
-        ax.plot([hull.min_bound[0], hull.max_bound[0]], [geom_centroid[1], geom_centroid[1]], 'g')
+        ax.plot(points[:, 0], points[:, 1], "o")
+        ax.plot(geom_centroid[0], geom_centroid[1], "r*")
+        ax.plot([geom_centroid[0], geom_centroid[0]], [hull.max_bound[1], hull.min_bound[1]], "g")
+        ax.plot([hull.min_bound[0], hull.max_bound[0]], [geom_centroid[1], geom_centroid[1]], "g")
         for simplex in hull.simplices:
-            ax.plot(points[simplex, 0], points[simplex, 1], 'k')
-        ax.plot(x_intersections[0][0], x_intersections[0][1], 'r*')
-        ax.plot(x_intersections[1][0], x_intersections[1][1], 'r*')
-        ax.plot(y_intersections[0][0], y_intersections[0][1], 'r*')
-        ax.plot(y_intersections[1][0], y_intersections[1][1], 'r*')
+            ax.plot(points[simplex, 0], points[simplex, 1], "k")
+        ax.plot(x_intersections[0][0], x_intersections[0][1], "r*")
+        ax.plot(x_intersections[1][0], x_intersections[1][1], "r*")
+        ax.plot(y_intersections[0][0], y_intersections[0][1], "r*")
+        ax.plot(y_intersections[1][0], y_intersections[1][1], "r*")
         ax.plot(vdc, loop_fit_function(vdc, init_guess_coef_vec))
 
     return init_guess_coef_vec
@@ -714,30 +764,33 @@ def fit_loop(vdc_shifted, pr_shifted, guess):
     #     return Jerr
 
     # do not change these:
-    lb = ([-1E3, -1E3, -1E3, -1E3, -1E-1, 1E-3, 1E-3, 1E-3, 1E-3])  # Lower Bounds
-    ub = ([1E3, 1E3, 1E3, 1E3, 1E-1, 100, 100, 100, 100])  # Upper Bounds
+    lb = [-1e3, -1e3, -1e3, -1e3, -1e-1, 1e-3, 1e-3, 1e-3, 1e-3]  # Lower Bounds
+    ub = [1e3, 1e3, 1e3, 1e3, 1e-1, 100, 100, 100, 100]  # Upper Bounds
 
     x_data = vdc_shifted.ravel()
     y_data = pr_shifted.ravel()
 
-    '''Do the fitting. Least Squares fit. Using more accurate determination of
+    """Do the fitting. Least Squares fit. Using more accurate determination of
     Jacobian. This is slower, but will be necessary initially for generating the
-    guesses (see below)'''
+    guesses (see below)"""
     # do not change these:
-    plsq = least_squares(loop_residuals, guess, args=(y_data, x_data), bounds=(lb, ub),
-                         jac='3-point')
+    plsq = least_squares(
+        loop_residuals, guess, args=(y_data, x_data), bounds=(lb, ub), jac="3-point"
+    )
     pr_fit_vec = loop_fit_function(x_data, plsq.x)
 
-    '''Here we compare the values of the information criterion, for the whole loop fit and a simple linear fit
+    """Here we compare the values of the information criterion, for the whole loop fit and a simple linear fit
     We use both the AIC and BIC creterion metrics to compare which is better
-    Lower values (even negative) are better than higher values).'''
+    Lower values (even negative) are better than higher values)."""
 
     num_dc_steps = len(x_data)
     sd_loop = np.std((y_data - pr_fit_vec))
     df_loop = 8  # degrees of freedom
     df_line = 1
 
-    l_l = np.sum(stats.norm.logpdf(y_data, loc=pr_fit_vec, scale=sd_loop))  # log likelihood estimation
+    l_l = np.sum(
+        stats.norm.logpdf(y_data, loc=pr_fit_vec, scale=sd_loop)
+    )  # log likelihood estimation
     aic_loop = 2.0 * df_loop - 2.0 * l_l  # calculate AIC
     bic_loop = -2.0 * l_l + df_loop * np.log(num_dc_steps)  # calculate BIC
 

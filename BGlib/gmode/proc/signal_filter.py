@@ -9,7 +9,6 @@ Created on Tue Nov 07 11:48:53 2017
 
 """
 
-from __future__ import division, print_function, absolute_import, unicode_literals
 import h5py
 import numpy as np
 from collections import Iterable
@@ -18,8 +17,12 @@ from pyUSID.processing.comp_utils import parallel_compute
 from sidpy.hdf.hdf_utils import write_simple_attrs
 
 from pyUSID import Dimension
-from pyUSID.io.hdf_utils import create_results_group, write_main_dataset, create_empty_dataset, \
-    write_ind_val_dsets
+from pyUSID.io.hdf_utils import (
+    create_results_group,
+    write_main_dataset,
+    create_empty_dataset,
+    write_ind_val_dsets,
+)
 from pyUSID.processing.process import Process
 
 from .fft import get_noise_floor, are_compatible_filters, build_composite_freq_filter
@@ -29,8 +32,17 @@ from .gmode_utils import test_filter
 
 
 class SignalFilter(Process):
-    def __init__(self, h5_main, frequency_filters=None, noise_threshold=None, write_filtered=True,
-                 write_condensed=False, num_pix=1, phase_rad=0, **kwargs):
+    def __init__(
+        self,
+        h5_main,
+        frequency_filters=None,
+        noise_threshold=None,
+        write_filtered=True,
+        write_condensed=False,
+        num_pix=1,
+        phase_rad=0,
+        **kwargs,
+    ):
         """
         Filters the entire h5 dataset with the given filtering parameters.
         Parameters
@@ -62,31 +74,37 @@ class SignalFilter(Process):
             Please see Process class for additional inputs
         """
 
-        super(SignalFilter, self).__init__(h5_main, 'FFT_Filtering', **kwargs)
+        super(SignalFilter, self).__init__(h5_main, "FFT_Filtering", **kwargs)
 
         if frequency_filters is None and noise_threshold is None:
-            raise ValueError('Need to specify at least some noise thresholding / frequency filter')
+            raise ValueError("Need to specify at least some noise thresholding / frequency filter")
 
         if noise_threshold is not None:
             if noise_threshold >= 1 or noise_threshold <= 0:
-                raise ValueError('Noise threshold must be within (0 1)')
+                raise ValueError("Noise threshold must be within (0 1)")
 
         self.composite_filter = 1
         if frequency_filters is not None:
             if not isinstance(frequency_filters, Iterable):
                 frequency_filters = [frequency_filters]
             if not are_compatible_filters(frequency_filters):
-                raise ValueError('frequency filters must be a single or list of FrequencyFilter objects')
+                raise ValueError(
+                    "frequency filters must be a single or list of FrequencyFilter objects"
+                )
             self.composite_filter = build_composite_freq_filter(frequency_filters)
         else:
             write_condensed = False
 
         if write_filtered is False and write_condensed is False:
-            raise ValueError('You need to write the filtered and/or the condensed dataset to the file')
+            raise ValueError(
+                "You need to write the filtered and/or the condensed dataset to the file"
+            )
 
         num_effective_pix = h5_main.shape[0] * 1.0 / num_pix
         if num_effective_pix % 1 > 0:
-            raise ValueError('Number of pixels not divisible by the number of pixels to use for FFT filter')
+            raise ValueError(
+                "Number of pixels not divisible by the number of pixels to use for FFT filter"
+            )
 
         self.num_effective_pix = int(num_effective_pix)
         self.phase_rad = phase_rad
@@ -107,15 +125,15 @@ class SignalFilter(Process):
         self._max_pos_per_read = int(self._max_pos_per_read / scaling_factor)
 
         if self.verbose and self.mpi_rank == 0:
-            print('Allowed to read {} pixels per chunk'.format(self._max_pos_per_read))
+            print("Allowed to read {} pixels per chunk".format(self._max_pos_per_read))
 
         self.parms_dict = dict()
         if self.frequency_filters is not None:
             for filter in self.frequency_filters:
                 self.parms_dict.update(filter.get_parms())
         if self.noise_threshold is not None:
-            self.parms_dict['noise_threshold'] = self.noise_threshold
-        self.parms_dict['num_pix'] = self.num_effective_pix
+            self.parms_dict["noise_threshold"] = self.noise_threshold
+        self.parms_dict["num_pix"] = self.num_effective_pix
 
         self.duplicate_h5_groups, self.partial_h5_groups = self._check_for_duplicates()
 
@@ -147,30 +165,40 @@ class SignalFilter(Process):
             return
         if pix_ind is None:
             pix_ind = np.random.randint(0, high=self.h5_main.shape[0])
-        return test_filter(self.h5_main[pix_ind], frequency_filters=self.frequency_filters, excit_wfm=excit_wfm,
-                           noise_threshold=self.noise_threshold, plot_title='Pos #' + str(pix_ind), show_plots=True,
-                           **kwargs)
+        return test_filter(
+            self.h5_main[pix_ind],
+            frequency_filters=self.frequency_filters,
+            excit_wfm=excit_wfm,
+            noise_threshold=self.noise_threshold,
+            plot_title="Pos #" + str(pix_ind),
+            show_plots=True,
+            **kwargs,
+        )
 
     def _create_results_datasets(self):
         """
         Creates all the datasets necessary for holding all parameters + data.
         """
 
-        self.h5_results_grp = create_results_group(self.h5_main, self.process_name,
-                                                   h5_parent_group=self._h5_target_group)
+        self.h5_results_grp = create_results_group(
+            self.h5_main, self.process_name, h5_parent_group=self._h5_target_group
+        )
 
-        self.parms_dict.update({'last_pixel': 0, 'algorithm': 'pycroscopy_SignalFilter'})
+        self.parms_dict.update({"last_pixel": 0, "algorithm": "pycroscopy_SignalFilter"})
 
         write_simple_attrs(self.h5_results_grp, self.parms_dict)
 
         assert isinstance(self.h5_results_grp, h5py.Group)
 
         if isinstance(self.composite_filter, np.ndarray):
-            h5_comp_filt = self.h5_results_grp.create_dataset('Composite_Filter',
-                                                              data=float(self.composite_filter))
+            h5_comp_filt = self.h5_results_grp.create_dataset(
+                "Composite_Filter", data=float(self.composite_filter)
+            )
 
             if self.verbose and self.mpi_rank == 0:
-                print('Rank {} - Finished creating the Composite_Filter dataset'.format(self.mpi_rank))
+                print(
+                    "Rank {} - Finished creating the Composite_Filter dataset".format(self.mpi_rank)
+                )
 
         # First create the position datsets if the new indices are smaller...
         if self.num_effective_pix != self.h5_main.shape[0]:
@@ -187,47 +215,71 @@ class SignalFilter(Process):
                 h5_pos_vals.data = np.atleast_2d(new_pos_vals)  # The data generated above varies linearly. Override.
 
             """
-            h5_pos_inds_new, h5_pos_vals_new = write_ind_val_dsets(self.h5_results_grp,
-                                                                   Dimension('pixel', 'a.u.', self.num_effective_pix),
-                                                                   is_spectral=False, verbose=self.verbose and self.mpi_rank==0)
+            h5_pos_inds_new, h5_pos_vals_new = write_ind_val_dsets(
+                self.h5_results_grp,
+                Dimension("pixel", "a.u.", self.num_effective_pix),
+                is_spectral=False,
+                verbose=self.verbose and self.mpi_rank == 0,
+            )
             if self.verbose and self.mpi_rank == 0:
-                print('Rank {} - Created the new position ancillary dataset'.format(self.mpi_rank))
+                print("Rank {} - Created the new position ancillary dataset".format(self.mpi_rank))
 
         else:
             h5_pos_inds_new = self.h5_main.h5_pos_inds
             h5_pos_vals_new = self.h5_main.h5_pos_vals
 
             if self.verbose and self.mpi_rank == 0:
-                print('Rank {} - Reusing source datasets position datasets'.format(self.mpi_rank))
+                print("Rank {} - Reusing source datasets position datasets".format(self.mpi_rank))
 
         if self.noise_threshold is not None:
-            self.h5_noise_floors = write_main_dataset(self.h5_results_grp, (self.num_effective_pix, 1), 'Noise_Floors',
-                                                      'Noise', 'a.u.', None, Dimension('arb', '', [1]),
-                                                      dtype=float, aux_spec_prefix='Noise_Spec_',
-                                                      h5_pos_inds=h5_pos_inds_new, h5_pos_vals=h5_pos_vals_new,
-                                                      verbose=self.verbose and self.mpi_rank == 0)
+            self.h5_noise_floors = write_main_dataset(
+                self.h5_results_grp,
+                (self.num_effective_pix, 1),
+                "Noise_Floors",
+                "Noise",
+                "a.u.",
+                None,
+                Dimension("arb", "", [1]),
+                dtype=float,
+                aux_spec_prefix="Noise_Spec_",
+                h5_pos_inds=h5_pos_inds_new,
+                h5_pos_vals=h5_pos_vals_new,
+                verbose=self.verbose and self.mpi_rank == 0,
+            )
             if self.verbose and self.mpi_rank == 0:
-                print('Rank {} - Finished creating the Noise_Floors dataset'.format(self.mpi_rank))
+                print("Rank {} - Finished creating the Noise_Floors dataset".format(self.mpi_rank))
 
         if self.write_filtered:
             # Filtered data is identical to Main_Data in every way - just a duplicate
-            self.h5_filtered = create_empty_dataset(self.h5_main, self.h5_main.dtype, 'Filtered_Data',
-                                                    h5_group=self.h5_results_grp)
+            self.h5_filtered = create_empty_dataset(
+                self.h5_main, self.h5_main.dtype, "Filtered_Data", h5_group=self.h5_results_grp
+            )
             if self.verbose and self.mpi_rank == 0:
-                print('Rank {} - Finished creating the Filtered dataset'.format(self.mpi_rank))
+                print("Rank {} - Finished creating the Filtered dataset".format(self.mpi_rank))
 
         self.hot_inds = None
 
         if self.write_condensed:
             self.hot_inds = np.where(self.composite_filter > 0)[0]
-            self.hot_inds = np.uint(self.hot_inds[int(0.5 * len(self.hot_inds)):])  # only need to keep half the data
-            condensed_spec = Dimension('hot_frequencies', '', int(0.5 * len(self.hot_inds)))
-            self.h5_condensed = write_main_dataset(self.h5_results_grp, (self.num_effective_pix, len(self.hot_inds)),
-                                                   'Condensed_Data', 'Complex', 'a. u.', None, condensed_spec,
-                                                   h5_pos_inds=h5_pos_inds_new, h5_pos_vals=h5_pos_vals_new,
-                                                   dtype=np.complex, verbose=self.verbose and self.mpi_rank == 0)
+            self.hot_inds = np.uint(
+                self.hot_inds[int(0.5 * len(self.hot_inds)) :]
+            )  # only need to keep half the data
+            condensed_spec = Dimension("hot_frequencies", "", int(0.5 * len(self.hot_inds)))
+            self.h5_condensed = write_main_dataset(
+                self.h5_results_grp,
+                (self.num_effective_pix, len(self.hot_inds)),
+                "Condensed_Data",
+                "Complex",
+                "a. u.",
+                None,
+                condensed_spec,
+                h5_pos_inds=h5_pos_inds_new,
+                h5_pos_vals=h5_pos_vals_new,
+                dtype=np.complex,
+                verbose=self.verbose and self.mpi_rank == 0,
+            )
             if self.verbose and self.mpi_rank == 0:
-                print('Rank {} - Finished creating the Condensed dataset'.format(self.mpi_rank))
+                print("Rank {} - Finished creating the Condensed dataset".format(self.mpi_rank))
 
         if self.mpi_size > 1:
             self.mpi_comm.Barrier()
@@ -238,11 +290,11 @@ class SignalFilter(Process):
         Extracts references to the existing datasets that hold the results
         """
         if self.write_filtered:
-            self.h5_filtered = self.h5_results_grp['Filtered_Data']
+            self.h5_filtered = self.h5_results_grp["Filtered_Data"]
         if self.write_condensed:
-            self.h5_condensed = self.h5_results_grp['Condensed_Data']
+            self.h5_condensed = self.h5_results_grp["Condensed_Data"]
         if self.noise_threshold is not None:
-            self.h5_noise_floors = self.h5_results_grp['Noise_Floors']
+            self.h5_noise_floors = self.h5_results_grp["Noise_Floors"]
 
     def _write_results_chunk(self):
         """
@@ -274,9 +326,13 @@ class SignalFilter(Process):
         self.data = np.fft.fftshift(np.fft.fft(self.data, axis=1), axes=1)
 
         if self.noise_threshold is not None:
-            self.noise_floors = parallel_compute(self.data, get_noise_floor, cores=self._cores,
-                                                 func_args=[self.noise_threshold],
-                                                 verbose=self.verbose)
+            self.noise_floors = parallel_compute(
+                self.data,
+                get_noise_floor,
+                cores=self._cores,
+                func_args=[self.noise_threshold],
+                verbose=self.verbose,
+            )
 
         if isinstance(self.composite_filter, np.ndarray):
             # multiple fft of data with composite filter
@@ -284,7 +340,9 @@ class SignalFilter(Process):
 
         if self.noise_threshold is not None:
             # apply thresholding
-            self.data[np.abs(self.data) < np.tile(np.atleast_2d(self.noise_floors), self.data.shape[1])] = 1E-16
+            self.data[
+                np.abs(self.data) < np.tile(np.atleast_2d(self.noise_floors), self.data.shape[1])
+            ] = 1e-16
 
         if self.write_condensed:
             # set self.condensed_data here

@@ -9,21 +9,17 @@ Created on Thu Nov 02 11:48:53 2017
 
 """
 
-from __future__ import division, print_function, absolute_import, unicode_literals
-
 import numpy as np
 from pyUSID.processing.comp_utils import parallel_compute
 from sidpy.hdf.dtype_utils import stack_real_to_compound
-from sidpy.hdf.hdf_utils import write_simple_attrs, print_tree, get_attributes
+from sidpy.hdf.hdf_utils import write_simple_attrs, get_attributes
 from pyUSID import Dimension
 from pyUSID.processing.process import Process
-from pyUSID.io.hdf_utils import write_main_dataset, create_results_group, \
-    create_empty_dataset
+from pyUSID.io.hdf_utils import write_main_dataset, create_results_group, create_empty_dataset
 from pyUSID import USIDataset
 from .utils.giv_utils import do_bayesian_inference, bayesian_inference_on_period
 
-cap_dtype = np.dtype({'names': ['Forward', 'Reverse'],
-                      'formats': [float, float]})
+cap_dtype = np.dtype({"names": ["Forward", "Reverse"], "formats": [float, float]})
 # TODO : Take lesser used bayesian inference params from kwargs if provided
 
 
@@ -33,8 +29,7 @@ class GIVBayesian(Process):
     signals in General mode I-V data
     """
 
-    def __init__(self, h5_main, ex_freq, gain, num_x_steps=250, r_extra=110,
-                 **kwargs):
+    def __init__(self, h5_main, ex_freq, gain, num_x_steps=250, r_extra=110, **kwargs):
         """
         Applies Bayesian Inference to General Mode IV (G-IV) data to extract the true current
 
@@ -58,8 +53,7 @@ class GIVBayesian(Process):
         kwargs : dict
             Other parameters specific to the Process class and nuanced bayesian_inference parameters
         """
-        super(GIVBayesian, self).__init__(h5_main, 'Bayesian_Inference',
-                                          **kwargs)
+        super(GIVBayesian, self).__init__(h5_main, "Bayesian_Inference", **kwargs)
         self.gain = gain
         self.ex_freq = ex_freq
         self.r_extra = r_extra
@@ -67,14 +61,18 @@ class GIVBayesian(Process):
         if self.num_x_steps % 4 == 0:
             self.num_x_steps = ((self.num_x_steps // 2) + 1) * 2
         if self.verbose and self.mpi_rank == 0:
-            print('ensuring that half steps should be odd, num_x_steps is now', self.num_x_steps)
+            print("ensuring that half steps should be odd, num_x_steps is now", self.num_x_steps)
 
         self.h5_main = USIDataset(self.h5_main)
 
         # take these from kwargs
-        bayesian_parms = {'gam': 0.03, 'e': 10.0, 'sigma': 10.0, 'sigmaC': 1.0, 'num_samples': 2E3}
+        bayesian_parms = {"gam": 0.03, "e": 10.0, "sigma": 10.0, "sigmaC": 1.0, "num_samples": 2e3}
 
-        self.parms_dict = {'freq': self.ex_freq, 'num_x_steps': self.num_x_steps, 'r_extra': self.r_extra}
+        self.parms_dict = {
+            "freq": self.ex_freq,
+            "num_x_steps": self.num_x_steps,
+            "r_extra": self.r_extra,
+        }
         self.parms_dict.update(bayesian_parms)
 
         self.duplicate_h5_groups, self.partial_h5_groups = self._check_for_duplicates()
@@ -119,13 +117,17 @@ class GIVBayesian(Process):
             pix_ind = np.random.randint(0, high=self.h5_main.shape[0])
         other_params = self.parms_dict.copy()
         # removing duplicates:
-        _ = other_params.pop('freq')
+        _ = other_params.pop("freq")
 
-        return bayesian_inference_on_period(self.h5_main[pix_ind], self.single_ao, self.parms_dict['freq'],
-                                            show_plots=show_plots, **other_params)
+        return bayesian_inference_on_period(
+            self.h5_main[pix_ind],
+            self.single_ao,
+            self.parms_dict["freq"],
+            show_plots=show_plots,
+            **other_params,
+        )
 
-    def _set_memory_and_cores(self, cores=None, man_mem_limit=None,
-                              mem_multiplier=1.0):
+    def _set_memory_and_cores(self, cores=None, man_mem_limit=None, mem_multiplier=1.0):
         """
         Checks hardware limitations such as memory, # cpus and sets the recommended datachunk sizes and the
         number of cores to be used by analysis methods.
@@ -139,9 +141,9 @@ class GIVBayesian(Process):
             Default - 1024
             The amount a memory in Mb to use in the computation
         """
-        super(GIVBayesian, self)._set_memory_and_cores(cores=cores,
-                                                       mem_multiplier=mem_multiplier,
-                                                       man_mem_limit=man_mem_limit)
+        super(GIVBayesian, self)._set_memory_and_cores(
+            cores=cores, mem_multiplier=mem_multiplier, man_mem_limit=man_mem_limit
+        )
         # Remember that the default number of pixels corresponds to only the raw data that can be held in memory
         # In the case of simplified Bayesian inference, four (roughly) equally sized datasets need to be held in memory:
         # raw, compensated current, resistance, variance
@@ -150,7 +152,7 @@ class GIVBayesian(Process):
         self._max_pos_per_read = min(1000, self._max_pos_per_read)
 
         if self.verbose and self.mpi_rank == 0:
-            print('Max positions per read set to {}'.format(self._max_pos_per_read))
+            print("Max positions per read set to {}".format(self._max_pos_per_read))
 
     def _create_results_datasets(self):
         """
@@ -160,58 +162,78 @@ class GIVBayesian(Process):
         num_pos = self.h5_main.shape[0]
 
         if self.verbose and self.mpi_rank == 0:
-            print('Now creating the datasets')
+            print("Now creating the datasets")
 
-        self.h5_results_grp = create_results_group(self.h5_main,
-                                                   self.process_name,
-                                                   h5_parent_group=self._h5_target_group)
+        self.h5_results_grp = create_results_group(
+            self.h5_main, self.process_name, h5_parent_group=self._h5_target_group
+        )
 
-        write_simple_attrs(self.h5_results_grp, {'algorithm_author': 'Kody J. Law', 'last_pixel': 0})
+        write_simple_attrs(
+            self.h5_results_grp, {"algorithm_author": "Kody J. Law", "last_pixel": 0}
+        )
         write_simple_attrs(self.h5_results_grp, self.parms_dict)
 
         if self.verbose and self.mpi_rank == 0:
-            print('created group: {} with attributes:'.format(self.h5_results_grp.name))
+            print("created group: {} with attributes:".format(self.h5_results_grp.name))
             print(get_attributes(self.h5_results_grp))
 
         # One of those rare instances when the result is exactly the same as the source
-        self.h5_i_corrected = create_empty_dataset(self.h5_main, float, 'Corrected_Current', h5_group=self.h5_results_grp)
+        self.h5_i_corrected = create_empty_dataset(
+            self.h5_main, float, "Corrected_Current", h5_group=self.h5_results_grp
+        )
 
         if self.verbose and self.mpi_rank == 0:
-            print('Created I Corrected')
+            print("Created I Corrected")
             # print_tree(self.h5_results_grp)
 
         # For some reason, we cannot specify chunks or compression!
         # The resistance dataset requires the creation of a new spectroscopic dimension
-        self.h5_resistance = write_main_dataset(self.h5_results_grp, (num_pos, self.num_x_steps), 'Resistance', 'Resistance',
-                                                'GOhms', None, Dimension('Bias', 'V', self.num_x_steps),
-                                                dtype=float, # chunks=(1, self.num_x_steps), #compression='gzip',
-                                                h5_pos_inds=self.h5_main.h5_pos_inds,
-                                                h5_pos_vals=self.h5_main.h5_pos_vals)
+        self.h5_resistance = write_main_dataset(
+            self.h5_results_grp,
+            (num_pos, self.num_x_steps),
+            "Resistance",
+            "Resistance",
+            "GOhms",
+            None,
+            Dimension("Bias", "V", self.num_x_steps),
+            dtype=float,  # chunks=(1, self.num_x_steps), #compression='gzip',
+            h5_pos_inds=self.h5_main.h5_pos_inds,
+            h5_pos_vals=self.h5_main.h5_pos_vals,
+        )
 
         if self.verbose and self.mpi_rank == 0:
-            print('Created Resistance')
+            print("Created Resistance")
             # print_tree(self.h5_results_grp)
 
         assert isinstance(self.h5_resistance, USIDataset)  # only here for PyCharm
         self.h5_new_spec_vals = self.h5_resistance.h5_spec_vals
 
         # The variance is identical to the resistance dataset
-        self.h5_variance = create_empty_dataset(self.h5_resistance, float, 'R_variance')
+        self.h5_variance = create_empty_dataset(self.h5_resistance, float, "R_variance")
 
         if self.verbose and self.mpi_rank == 0:
-            print('Created Variance')
+            print("Created Variance")
             # print_tree(self.h5_results_grp)
 
         # The capacitance dataset requires new spectroscopic dimensions as well
-        self.h5_cap = write_main_dataset(self.h5_results_grp, (num_pos, 1), 'Capacitance', 'Capacitance', 'pF', None,
-                                         Dimension('Direction', '', [1]),  h5_pos_inds=self.h5_main.h5_pos_inds,
-                                         h5_pos_vals=self.h5_main.h5_pos_vals, dtype=cap_dtype, #compression='gzip',
-                                         aux_spec_prefix='Cap_Spec_')
+        self.h5_cap = write_main_dataset(
+            self.h5_results_grp,
+            (num_pos, 1),
+            "Capacitance",
+            "Capacitance",
+            "pF",
+            None,
+            Dimension("Direction", "", [1]),
+            h5_pos_inds=self.h5_main.h5_pos_inds,
+            h5_pos_vals=self.h5_main.h5_pos_vals,
+            dtype=cap_dtype,  # compression='gzip',
+            aux_spec_prefix="Cap_Spec_",
+        )
 
         if self.verbose and self.mpi_rank == 0:
-            print('Created Capacitance')
+            print("Created Capacitance")
             # print_tree(self.h5_results_grp)
-            print('Done creating all results datasets!')
+            print("Done creating all results datasets!")
 
         if self.mpi_size > 1:
             self.mpi_comm.Barrier()
@@ -221,11 +243,11 @@ class GIVBayesian(Process):
         """
         Extracts references to the existing datasets that hold the results
         """
-        self.h5_new_spec_vals = self.h5_results_grp['Spectroscopic_Values']
-        self.h5_cap = self.h5_results_grp['Capacitance']
-        self.h5_variance = self.h5_results_grp['R_variance']
-        self.h5_resistance = self.h5_results_grp['Resistance']
-        self.h5_i_corrected = self.h5_results_grp['Corrected_Current']
+        self.h5_new_spec_vals = self.h5_results_grp["Spectroscopic_Values"]
+        self.h5_cap = self.h5_results_grp["Capacitance"]
+        self.h5_variance = self.h5_results_grp["R_variance"]
+        self.h5_resistance = self.h5_results_grp["Resistance"]
+        self.h5_i_corrected = self.h5_results_grp["Corrected_Current"]
 
     def _write_results_chunk(self):
         """
@@ -233,7 +255,7 @@ class GIVBayesian(Process):
         """
 
         if self.verbose:
-            print('Rank {} - Started accumulating results for this chunk'.format(self.mpi_rank))
+            print("Rank {} - Started accumulating results for this chunk".format(self.mpi_rank))
 
         num_pixels = len(self.forward_results)
         cap_mat = np.zeros((num_pixels, 2), dtype=float)
@@ -241,16 +263,17 @@ class GIVBayesian(Process):
         r_var_mat = np.zeros((num_pixels, self.num_x_steps), dtype=float)
         i_cor_sin_mat = np.zeros((num_pixels, self.single_ao.size), dtype=float)
 
-        for pix_ind, i_meas, forw_results, rev_results in zip(range(num_pixels), self.data,
-                                                              self.forward_results, self.reverse_results):
+        for pix_ind, i_meas, forw_results, rev_results in zip(
+            range(num_pixels), self.data, self.forward_results, self.reverse_results
+        ):
             full_results = dict()
-            for item in ['cValue']:
+            for item in ["cValue"]:
                 full_results[item] = np.hstack((forw_results[item], rev_results[item]))
                 # print(item, full_results[item].shape)
 
             # Capacitance is always doubled - halve it now (locally):
             # full_results['cValue'] *= 0.5
-            cap_val = np.mean(full_results['cValue']) * 0.5
+            cap_val = np.mean(full_results["cValue"]) * 0.5
 
             # Compensating the resistance..
             """
@@ -262,23 +285,29 @@ class GIVBayesian(Process):
             i_corr_sine = i_meas - i_cap - i_extra
 
             # Equivalent to flipping the X:
-            rev_results['x'] *= -1
+            rev_results["x"] *= -1
 
             # Stacking the results - no flipping required for reverse:
-            for item in ['x', 'mR', 'vR']:
+            for item in ["x", "mR", "vR"]:
                 full_results[item] = np.hstack((forw_results[item], rev_results[item]))
 
             i_cor_sin_mat[pix_ind] = i_corr_sine
-            cap_mat[pix_ind] = full_results['cValue'] * 1000  # convert from nF to pF
-            r_inf_mat[pix_ind] = full_results['mR']
-            r_var_mat[pix_ind] = full_results['vR']
+            cap_mat[pix_ind] = full_results["cValue"] * 1000  # convert from nF to pF
+            r_inf_mat[pix_ind] = full_results["mR"]
+            r_var_mat[pix_ind] = full_results["vR"]
 
         # Now write to h5 files:
         if self.verbose:
-            print('Rank {} - Finished accumulating results. Writing results of chunk to h5'.format(self.mpi_rank))
+            print(
+                "Rank {} - Finished accumulating results. Writing results of chunk to h5".format(
+                    self.mpi_rank
+                )
+            )
 
         if self.__first_batch:
-            self.h5_new_spec_vals[0, :] = full_results['x']  # Technically this needs to only be done once
+            self.h5_new_spec_vals[0, :] = full_results[
+                "x"
+            ]  # Technically this needs to only be done once
             self.__first_batch = False
 
         # Get access to the private variable:
@@ -306,23 +335,37 @@ class GIVBayesian(Process):
         rolled_raw_data = np.roll(self.data, self.roll_pts, axis=1)
         # Ensure that the bias has a positive slope. Multiply current by -1 accordingly
         if self.verbose:
-            print('Rank {} beginning parallel compute for Forward'.format(self.mpi_rank))
-        self.reverse_results = parallel_compute(rolled_raw_data[:, :half_v_steps] * -1, do_bayesian_inference,
-                                                cores=self._cores,
-                                                func_args=[self.rolled_bias[:half_v_steps] * -1, self.ex_freq],
-                                                func_kwargs=self._bayes_parms, lengthy_computation=False,
-                                                verbose=self.verbose)
+            print("Rank {} beginning parallel compute for Forward".format(self.mpi_rank))
+        self.reverse_results = parallel_compute(
+            rolled_raw_data[:, :half_v_steps] * -1,
+            do_bayesian_inference,
+            cores=self._cores,
+            func_args=[self.rolled_bias[:half_v_steps] * -1, self.ex_freq],
+            func_kwargs=self._bayes_parms,
+            lengthy_computation=False,
+            verbose=self.verbose,
+        )
 
         if self.verbose:
-            print('Rank {} finished processing forward sections. Now working on reverse sections'.format(self.mpi_rank))
+            print(
+                "Rank {} finished processing forward sections. Now working on reverse sections".format(
+                    self.mpi_rank
+                )
+            )
 
-        self.forward_results = parallel_compute(rolled_raw_data[:, half_v_steps:], do_bayesian_inference,
-                                                cores=self._cores,
-                                                func_args=[self.rolled_bias[half_v_steps:], self.ex_freq],
-                                                func_kwargs=self._bayes_parms, lengthy_computation=False,
-                                                verbose=self.verbose)
+        self.forward_results = parallel_compute(
+            rolled_raw_data[:, half_v_steps:],
+            do_bayesian_inference,
+            cores=self._cores,
+            func_args=[self.rolled_bias[half_v_steps:], self.ex_freq],
+            func_kwargs=self._bayes_parms,
+            lengthy_computation=False,
+            verbose=self.verbose,
+        )
         if self.verbose:
-            print('Rank {} Finished processing reverse loops (and this chunk)'.format(self.mpi_rank))
+            print(
+                "Rank {} Finished processing reverse loops (and this chunk)".format(self.mpi_rank)
+            )
 
     def compute(self, override=False, *args, **kwargs):
         """
@@ -347,8 +390,8 @@ class GIVBayesian(Process):
 
         # remove additional parm and halve the x points
         self._bayes_parms = self.parms_dict.copy()
-        self._bayes_parms['num_x_steps'] = self.num_x_steps // 2
-        self._bayes_parms['econ'] = True
-        del(self._bayes_parms['freq'])
+        self._bayes_parms["num_x_steps"] = self.num_x_steps // 2
+        self._bayes_parms["econ"] = True
+        del self._bayes_parms["freq"]
 
         return super(GIVBayesian, self).compute(override=override, *args, **kwargs)

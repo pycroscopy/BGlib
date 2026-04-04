@@ -11,4 +11,4 @@ Submodules
 
 from . import translators
 
-__all__ = ['translators']
+__all__ = ["translators"]

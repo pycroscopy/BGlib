@@ -7,19 +7,28 @@ Created on Wed Aug 31 17:03:29 2016
 @author: Suhas Somnath
 """
 
-from __future__ import division, print_function, absolute_import, unicode_literals
 import numpy as np
 
 
 # TODO: Test and debug node and clusterTree classes for agglomerative clustering etc
+
 
 class Node(object):
     """
     Basic unit of a tree - a node. Keeps track of its value, labels, parent, children, level in the tree etc.
     """
 
-    def __init__(self, name, value=None, parent=None, dist=0, labels=None, children=[], compute_mean=False,
-                 verbose=False):
+    def __init__(
+        self,
+        name,
+        value=None,
+        parent=None,
+        dist=0,
+        labels=None,
+        children=[],
+        compute_mean=False,
+        verbose=False,
+    ):
         """
         Parameters
         ----------
@@ -54,17 +63,17 @@ class Node(object):
             temp_labels = []
             for child in self.children:
                 if verbose:
-                    print('Child #{} had the following labels:'.format(child.name))
+                    print("Child #{} had the following labels:".format(child.name))
                     print(child.labels)
                 temp_labels.append(np.array(child.labels))
             if verbose:
-                print('Labels (unsorted) derived from children for node #{}:'.format(name))
+                print("Labels (unsorted) derived from children for node #{}:".format(name))
                 print(temp_labels)
             self.labels = np.hstack(temp_labels)
             self.labels.sort()
         else:
             if verbose:
-                print('Labels for leaf node #{}:'.format(name))
+                print("Labels for leaf node #{}:".format(name))
                 print(labels)
             self.labels = np.array(labels, dtype=np.uint32)
 
@@ -74,16 +83,24 @@ class Node(object):
             for child in self.children:
                 self.num_nodes += child.num_nodes
                 self.level = max(self.level, child.level)
-            self.level += 1  # because this node has to be one higher level than its highest children
+            self.level += (
+                1  # because this node has to be one higher level than its highest children
+            )
         else:
             self.num_nodes = 1
             if verbose:
-                print('Parent node:', str(name), 'has', str(self.num_nodes), 'children')
+                print("Parent node:", str(name), "has", str(self.num_nodes), "children")
         if all([len(self.children) > 0, value is None, compute_mean]):
             resp = []
             for child in children:
                 if verbose:
-                    print('       Child node', str(child.name), 'has', str(child.num_nodes), 'children')
+                    print(
+                        "       Child node",
+                        str(child.name),
+                        "has",
+                        str(child.num_nodes),
+                        "children",
+                    )
                 # primitive method of equal bias mean: resp.append(child.value)
                 # weighted mean:
                 resp.append(child.value * child.labels.size / self.labels.size)
@@ -91,7 +108,9 @@ class Node(object):
             self.value = np.sum(np.array(resp), axis=0)
 
     def __str__(self):
-        return '({}) --> {},{}'.format(self.name, str(self.children[0].name), str(self.children[1].name))
+        return "({}) --> {},{}".format(
+            self.name, str(self.children[0].name), str(self.children[1].name)
+        )
 
 
 class ClusterTree(object):
@@ -140,7 +159,9 @@ class ClusterTree(object):
                 look up the node object corresponding to this label """
                 childs.append(self.nodes[int(linkage_pairing[row, col])])
                 # Now this row results in a new node. That is what we create here and assign the children to this node
-            new_node = Node(row + self.num_leaves, children=childs, compute_mean=centroids is not None)
+            new_node = Node(
+                row + self.num_leaves, children=childs, compute_mean=centroids is not None
+            )
             # If distances are provided, add the distances attribute to this node.
             # This is the distance between the children
             if distances is not None:

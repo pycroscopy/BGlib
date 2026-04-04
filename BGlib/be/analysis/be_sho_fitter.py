@@ -7,15 +7,18 @@ Created on Thu Nov 20 11:48:53 2019
 
 @author: Suhas Somnath, Chris R. Smith
 """
-from __future__ import division, print_function, absolute_import, \
-    unicode_literals
+
 from enum import Enum
 from warnings import warn
 import numpy as np
 from functools import partial
 from sidpy.hdf.hdf_utils import write_simple_attrs, get_attr
-from pyUSID.io.hdf_utils import create_results_group, write_main_dataset, \
-    write_reduced_anc_dsets, create_empty_dataset
+from pyUSID.io.hdf_utils import (
+    create_results_group,
+    write_main_dataset,
+    write_reduced_anc_dsets,
+    create_empty_dataset,
+)
 from pyUSID.io.usi_data import USIDataset
 
 from scipy.signal import find_peaks_cwt
@@ -23,13 +26,11 @@ from .utils.be_sho import SHOestimateGuess, SHOfunc
 from .fitter import Fitter
 
 
-'''
+"""
 Custom dtype for the datasets created during fitting.
-'''
-_field_names = ['Amplitude [V]', 'Frequency [Hz]', 'Quality Factor',
-                'Phase [rad]', 'R2 Criterion']
-sho32 = np.dtype({'names': _field_names,
-                  'formats': [float for name in _field_names]})
+"""
+_field_names = ["Amplitude [V]", "Frequency [Hz]", "Quality Factor", "Phase [rad]", "R2 Criterion"]
+sho32 = np.dtype({"names": _field_names, "formats": [float for name in _field_names]})
 
 
 class SHOGuessFunc(Enum):
@@ -42,7 +43,6 @@ class SHOFitFunc(Enum):
 
 
 class BESHOfitter(Fitter):
-
     def __init__(self, h5_main, **kwargs):
         """
         Creates an instance of the BESHOFitter class
@@ -60,16 +60,15 @@ class BESHOfitter(Fitter):
             Keyword arguments such as "verbose" and "cores" that will be
             passed onto :class:`~pyUSID.processing.process.Process`
         """
-        super(BESHOfitter, self).__init__(h5_main, "SHO_Fit",
-                                          variables=['Frequency'], **kwargs)
+        super(BESHOfitter, self).__init__(h5_main, "SHO_Fit", variables=["Frequency"], **kwargs)
 
         self.parms_dict = None
 
-        self._fit_dim_name = 'Frequency'
+        self._fit_dim_name = "Frequency"
 
         # Extract some basic parameters that are necessary for either the guess
         # or fit
-        freq_dim_ind = self.h5_main.spec_dim_labels.index('Frequency')
+        freq_dim_ind = self.h5_main.spec_dim_labels.index("Frequency")
         self.step_start_inds = np.where(self.h5_main.h5_spec_inds[freq_dim_ind] == 0)[0]
         self.num_udvs_steps = len(self.step_start_inds)
 
@@ -93,53 +92,59 @@ class BESHOfitter(Fitter):
 
         """
         h5_spec_vals = self.h5_main.h5_spec_vals
-        freq_dim = np.argwhere('Frequency' == np.array(self.h5_main.spec_dim_labels)).squeeze()
+        freq_dim = np.argwhere("Frequency" == np.array(self.h5_main.spec_dim_labels)).squeeze()
 
         if len(self.step_start_inds) == 1:  # BE-Line
             end_ind = h5_spec_vals.shape[1]
         else:  # BEPS
             end_ind = self.step_start_inds[1]
 
-        self.freq_vec = h5_spec_vals[freq_dim, self.step_start_inds[0]:end_ind]
+        self.freq_vec = h5_spec_vals[freq_dim, self.step_start_inds[0] : end_ind]
 
     def _create_guess_datasets(self):
         """
         Creates the h5 group, guess dataset, corresponding spectroscopic datasets and also
         links the guess dataset to the spectroscopic datasets.
         """
-        self.h5_results_grp = create_results_group(self.h5_main,
-                                                   self.process_name,
-                                                   h5_parent_group=self._h5_target_group)
+        self.h5_results_grp = create_results_group(
+            self.h5_main, self.process_name, h5_parent_group=self._h5_target_group
+        )
         write_simple_attrs(self.h5_results_grp, self.parms_dict)
 
         # If writing to a new HDF5 file:
         # Add back the data_type attribute - still being used in the visualizer
         if self.h5_results_grp.file != self.h5_main.file:
-            write_simple_attrs(self.h5_results_grp.file,
-                               {'data_type': get_attr(self.h5_main.file,
-                                                      'data_type')})
+            write_simple_attrs(
+                self.h5_results_grp.file, {"data_type": get_attr(self.h5_main.file, "data_type")}
+            )
 
-        ret_vals = write_reduced_anc_dsets(self.h5_results_grp,
-                                           self.h5_main.h5_spec_inds,
-                                           self.h5_main.h5_spec_vals,
-                                           self._fit_dim_name,
-                                           verbose=self.verbose)
+        ret_vals = write_reduced_anc_dsets(
+            self.h5_results_grp,
+            self.h5_main.h5_spec_inds,
+            self.h5_main.h5_spec_vals,
+            self._fit_dim_name,
+            verbose=self.verbose,
+        )
 
         h5_sho_inds, h5_sho_vals = ret_vals
 
-        self._h5_guess = write_main_dataset(self.h5_results_grp,
-                                            (self.h5_main.shape[0],
-                                             self.num_udvs_steps),
-                                            'Guess', 'SHO', 'compound',
-                                            None, None,
-                                            h5_pos_inds=self.h5_main.h5_pos_inds,
-                                            h5_pos_vals=self.h5_main.h5_pos_vals,
-                                            h5_spec_inds=h5_sho_inds,
-                                            h5_spec_vals=h5_sho_vals,
-                                            chunks=(1, self.num_udvs_steps),
-                                            dtype=sho32,
-                                            main_dset_attrs=self.parms_dict,
-                                            verbose=self.verbose)
+        self._h5_guess = write_main_dataset(
+            self.h5_results_grp,
+            (self.h5_main.shape[0], self.num_udvs_steps),
+            "Guess",
+            "SHO",
+            "compound",
+            None,
+            None,
+            h5_pos_inds=self.h5_main.h5_pos_inds,
+            h5_pos_vals=self.h5_main.h5_pos_vals,
+            h5_spec_inds=h5_sho_inds,
+            h5_spec_vals=h5_sho_vals,
+            chunks=(1, self.num_udvs_steps),
+            dtype=sho32,
+            main_dset_attrs=self.parms_dict,
+            verbose=self.verbose,
+        )
 
         # Does not make sense to propagate region refs - nobody uses them
         # copy_region_refs(self.h5_main, self._h5_guess)
@@ -147,7 +152,7 @@ class BESHOfitter(Fitter):
         self._h5_guess.file.flush()
 
         if self.verbose and self.mpi_rank == 0:
-            print('Finished creating Guess dataset')
+            print("Finished creating Guess dataset")
 
     def _create_fit_datasets(self):
         """
@@ -158,7 +163,7 @@ class BESHOfitter(Fitter):
         """
 
         if self._h5_guess is None or self.h5_results_grp is None:
-            warn('Need to guess before fitting!')
+            warn("Need to guess before fitting!")
             return
 
         """
@@ -168,21 +173,21 @@ class BESHOfitter(Fitter):
         This is a problem of doing two processes within the same group. 
         Until all legacy is removed, we will simply reset the last_pixel attribute.
         """
-        self.h5_results_grp.attrs['last_pixel'] = 0
+        self.h5_results_grp.attrs["last_pixel"] = 0
 
         write_simple_attrs(self.h5_results_grp, self.parms_dict)
 
         # Create the fit dataset as an empty dataset of the same size and dtype
         # as the guess.
         # Also automatically links in the ancillary datasets.
-        self._h5_fit = USIDataset(create_empty_dataset(self._h5_guess,
-                                                       dtype=sho32,
-                                                       dset_name='Fit'))
+        self._h5_fit = USIDataset(
+            create_empty_dataset(self._h5_guess, dtype=sho32, dset_name="Fit")
+        )
 
         self._h5_fit.file.flush()
 
         if self.verbose and self.mpi_rank == 0:
-            print('Finished creating Fit dataset')
+            print("Finished creating Fit dataset")
 
     def _read_data_chunk(self):
         """
@@ -196,11 +201,10 @@ class BESHOfitter(Fitter):
         # reshaped to a single UDVS step:
         if self.data is not None:
             if self.verbose and self.mpi_rank == 0:
-                print('Got raw data of shape {} from super'
-                      '.'.format(self.data.shape))
+                print("Got raw data of shape {} from super.".format(self.data.shape))
             self.data = _reshape_to_one_step(self.data, self.num_udvs_steps)
             if self.verbose and self.mpi_rank == 0:
-                print('Reshaped raw data to shape {}'.format(self.data.shape))
+                print("Reshaped raw data to shape {}".format(self.data.shape))
 
     def _read_guess_chunk(self):
         """
@@ -220,26 +224,29 @@ class BESHOfitter(Fitter):
         self._guess = _reshape_to_one_step(self._guess, self.num_udvs_steps)
         # bear in mind that this self._guess is a compound dataset. Convert to float32
         # don't keep the R^2.
-        self._guess = np.hstack([self._guess[name] for name in self._guess.dtype.names if name != 'R2 Criterion'])
+        self._guess = np.hstack(
+            [self._guess[name] for name in self._guess.dtype.names if name != "R2 Criterion"]
+        )
 
     def _write_results_chunk(self):
         """
         Writes the provided chunk of data into the guess or fit datasets.
         This method is responsible for any and all book-keeping.
         """
-        prefix = 'guess' if self._is_guess else 'fit'
-        self._results = self._reformat_results(self._results,
-                                               self.parms_dict[prefix + '-algorithm'])
+        prefix = "guess" if self._is_guess else "fit"
+        self._results = self._reformat_results(
+            self._results, self.parms_dict[prefix + "-algorithm"]
+        )
 
         if self._is_guess:
             self._guess = np.hstack(tuple(self._results))
             # prepare to reshape:
             self._guess = np.transpose(np.atleast_2d(self._guess))
             if self.verbose and self.mpi_rank == 0:
-                print('Prepared guess of shape {} before reshaping'.format(self._guess.shape))
+                print("Prepared guess of shape {} before reshaping".format(self._guess.shape))
             self._guess = _reshape_to_n_steps(self._guess, self.num_udvs_steps)
             if self.verbose and self.mpi_rank == 0:
-                print('Reshaped guess to shape {}'.format(self._guess.shape))
+                print("Reshaped guess to shape {}".format(self._guess.shape))
         else:
             self._fit = self._results
             self._fit = np.transpose(np.atleast_2d(self._fit))
@@ -248,8 +255,13 @@ class BESHOfitter(Fitter):
         # ask super to take care of the rest, which is a standardized operation
         super(BESHOfitter, self)._write_results_chunk()
 
-    def set_up_guess(self, guess_func=SHOGuessFunc.complex_gaussian,
-                     h5_partial_guess=None, *func_args, **func_kwargs):
+    def set_up_guess(
+        self,
+        guess_func=SHOGuessFunc.complex_gaussian,
+        h5_partial_guess=None,
+        *func_args,
+        **func_kwargs,
+    ):
         """
         Need this because during the set up, we won't know which strategy is being used.
         Should Guess be its own Process class in that case? If so, it would end up having
@@ -262,38 +274,49 @@ class BESHOfitter(Fitter):
         h5_partial_guess : h5py.Dataset, optional
             Partial guess results dataset to continue computing on
         """
-        self.parms_dict = {'guess-method': "pycroscopy BESHO"}
+        self.parms_dict = {"guess-method": "pycroscopy BESHO"}
 
         if not isinstance(guess_func, SHOGuessFunc):
-            raise TypeError('Please supply SHOGuessFunc.complex_gaussian or SHOGuessFunc.wavelet_peaks for the guess_func')
+            raise TypeError(
+                "Please supply SHOGuessFunc.complex_gaussian or SHOGuessFunc.wavelet_peaks for the guess_func"
+            )
 
         partial_func = None
 
         if guess_func == SHOGuessFunc.complex_gaussian:
+            num_points = func_kwargs.pop("num_points", 5)
 
-            num_points=func_kwargs.pop('num_points', 5)
+            self.parms_dict.update(
+                {
+                    "guess-algorithm": "complex_gaussian",
+                    "guess-complex_gaussian-num_points": num_points,
+                }
+            )
 
-            self.parms_dict.update({'guess-algorithm': 'complex_gaussian',
-                                    'guess-complex_gaussian-num_points': num_points})
-
-            partial_func = partial(complex_gaussian, w_vec=self.freq_vec,
-                                   num_points=num_points)
+            partial_func = partial(complex_gaussian, w_vec=self.freq_vec, num_points=num_points)
 
         elif guess_func == SHOGuessFunc.wavelet_peaks:
-
-            peak_width_bounds = func_kwargs.pop('peak_width_bounds', [10, 200])
-            peak_width_step = func_kwargs.pop('peak_width_step', 20)
+            peak_width_bounds = func_kwargs.pop("peak_width_bounds", [10, 200])
+            peak_width_step = func_kwargs.pop("peak_width_step", 20)
 
             if len(func_args) > 0:
                 # Assume that the first argument is what we are looking for
                 peak_width_bounds = func_args[0]
 
-            self.parms_dict.update({'guess_algorithm': 'wavelet_peaks',
-                                    'guess-wavelet_peaks-peak_width_bounds': peak_width_bounds,
-                                    'guess-wavelet_peaks-peak_width_step': peak_width_step})
+            self.parms_dict.update(
+                {
+                    "guess_algorithm": "wavelet_peaks",
+                    "guess-wavelet_peaks-peak_width_bounds": peak_width_bounds,
+                    "guess-wavelet_peaks-peak_width_step": peak_width_step,
+                }
+            )
 
-            partial_func = partial(wavelet_peaks, peak_width_bounds=peak_width_bounds,
-                                   peak_width_step=peak_width_step, **func_kwargs)
+            partial_func = partial(
+                wavelet_peaks,
+                peak_width_bounds=peak_width_bounds,
+                peak_width_step=peak_width_step,
+                **func_kwargs,
+            )
 
         self._map_function = partial_func
 
@@ -302,38 +325,42 @@ class BESHOfitter(Fitter):
         # ask super to take care of the rest, which is a standardized operation
         super(BESHOfitter, self).set_up_guess(h5_partial_guess=h5_partial_guess)
 
-    def set_up_fit(self, fit_func=SHOFitFunc.least_squares,
-                   *func_args, h5_partial_fit=None, h5_guess=None, **func_kwargs):
+    def set_up_fit(
+        self,
+        fit_func=SHOFitFunc.least_squares,
+        *func_args,
+        h5_partial_fit=None,
+        h5_guess=None,
+        **func_kwargs,
+    ):
         """
         Need this because during the set up, we won't know which strategy is being used.
         Should Guess be its own Process class in that case? If so, it would end up having
         its own group etc.
         """
-        self.parms_dict = {'fit-method': "pycroscopy BESHO"}
+        self.parms_dict = {"fit-method": "pycroscopy BESHO"}
 
         if not isinstance(fit_func, SHOFitFunc):
-            raise TypeError('Please supply SHOFitFunc.least_squares for the fit_func')
+            raise TypeError("Please supply SHOFitFunc.least_squares for the fit_func")
 
         if fit_func == SHOFitFunc.least_squares:
-
-            self.parms_dict.update({'fit-algorithm': 'least_squares'})
+            self.parms_dict.update({"fit-algorithm": "least_squares"})
 
         self._max_pos_per_read = self._max_raw_pos_per_read // 1.75
 
         # ask super to take care of the rest, which is a standardized operation
-        super(BESHOfitter, self).set_up_fit(h5_partial_fit=h5_partial_fit,
-                                            h5_guess=h5_guess)
+        super(BESHOfitter, self).set_up_fit(h5_partial_fit=h5_partial_fit, h5_guess=h5_guess)
 
     def _unit_compute_fit(self):
         """
         Punts unit computation on a chunk of data to Process
 
         """
-        super(BESHOfitter, self)._unit_compute_fit(_sho_error,
-                                                   obj_func_args=[self.freq_vec],
-                                                   solver_options={'jac': 'cs'})
+        super(BESHOfitter, self)._unit_compute_fit(
+            _sho_error, obj_func_args=[self.freq_vec], solver_options={"jac": "cs"}
+        )
 
-    def _reformat_results(self, results, strategy='wavelet_peaks'):
+    def _reformat_results(self, results, strategy="wavelet_peaks"):
         """
         Model specific calculation and or reformatting of the raw guess or fit results
 
@@ -356,12 +383,12 @@ class BESHOfitter(Fitter):
         # Create an empty array to store the guess parameters
         sho_vec = np.zeros(shape=(len(results)), dtype=sho32)
         if self.verbose and self.mpi_rank == 0:
-            print('Raw results and compound SHO vector of shape {}'.format(len(results)))
+            print("Raw results and compound SHO vector of shape {}".format(len(results)))
 
         # Extracting and reshaping the remaining parameters for SHO
-        if strategy in ['wavelet_peaks', 'relative_maximum', 'absolute_maximum']:
+        if strategy in ["wavelet_peaks", "relative_maximum", "absolute_maximum"]:
             if self.verbose and self.mpi_rank == 0:
-                  print('Reformatting results from a peak-position-finding algorithm')
+                print("Reformatting results from a peak-position-finding algorithm")
             # wavelet_peaks sometimes finds 0, 1, 2, or more peaks. Need to handle that:
             # peak_inds = np.array([pixel[0] for pixel in results])
             peak_inds = np.zeros(shape=(len(results)), dtype=np.uint32)
@@ -369,45 +396,59 @@ class BESHOfitter(Fitter):
                 if len(pixel) == 1:  # majority of cases - one peak found
                     peak_inds[pix_ind] = pixel[0]
                 elif len(pixel) == 0:  # no peak found
-                    peak_inds[pix_ind] = int(0.5*self.data.shape[1])  # set to center of band
+                    peak_inds[pix_ind] = int(0.5 * self.data.shape[1])  # set to center of band
                 else:  # more than one peak found
-                    dist = np.abs(np.array(pixel) - int(0.5*self.data.shape[1]))
-                    peak_inds[pix_ind] = pixel[np.argmin(dist)]  # set to peak closest to center of band
+                    dist = np.abs(np.array(pixel) - int(0.5 * self.data.shape[1]))
+                    peak_inds[pix_ind] = pixel[
+                        np.argmin(dist)
+                    ]  # set to peak closest to center of band
             if self.verbose and self.mpi_rank == 0:
-                print('Peak positions of shape {}'.format(peak_inds.shape))
+                print("Peak positions of shape {}".format(peak_inds.shape))
             # First get the value (from the raw data) at these positions:
             comp_vals = np.array(
-                [self.data[pixel_ind, peak_inds[pixel_ind]] for pixel_ind in np.arange(peak_inds.size)])
+                [
+                    self.data[pixel_ind, peak_inds[pixel_ind]]
+                    for pixel_ind in np.arange(peak_inds.size)
+                ]
+            )
             if self.verbose and self.mpi_rank == 0:
-                print('Complex values at peak positions of shape {}'.format(comp_vals.shape))
-            sho_vec['Amplitude [V]'] = np.abs(comp_vals)  # Amplitude
-            sho_vec['Phase [rad]'] = np.angle(comp_vals)  # Phase in radians
-            sho_vec['Frequency [Hz]'] = self.freq_vec[peak_inds]  # Frequency
-            sho_vec['Quality Factor'] = np.ones_like(comp_vals) * 10  # Quality factor
+                print("Complex values at peak positions of shape {}".format(comp_vals.shape))
+            sho_vec["Amplitude [V]"] = np.abs(comp_vals)  # Amplitude
+            sho_vec["Phase [rad]"] = np.angle(comp_vals)  # Phase in radians
+            sho_vec["Frequency [Hz]"] = self.freq_vec[peak_inds]  # Frequency
+            sho_vec["Quality Factor"] = np.ones_like(comp_vals) * 10  # Quality factor
             # Add something here for the R^2
-            sho_vec['R2 Criterion'] = np.array([self.r_square(self.data, self._sho_func, self.freq_vec, sho_parms)
-                                                for sho_parms in sho_vec])
-        elif strategy in ['complex_gaussian']:
+            sho_vec["R2 Criterion"] = np.array(
+                [
+                    self.r_square(self.data, self._sho_func, self.freq_vec, sho_parms)
+                    for sho_parms in sho_vec
+                ]
+            )
+        elif strategy in ["complex_gaussian"]:
             if self.verbose and self.mpi_rank == 0:
-                print('Reformatting results from the SHO Guess algorithm')
+                print("Reformatting results from the SHO Guess algorithm")
             for iresult, result in enumerate(results):
-                sho_vec['Amplitude [V]'][iresult] = result[0]
-                sho_vec['Frequency [Hz]'][iresult] = result[1]
-                sho_vec['Quality Factor'][iresult] = result[2]
-                sho_vec['Phase [rad]'][iresult] = result[3]
-                sho_vec['R2 Criterion'][iresult] = result[4]
-        elif strategy in ['least_squares']:
+                sho_vec["Amplitude [V]"][iresult] = result[0]
+                sho_vec["Frequency [Hz]"][iresult] = result[1]
+                sho_vec["Quality Factor"][iresult] = result[2]
+                sho_vec["Phase [rad]"][iresult] = result[3]
+                sho_vec["R2 Criterion"][iresult] = result[4]
+        elif strategy in ["least_squares"]:
             if self.verbose and self.mpi_rank == 0:
-                print('Reformatting results from a list of least_squares result objects')
+                print("Reformatting results from a list of least_squares result objects")
             for iresult, result in enumerate(results):
-                sho_vec['Amplitude [V]'][iresult] = result.x[0]
-                sho_vec['Frequency [Hz]'][iresult] = result.x[1]
-                sho_vec['Quality Factor'][iresult] = result.x[2]
-                sho_vec['Phase [rad]'][iresult] = result.x[3]
-                sho_vec['R2 Criterion'][iresult] = 1-result.fun
+                sho_vec["Amplitude [V]"][iresult] = result.x[0]
+                sho_vec["Frequency [Hz]"][iresult] = result.x[1]
+                sho_vec["Quality Factor"][iresult] = result.x[2]
+                sho_vec["Phase [rad]"][iresult] = result.x[3]
+                sho_vec["R2 Criterion"][iresult] = 1 - result.fun
         else:
             if self.verbose and self.mpi_rank == 0:
-                  print('_reformat_results() will not reformat results since the provided algorithm: {} does not match anything that this function can handle.'.format(strategy))
+                print(
+                    "_reformat_results() will not reformat results since the provided algorithm: {} does not match anything that this function can handle.".format(
+                        strategy
+                    )
+                )
 
         return sho_vec
 
@@ -536,8 +577,7 @@ def wavelet_peaks(vector, peak_width_bounds, peak_width_step=20, **kwargs):
         List of indices of peaks within the prescribed peak widths
     """
     # The below numpy array is used to configure the returned function wpeaks
-    wavelet_widths = np.linspace(peak_width_bounds[0], peak_width_bounds[1],
-                                 peak_width_step)
+    wavelet_widths = np.linspace(peak_width_bounds[0], peak_width_bounds[1], peak_width_step)
 
     peak_indices = find_peaks_cwt(np.abs(vector), wavelet_widths, **kwargs)
 
@@ -565,8 +605,7 @@ def complex_gaussian(resp_vec, w_vec, num_points=5):
     guess = SHOestimateGuess(resp_vec, w_vec, num_points)
 
     # Calculate the error and append it.
-    guess = np.hstack(
-        [guess, np.array(_r_square(resp_vec, SHOfunc, guess, w_vec))])
+    guess = np.hstack([guess, np.array(_r_square(resp_vec, SHOfunc, guess, w_vec))])
 
     return guess
 
@@ -598,12 +637,12 @@ def _sho_error(guess, data_vec, freq_vector):
     """
 
     if len(guess) < 4:
-        raise ValueError(
-            'Error: The Single Harmonic Oscillator requires 4 parameter guesses!')
+        raise ValueError("Error: The Single Harmonic Oscillator requires 4 parameter guesses!")
 
     Amp, w_0, Q, phi = guess[:4]
-    guess_vec = Amp * np.exp(1.j * phi) * w_0 ** 2 / (
-                freq_vector ** 2 - 1j * freq_vector * w_0 / Q - w_0 ** 2)
+    guess_vec = (
+        Amp * np.exp(1.0j * phi) * w_0**2 / (freq_vector**2 - 1j * freq_vector * w_0 / Q - w_0**2)
+    )
 
     data_mean = np.mean(data_vec)
 
