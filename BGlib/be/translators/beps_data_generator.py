@@ -10,16 +10,15 @@ from sklearn.utils import gen_batches
 from pyUSID.processing.comp_utils import get_available_memory
 from skimage.measure import block_reduce
 # Pycroscopy imports
-from sidpy.hdf.hdf_utils import get_attr, write_simple_attrs
+from sidpy.hdf.hdf_utils import write_simple_attrs
 from sidpy.hdf.dtype_utils import stack_real_to_compound
 from sidpy.sid import Translator
-from pyUSID.io.hdf_utils import link_as_main, copy_dataset, \
+from pyUSID.io.hdf_utils import copy_dataset, \
     write_main_dataset, create_indexed_group, create_results_group, \
     write_reduced_anc_dsets
-from sidpy.hdf.reg_ref import copy_all_region_refs , write_region_references
+from sidpy.hdf.reg_ref import copy_all_region_refs
 
-from pyUSID import Dimension
-from pyUSID.io.anc_build_utils import Dimension, calc_chunks
+from pyUSID.io.anc_build_utils import Dimension
 from pyUSID.io.image import read_image
 
 from ..analysis.utils.be_loop import loop_fit_function

@@ -12,8 +12,6 @@ Hello World
 
 # The package for accessing files in directories, etc.:
 import importlib
-import os
-import zipfile
 
 # Warning package in case something goes wrong
 from warnings import warn
@@ -33,10 +31,6 @@ except ImportError:
     importlib.import_module('wget')
 
 # The mathematical computation package:
-import numpy as np
-
-# The package used for creating and manipulating HDF5 files:
-import h5py
 
 # import sidpy - supporting package for pyUSID:
 try:

@@ -1795,23 +1795,10 @@ def show(img, cmap = 'plasma', colorbar = True):
     plt.clim(ll,ul)
     fig.axes.get_xaxis().set_visible(False)
     fig.axes.get_yaxis().set_visible(False)
-    if colorbar == True:
+    if colorbar:
         plt.colorbar()
     return
 
-
-def SHOfunc(parms, w_vec):
-    """
-    Generates the SHO response over the given frequency band
-    Parameters
-    -----------
-    parms : list or tuple
-        SHO parae=(A,w0,Q,phi)
-    w_vec : 1D numpy array
-        Vector of frequency values
-    """
-    return parms[0] * np.exp(1j * parms[3]) * parms[1] ** 2 / \
-           (w_vec ** 2 - 1j * w_vec * parms[1] / parms[2] - parms[1] ** 2)
 
 def viz_berelaxfit(berelaxfit, bias_ind =0, t_time=0 , x_col=0, h_row=0, sensitivity=1, phase_offset=0,
               starts_with="write", fit_method='Exponential'):

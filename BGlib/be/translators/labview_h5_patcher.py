@@ -32,10 +32,7 @@ def fix_BE_problem(h5_main):
     Output:
         None. The file is modified in-place.
     """
-    spec_inds = h5_main.parent['Spectroscopic_Indices']
     spec_vals = h5_main.parent['Spectroscopic_Values']
-    pos_inds = h5_main.parent['Position_Indices']
-    pos_vals = h5_main.parent['Position_Values']
 
     freq_vec = np.unique(spec_vals)
 
@@ -189,7 +186,6 @@ class LabViewH5Patcher(Translator):
                     h5_file.flush()
 
                 # Get the labels and units for the Spectroscopic datasets
-                h5_spec_labels = h5_spec_inds.attrs['labels']
                 inds_and_vals = [h5_pos_inds, h5_pos_vals, h5_spec_inds, h5_spec_vals]
                 for dset in inds_and_vals:
                     spec_labels = dset.attrs['labels']
@@ -269,8 +265,6 @@ class LabViewH5Patcher(Translator):
                     h5_sho_spec_inds[:, :] = ds_sho_spec_inds[:, :]
 
                 # Get the labels and units for the Spectroscopic datasets
-                h5_sho_spec_labels = get_attr(h5_sho_spec_inds, 'labels')
-                h5_sho_spec_units = get_attr(h5_sho_spec_vals, 'units')
                 if h5_sho_spec_inds.shape[-1] != h5_sho_guess.shape[-1]:
                     logger.warning(
                         "Found incorrect spectral dimension for dataset %s. Attempting a fix.",

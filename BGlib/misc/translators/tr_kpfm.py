@@ -4,7 +4,6 @@ Created on Thursday July 27 2017
 """
 
 import logging
-import sys
 from os import path, remove, listdir  # File Path formatting
 import re
 import numpy as np  # For array operations

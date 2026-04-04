@@ -266,7 +266,7 @@ class VirtualDataset(VirtualData):
                             raise ValueError('chunking shape ({}) must be less than or equal to the data shape ({}) in '
                                              'all dimensions'.format(chunking, data_shape))
 
-        if isinstance(dtype, (str, unicode)):
+        if isinstance(dtype, str):
             dtype = np.dtype(dtype)
 
         if data is not None:

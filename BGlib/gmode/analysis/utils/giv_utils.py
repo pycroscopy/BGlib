@@ -98,8 +98,8 @@ def do_bayesian_inference(i_meas, bias, freq, num_x_steps=251, r_extra=110, gam=
     Lapt = (-1. * np.diag((t[:-1]) ** 0, -1) - np.diag(t[:-1] ** 0, 1) + 2. * np.diag(t ** 0, 0)) / dt / dt
     Lapt[0, 0] = 1. / dt / dt
     Lapt[-1, -1] = 1. / dt / dt
-    O = (1. / gam ** 2) * (np.eye(num_volt_points))
-    # noise_term = np.linalg.lstsq(sqrtm(O),np.random.randn(N,1))[0]
+    observation_cov = (1. / gam ** 2) * np.eye(num_volt_points)
+    # noise_term = np.linalg.lstsq(sqrtm(observation_cov),np.random.randn(N,1))[0]
     # y = IV_point
     #  Itrue + noise_term.ravel()
 
@@ -114,8 +114,8 @@ def do_bayesian_inference(i_meas, bias, freq, num_x_steps=251, r_extra=110, gam=
     P0[:num_x_steps, :num_x_steps] = 1. / sigma ** 2 * (1. * np.eye(num_x_steps) + np.linalg.matrix_power(Lap, 3))
     P0[num_x_steps, num_x_steps] = 1. / sigmaC ** 2
 
-    Sigma = np.linalg.inv(np.dot(A.T, np.dot(O, A)) + P0)
-    m = np.dot(Sigma, (np.dot(A.T, np.dot(O, i_meas)) + np.dot(P0, m0)))
+    Sigma = np.linalg.inv(np.dot(A.T, np.dot(observation_cov, A)) + P0)
+    m = np.dot(Sigma, (np.dot(A.T, np.dot(observation_cov, i_meas)) + np.dot(P0, m0)))
 
     # Reconstructed current
     Irec = np.dot(A, m)  # This includes the capacitance

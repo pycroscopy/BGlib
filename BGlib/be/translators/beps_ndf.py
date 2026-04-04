@@ -6,7 +6,6 @@ Created on Tue Nov  3 15:07:16 2015
 """
 
 import logging
-import sys
 from os import path, listdir, remove
 from warnings import warn
 import h5py
@@ -19,9 +18,9 @@ from sidpy.hdf.hdf_utils import link_h5_objects_as_attrs, write_simple_attrs
 from pyUSID.processing.comp_utils import get_available_memory
 
 from pyUSID.io.anc_build_utils import make_indices_matrix, VALUES_DTYPE, \
-    INDICES_DTYPE, calc_chunks
+    INDICES_DTYPE
 from pyUSID.io.usi_data import USIDataset
-from pyUSID.io.hdf_utils import create_indexed_group, check_if_main, print_tree
+from pyUSID.io.hdf_utils import create_indexed_group
 
 from .df_utils.be_utils import trimUDVS, getSpectroscopicParmLabel, \
     parmsToDict, generatePlotGroups, normalizeBEresponse, createSpecVals, nf32

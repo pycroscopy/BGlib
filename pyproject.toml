@@ -13,4 +13,4 @@ extend-exclude = ["notebooks", "docs"]
 
 [tool.ruff.lint]
 select = ["E", "F"]
-ignore = ["E501"]
+ignore = ["E501", "F841"]

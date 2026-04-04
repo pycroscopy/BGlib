@@ -6,10 +6,8 @@ THen it should be able to do sho fitting and maybe loop fitting.
 
 '''
 
-# import numpy as np
-import SciFiReaders as sr
-from scipy.optimize import curve_fit
 import numpy as np
+from numpy import append, arctan2, exp, imag, real, sqrt, sum
 
 
 
@@ -27,7 +25,6 @@ def my_guess_fn(freq_vec,ydata):
     ydata = np.array(ydata)
     amp_guess = np.abs(ydata)[np.argmax(np.abs(ydata))]
     Q_guess = 50
-    max_min_ratio = np.max(abs(ydata)) / np.min(abs(ydata))
     phi_guess = np.angle(ydata)[np.argmax(np.abs(ydata))]
     w_guess = freq_vec[np.argmax(np.abs(ydata))]
     
@@ -47,8 +44,6 @@ def my_guess_fn(freq_vec,ydata):
 
 
 #Complex Gaussian Guess function
-from numpy import exp, abs, sqrt, sum, real, imag, arctan2, append
-
 def SHOestimateGuess(w_vec, resp_vec, num_points=5):
     """
     Generates good initial guesses for fitting

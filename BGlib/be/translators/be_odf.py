@@ -6,7 +6,6 @@ Created on Tue Nov  3 15:24:12 2015
 
 import logging
 from os import path, listdir, remove
-import sys
 import datetime
 from warnings import warn
 import h5py
@@ -1423,7 +1422,7 @@ class BEodfTranslator(Translator):
                                         '1/3 harmonic excitation',
                                         'pure sine'],
                                        [1, 2, 3, 4])
-        if BE_signal_type == None:
+        if BE_signal_type is None:
             raise NotImplementedError('This translator does not know how to '
                                       'handle "BE_phase_content": "{}"'
                                       ''.format(parm_dict['BE_phase_content']))

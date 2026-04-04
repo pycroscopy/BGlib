@@ -1,4 +1,3 @@
-
 import os
 # 1) Force Qt-backed Matplotlib (avoid MacOSX backend which must run on main thread)
 os.environ.setdefault("MPLBACKEND", "QtAgg")   # or "Qt5Agg"
@@ -10,34 +9,29 @@ for var in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS",
 
 # (optional but helpful) make Qt explicit
 os.environ.setdefault("QT_API", "pyqt5")
-import sys
-import faulthandler
+import sys  # noqa: E402
+import faulthandler  # noqa: E402
 faulthandler.enable()
 
-from PyQt5.QtWidgets import (
+from PyQt5.QtWidgets import (  # noqa: E402
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QTabWidget, QFileDialog, QPushButton, QTextEdit, QFrame,
-    QGridLayout, QLineEdit, QComboBox, QSizePolicy
+    QGridLayout, QLineEdit, QComboBox
 )
-from PyQt5.QtCore import Qt, QThread, pyqtSignal
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from PyQt5.QtGui import QDoubleValidator
-import BGlib.be as belib
-import numpy as np
-import os
-import sidpy
-import SciFiReaders as sr
-from BGlib.be.analysis.utils.sidpy_sho_fitter import SHOestimateGuess, SHOestimateGuess, SHO_fit_flattened
-from PyQt5.QtGui import QTextCursor
-from PyQt5.QtCore import QObject, pyqtSignal
+from PyQt5.QtCore import QObject, Qt, QThread, pyqtSignal  # noqa: E402
+from matplotlib.figure import Figure  # noqa: E402
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas  # noqa: E402
+import BGlib.be as belib  # noqa: E402
+import numpy as np  # noqa: E402
+import sidpy  # noqa: E402
+import SciFiReaders as sr  # noqa: E402
+from BGlib.be.analysis.utils.sidpy_sho_fitter import SHOestimateGuess, SHO_fit_flattened  # noqa: E402
+from PyQt5.QtGui import QTextCursor  # noqa: E402
 
 # pip install dask distributed
-import time
-from typing import Optional, Sequence, Tuple
-
-from PyQt5.QtCore import QObject, pyqtSignal, QThread  # PyQt6: use PyQt6.QtCore
-from dask.distributed import Client
+import time  # noqa: E402
+from typing import Optional, Sequence, Tuple  # noqa: E402
+from dask.distributed import Client  # noqa: E402
 
 # Helper to normalize log records across dask versions
 def _format_sched_record(rec) -> str:
@@ -142,8 +136,6 @@ class DaskLogWorker(QObject):
 
     def stop(self):
         self._running = False
-
-from PyQt5.QtWidgets import QTextEdit
 
 class DaskLogsPanel(QTextEdit):
     def __init__(self, scheduler_address: str, parent=None):

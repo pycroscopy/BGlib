@@ -56,7 +56,7 @@ class ForcIVTranslator(Translator):
         self.h5_read = True
         try:
             h5_raw = h5py.File(raw_data_path, 'r')
-        except:
+        except OSError:
             self.h5_read = False
             h5_raw = loadmat(raw_data_path)
 

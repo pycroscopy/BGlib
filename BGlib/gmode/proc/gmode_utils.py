@@ -6,7 +6,6 @@ Created on Thu May 05 13:29:12 2016
 @author: Suhas Somnath
 """
 
-import sys
 from collections import Iterable
 from warnings import warn
 from numbers import Number

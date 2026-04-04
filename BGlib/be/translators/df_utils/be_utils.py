@@ -832,7 +832,7 @@ def visualize_plot_groups(h5_filepath):
                         hist_data = plt_grp['Histograms']
                         hist_bins = plt_grp['Histograms_Indicies']
                         plot_histograms(hist_data, hist_bins, plt_grp.attrs['Name'])
-                    except:
+                    except Exception:
                         pass
 
     plt.show()
@@ -1669,7 +1669,7 @@ class BEHistogram:
                 try:
                     max_resp = find_dataset(group, 'Max_Response')
                     min_resp = find_dataset(group, 'Min_Response')
-                except:
+                except Exception:
                     warn('Maximum and Minimum Response vectors not found for {}.'.format(p_group.name))
                     max_resp = []
                     min_resp = []
