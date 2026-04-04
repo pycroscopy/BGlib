@@ -5,8 +5,9 @@ from setuptools import find_packages, setup
 here = Path(__file__).resolve().parent
 long_description = (here / "README.rst").read_text(encoding="utf-8")
 
-with (here / "BGlib" / "__version__.py").open(encoding="utf-8") as f:
-    __version__ = f.read().split("'")[1]
+version_ns = {}
+exec((here / "BGlib" / "__version__.py").read_text(encoding="utf-8"), version_ns)
+__version__ = version_ns["version"]
 
 # TODO: Move requirements to requirements.txt
 requirements = [
