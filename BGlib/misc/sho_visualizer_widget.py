@@ -1,6 +1,14 @@
 # visualizer_widget.py
 import numpy as np
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSlider, QComboBox, QGridLayout
+from PyQt5.QtWidgets import (
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QLabel,
+    QSlider,
+    QComboBox,
+    QGridLayout,
+)
 from PyQt5.QtCore import Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -10,6 +18,7 @@ import matplotlib as mpl
 
 class MplCanvas(FigureCanvas):
     """Matplotlib canvas to embed in PyQt."""
+
     def __init__(self, parent=None, width=5, height=4, dpi=100):
         fig = Figure(figsize=(width, height), dpi=dpi)
         self.axes = fig.add_subplot(111)
@@ -21,9 +30,9 @@ class SHOVisualizerWidget(QWidget):
     """
     Widget containing the BEPS visualizer for embedding inside a tab.
     """
-    def __init__(self, fit_data, freq_vec,dc_vec, parent=None):
+
+    def __init__(self, fit_data, freq_vec, dc_vec, parent=None):
         super().__init__(parent)
-        
 
         # Backend logic
         self.core = SHOVisualizerCore(fit_data, freq_vec, dc_vec)
@@ -60,7 +69,9 @@ class SHOVisualizerWidget(QWidget):
 
         # Fit Parameter Dropdown
         self.fit_param_dropdown = QComboBox()
-        self.fit_param_dropdown.addItems(['Amplitude', 'Resonant Frequency', 'Quality Factor', 'Phase'])
+        self.fit_param_dropdown.addItems(
+            ["Amplitude", "Resonant Frequency", "Quality Factor", "Phase"]
+        )
         self.fit_param_dropdown.currentIndexChanged.connect(self.update_fit_param)
         control_layout.addWidget(QLabel("Fit Parameter"), 3, 0)
         control_layout.addWidget(self.fit_param_dropdown, 3, 1)
@@ -72,10 +83,8 @@ class SHOVisualizerWidget(QWidget):
         plot_layout = QVBoxLayout()
         plot_layout.addWidget(QLabel("2D Map"))
         plot_layout.addWidget(self.map_canvas)
-        self._map_click_cid = (
-        self.map_canvas.figure.canvas.mpl_connect(
+        self._map_click_cid = self.map_canvas.figure.canvas.mpl_connect(
             "button_press_event", self._on_map_click
-            )
         )
         plot_layout.addWidget(QLabel("Spectrum at Selected Point"))
         plot_layout.addWidget(self.spectrum_canvas)
@@ -84,7 +93,7 @@ class SHOVisualizerWidget(QWidget):
         main_layout.addLayout(control_layout, 1)
         main_layout.addLayout(plot_layout, 3)
         self.setLayout(main_layout)
-      
+
         # Initial plot
         self.update_visualization()
 
@@ -162,7 +171,9 @@ class SHOVisualizerWidget(QWidget):
         # spec = self.dataset.isel(y=r, x=c).values  # adjust dim names as needed
 
         # Replace with your actual retrieval:
-        spec = self.spectrum = self.core.get_spectrum_at_point(r, c)  # <-- implement or swap in your accessor
+        spec = self.spectrum = self.core.get_spectrum_at_point(
+            r, c
+        )  # <-- implement or swap in your accessor
 
         # Frequency or x-axis:
         # If you already have frequency axis (1D) aligned to spec:
@@ -191,11 +202,9 @@ class SHOVisualizerWidget(QWidget):
 
         # Draw a nice white-outlined circle so it’s visible on most colormaps:
         (self._click_marker,) = ax.plot(
-            [x], [y],
-            marker="o", mfc="none", mec="w", mew=1.5, ms=10, linestyle="None"
+            [x], [y], marker="o", mfc="none", mec="w", mew=1.5, ms=10, linestyle="None"
         )
         self.map_canvas.figure.canvas.draw_idle()
-
 
     # ========================================
     # Control Updates
@@ -224,14 +233,14 @@ class SHOVisualizerWidget(QWidget):
         # Update 2D Map
         self.map_canvas.axes.clear()
         map_slice = self.core.get_map_slice()
-        im = self.map_canvas.axes.imshow(map_slice.T, origin='lower', cmap='viridis', aspect='auto')
+        im = self.map_canvas.axes.imshow(map_slice.T, origin="lower", cmap="viridis", aspect="auto")
         self.map_canvas.axes.set_title("2D Fit Parameter Map")
         self.map_canvas.draw()
 
         # Update Spectrum
-        
+
         self.spectrum_canvas.axes.clear()
         spectrum = self.core.get_spectrum_at_point()
-        self.spectrum_canvas.axes.plot(self.dc_vec, spectrum, 'b-')
+        self.spectrum_canvas.axes.plot(self.dc_vec, spectrum, "b-")
         self.spectrum_canvas.axes.set_title("Response vs DC Offset")
         self.spectrum_canvas.draw()

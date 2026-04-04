@@ -15,8 +15,19 @@ disable_histogram = False
 logger = logging.getLogger(__name__)
 
 
-def build_histogram(x_hist, data_mat, N_x_bins, N_y_bins, weighting_vec=1, min_resp=None, max_resp=None, func=None,
-                    debug=False, *args, **kwargs):
+def build_histogram(
+    x_hist,
+    data_mat,
+    N_x_bins,
+    N_y_bins,
+    weighting_vec=1,
+    min_resp=None,
+    max_resp=None,
+    func=None,
+    debug=False,
+    *args,
+    **kwargs,
+):
     """
     Creates histogram for a single block of pixels
 
@@ -54,9 +65,9 @@ def build_histogram(x_hist, data_mat, N_x_bins, N_y_bins, weighting_vec=1, min_r
     else:
         y_hist = data_mat
 
-    '''
+    """
     Get the min_resp and max_resp from y_hist if they are none
-    '''
+    """
     if min_resp is None:
         min_resp = np.min(y_hist)
     if max_resp is None:
@@ -66,9 +77,9 @@ def build_histogram(x_hist, data_mat, N_x_bins, N_y_bins, weighting_vec=1, min_r
 
     y_hist = __scale_and_discretize(y_hist, N_y_bins, max_resp, min_resp, debug)
 
-    '''
+    """
     Combine x_hist and y_hist into one matrix
-    '''
+    """
     if debug:
         logger.debug("x_hist shape: %s", np.shape(x_hist))
         logger.debug("y_hist shape: %s", np.shape(y_hist))
@@ -77,16 +88,18 @@ def build_histogram(x_hist, data_mat, N_x_bins, N_y_bins, weighting_vec=1, min_r
     group_idx[0, :] = x_hist
     group_idx[1, :] = y_hist
 
-    '''
+    """
     Aggregate matrix for histogram of current chunk
-    '''
+    """
     if debug:
         logger.debug("group_idx shape: %s", np.shape(group_idx))
         logger.debug("weighting_vec shape: %s", np.shape(weighting_vec))
         logger.debug("bins: x=%s y=%s", N_x_bins, N_y_bins)
 
     if not disable_histogram:
-        pixel_hist = aggregate_np(group_idx, weighting_vec, func='sum', size=(N_x_bins, N_y_bins), dtype=np.int32)
+        pixel_hist = aggregate_np(
+            group_idx, weighting_vec, func="sum", size=(N_x_bins, N_y_bins), dtype=np.int32
+        )
     else:
         pixel_hist = None
 
@@ -95,8 +108,8 @@ def build_histogram(x_hist, data_mat, N_x_bins, N_y_bins, weighting_vec=1, min_r
 
 def __scale_and_discretize(y_hist, N_y_bins, max_resp, min_resp, debug=False):
     """
-    Normalizes and discretizes the `y_hist` array 
-    
+    Normalizes and discretizes the `y_hist` array
+
     Parameters
     ----------
     y_hist : numpy.ndarray
@@ -113,9 +126,9 @@ def __scale_and_discretize(y_hist, N_y_bins, max_resp, min_resp, debug=False):
     y_hist = np.clip(y_hist, min_resp, max_resp)
     y_hist = np.add(y_hist, -min_resp)
     y_hist = np.dot(y_hist, 1.0 / (max_resp - min_resp))
-    '''
+    """
     Discretize y_hist
-    '''
+    """
     y_hist = np.rint(y_hist * (N_y_bins - 1))
     if debug:
         logger.debug("ymin %s ymax %s", min(y_hist), max(y_hist))

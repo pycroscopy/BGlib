@@ -4,10 +4,13 @@ Created on Tue Jan 05 07:55:56 2016
 
 @author: Chris Smith
 """
+
 import numpy as np
 import os
 
-beps_image_folder = os.path.abspath(os.path.join(os.path.realpath(__file__), '../beps_data_gen_images'))
+beps_image_folder = os.path.abspath(
+    os.path.join(os.path.realpath(__file__), "../beps_data_gen_images")
+)
 
 
 def combine_in_out_field_loops(in_vec, out_vec):
@@ -43,9 +46,13 @@ def build_loop_from_mat(loop_mat, num_steps):
     -------
 
     """
-    return np.vstack((loop_mat[0, :int(num_steps / 4) + 1],
-                      loop_mat[1],
-                      loop_mat[0, int(num_steps / 4) + 1: int(num_steps / 2)]))
+    return np.vstack(
+        (
+            loop_mat[0, : int(num_steps / 4) + 1],
+            loop_mat[1],
+            loop_mat[0, int(num_steps / 4) + 1 : int(num_steps / 2)],
+        )
+    )
 
 
 def get_noise_vec(num_pts, noise_coeff):

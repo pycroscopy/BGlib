@@ -9,6 +9,7 @@ import numpy as np
 from numpy import exp, abs, sqrt, sum, real, imag, arctan2, append
 from scipy.optimize import minimize
 
+
 def SHOfunc(parms, w_vec):
     """
     Generates the SHO response over the given frequency band
@@ -20,8 +21,12 @@ def SHOfunc(parms, w_vec):
     w_vec : 1D numpy array
         Vector of frequency values
     """
-    return parms[0] * exp(1j * parms[3]) * parms[1] ** 2 / \
-        (w_vec ** 2 - 1j * w_vec * parms[1] / parms[2] - parms[1] ** 2)
+    return (
+        parms[0]
+        * exp(1j * parms[3])
+        * parms[1] ** 2
+        / (w_vec**2 - 1j * w_vec * parms[1] / parms[2] - parms[1] ** 2)
+    )
 
 
 def SHOfit(parms, w_vec, resp_vec):
@@ -37,13 +42,15 @@ def SHOfit(parms, w_vec, resp_vec):
     resp_vec : 1D complex numpy array or list
         Cantilever response vector as a function of frequency
     """
+
     # Cost function to minimize.
     def cost(p):
         return np.sum((np.abs(SHOfunc(p, w_vec)) - np.abs(resp_vec)) ** 2)
 
-    popt = minimize(cost, parms, method='TNC', options={'disp':False})
+    popt = minimize(cost, parms, method="TNC", options={"disp": False})
 
     return popt.x
+
 
 def SHOestimateGuess(resp_vec, w_vec, num_points=5):
     """
@@ -78,15 +85,23 @@ def SHOestimateGuess(resp_vec, w_vec, num_points=5):
             Y1 = imag(resp_vec[ii[c1]])
             Y2 = imag(resp_vec[ii[c2]])
 
-            denom = (w1 * (X1 ** 2 - X1 * X2 + Y1 * (Y1 - Y2)) + w2 * (-X1 * X2 + X2 ** 2 - Y1 * Y2 + Y2 ** 2))
+            denom = w1 * (X1**2 - X1 * X2 + Y1 * (Y1 - Y2)) + w2 * (
+                -X1 * X2 + X2**2 - Y1 * Y2 + Y2**2
+            )
             if denom > 0:
-                a = ((w1 ** 2 - w2 ** 2) * (w1 * X2 * (X1 ** 2 + Y1 ** 2) - w2 * X1 * (X2 ** 2 + Y2 ** 2))) / denom
-                b = ((w1 ** 2 - w2 ** 2) * (w1 * Y2 * (X1 ** 2 + Y1 ** 2) - w2 * Y1 * (X2 ** 2 + Y2 ** 2))) / denom
-                c = ((w1 ** 2 - w2 ** 2) * (X2 * Y1 - X1 * Y2)) / denom
-                d = (w1 ** 3 * (X1 ** 2 + Y1 ** 2) -
-                     w1 ** 2 * w2 * (X1 * X2 + Y1 * Y2) -
-                     w1 * w2 ** 2 * (X1 * X2 + Y1 * Y2) +
-                     w2 ** 3 * (X2 ** 2 + Y2 ** 2)) / denom
+                a = (
+                    (w1**2 - w2**2) * (w1 * X2 * (X1**2 + Y1**2) - w2 * X1 * (X2**2 + Y2**2))
+                ) / denom
+                b = (
+                    (w1**2 - w2**2) * (w1 * Y2 * (X1**2 + Y1**2) - w2 * Y1 * (X2**2 + Y2**2))
+                ) / denom
+                c = ((w1**2 - w2**2) * (X2 * Y1 - X1 * Y2)) / denom
+                d = (
+                    w1**3 * (X1**2 + Y1**2)
+                    - w1**2 * w2 * (X1 * X2 + Y1 * Y2)
+                    - w1 * w2**2 * (X1 * X2 + Y1 * Y2)
+                    + w2**3 * (X2**2 + Y2**2)
+                ) / denom
 
                 if d > 0:
                     a_mat = append(a_mat, [a, b, c, d])
@@ -96,12 +111,18 @@ def SHOestimateGuess(resp_vec, w_vec, num_points=5):
                     Q_fit = -sqrt(d) / c
                     phi_fit = arctan2(-b, -a)
 
-                    H_fit = A_fit * w0_fit ** 2 * exp(1j * phi_fit) / (
-                        w_vec ** 2 - 1j * w_vec * w0_fit / Q_fit - w0_fit ** 2)
+                    H_fit = (
+                        A_fit
+                        * w0_fit**2
+                        * exp(1j * phi_fit)
+                        / (w_vec**2 - 1j * w_vec * w0_fit / Q_fit - w0_fit**2)
+                    )
 
-                    e_vec = append(e_vec,
-                                   sum((real(H_fit) - real(resp_vec)) ** 2) +
-                                   sum((imag(H_fit) - imag(resp_vec)) ** 2))
+                    e_vec = append(
+                        e_vec,
+                        sum((real(H_fit) - real(resp_vec)) ** 2)
+                        + sum((imag(H_fit) - imag(resp_vec)) ** 2),
+                    )
     if a_mat.size > 0:
         a_mat = a_mat.reshape(-1, 4)
 
@@ -118,10 +139,18 @@ def SHOestimateGuess(resp_vec, w_vec, num_points=5):
         Q_fit = -sqrt(d_w) / c_w
         phi_fit = np.arctan2(-b_w, -a_w)
 
-        H_fit = A_fit * w0_fit ** 2 * exp(1j * phi_fit) / (w_vec ** 2 - 1j * w_vec * w0_fit / Q_fit - w0_fit ** 2)
+        H_fit = (
+            A_fit
+            * w0_fit**2
+            * exp(1j * phi_fit)
+            / (w_vec**2 - 1j * w_vec * w0_fit / Q_fit - w0_fit**2)
+        )
 
-        if np.std(abs(resp_vec)) / np.std(abs(resp_vec - H_fit)) < 1.2 or w0_fit < np.min(w_vec) or w0_fit > np.max(
-                w_vec):
+        if (
+            np.std(abs(resp_vec)) / np.std(abs(resp_vec - H_fit)) < 1.2
+            or w0_fit < np.min(w_vec)
+            or w0_fit > np.max(w_vec)
+        ):
             p0 = SHOfastGuess(w_vec, resp_vec)
         else:
             p0 = np.array([A_fit, w0_fit, Q_fit, phi_fit])
@@ -151,7 +180,9 @@ def SHOfastGuess(w_vec, resp_vec, qual_factor=200):
     """
     amp_vec = abs(resp_vec)
     i_max = int(len(resp_vec) / 2)
-    return np.array([np.mean(amp_vec) / qual_factor, w_vec[i_max], qual_factor, np.angle(resp_vec[i_max])])
+    return np.array(
+        [np.mean(amp_vec) / qual_factor, w_vec[i_max], qual_factor, np.angle(resp_vec[i_max])]
+    )
 
 
 def SHOlowerBound(w_vec):

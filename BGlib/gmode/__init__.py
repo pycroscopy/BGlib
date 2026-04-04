@@ -15,4 +15,4 @@ Submodules
 
 from . import analysis, translators, viz
 
-__all__ = ['analysis', 'translators', 'viz']
+__all__ = ["analysis", "translators", "viz"]

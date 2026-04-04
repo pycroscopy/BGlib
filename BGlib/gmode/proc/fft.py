@@ -35,7 +35,10 @@ def get_fft_stack(image_stack):
     if image_stack.ndim == 2:
         # single image
         image_stack = np.expand_dims(image_stack, axis=0)
-    blackman_2d = np.atleast_2d(np.blackman(image_stack.shape[2])) * np.atleast_2d(np.blackman(image_stack.shape[1])).T
+    blackman_2d = (
+        np.atleast_2d(np.blackman(image_stack.shape[2]))
+        * np.atleast_2d(np.blackman(image_stack.shape[1])).T
+    )
     blackman_3d = np.expand_dims(blackman_2d, axis=0)
     fft_stack = blackman_3d * image_stack
     fft_stack = np.abs(np.fft.fftshift(np.fft.fft2(fft_stack, axes=(1, 2)), axes=(1, 2)))
@@ -58,9 +61,11 @@ def build_radius_matrix(image_shape):
     radius_mat: 2d numpy float array
         Radius matrix
     """
-    (u_mat, v_mat) = np.meshgrid(range(-image_shape[0] // 2, image_shape[0] // 2, 1),
-                                 range(-image_shape[1] // 2, image_shape[1] // 2, 1))
-    return np.sqrt(u_mat ** 2 + v_mat ** 2)
+    (u_mat, v_mat) = np.meshgrid(
+        range(-image_shape[0] // 2, image_shape[0] // 2, 1),
+        range(-image_shape[1] // 2, image_shape[1] // 2, 1),
+    )
+    return np.sqrt(u_mat**2 + v_mat**2)
 
 
 def get_2d_gauss_lpf(radius_mat, filter_width):
@@ -82,7 +87,7 @@ def get_2d_gauss_lpf(radius_mat, filter_width):
     gauss_filt: 2D numpy float array
         matrix with a single gaussian peak at the center of the matrix.
     """
-    return np.e ** (-(radius_mat * filter_width) ** 2)
+    return np.e ** (-((radius_mat * filter_width) ** 2))
 
 
 def fft_to_real(image):
@@ -129,18 +134,17 @@ def get_noise_floor(fft_data, tolerance):
     num_pts = fft_data.shape[1]
 
     for amp in fft_data:
-
-        prev_val = np.sqrt(np.sum(amp ** 2) / (2 * num_pts))
-        threshold = np.sqrt((2 * prev_val ** 2) * (-np.log(tolerance)))
+        prev_val = np.sqrt(np.sum(amp**2) / (2 * num_pts))
+        threshold = np.sqrt((2 * prev_val**2) * (-np.log(tolerance)))
 
         residual = 1
         iterations = 1
 
-        while (residual > 10 ** -2) and iterations < 50:
+        while (residual > 10**-2) and iterations < 50:
             amp[amp > threshold] = 0
-            new_val = np.sqrt(np.sum(amp ** 2) / (2 * num_pts))
+            new_val = np.sqrt(np.sum(amp**2) / (2 * num_pts))
             residual = np.abs(new_val - prev_val)
-            threshold = np.sqrt((2 * new_val ** 2) * (-np.log(tolerance)))
+            threshold = np.sqrt((2 * new_val**2) * (-np.log(tolerance)))
             prev_val = new_val
             iterations += 1
 
@@ -150,6 +154,7 @@ def get_noise_floor(fft_data, tolerance):
 
 
 ###############################################################################
+
 
 def down_sample(fft_vec, freq_ratio):
     """
@@ -169,12 +174,12 @@ def down_sample(fft_vec, freq_ratio):
 
     """
     if freq_ratio >= 1:
-        warn('Error at downSample: New sampling rate > old sampling rate')
+        warn("Error at downSample: New sampling rate > old sampling rate")
         return fft_vec
 
     vec_len = len(fft_vec)
     ind = np.round(float(vec_len) * (0.5 * float(freq_ratio)))
-    fft_vec = fft_vec[max(0.5 * vec_len - ind, 0):min(0.5 * vec_len + ind, vec_len)]
+    fft_vec = fft_vec[max(0.5 * vec_len - ind, 0) : min(0.5 * vec_len + ind, vec_len)]
     fft_vec = fft_vec * freq_ratio * 2
 
     return np.fft.ifft(np.fft.ifftshift(fft_vec))
@@ -185,15 +190,15 @@ def down_sample(fft_vec, freq_ratio):
 
 class FrequencyFilter(object):
     def __init__(self, signal_length, samp_rate, *args, **kwargs):
-        for val, name in zip([signal_length, samp_rate], ['Signal length', 'Sampling rate']):
+        for val, name in zip([signal_length, samp_rate], ["Signal length", "Sampling rate"]):
             if val % 1 != 0 or val < 0:
-                raise ValueError(name + ' must be an unsigned integer')
+                raise ValueError(name + " must be an unsigned integer")
         self.signal_length = abs(int(signal_length))
         self.samp_rate = samp_rate
         self.value = None
 
     def get_parms(self):
-        return {'samp_rate': self.samp_rate, 'signal_length': self.signal_length}
+        return {"samp_rate": self.samp_rate, "signal_length": self.signal_length}
 
     def is_compatible(self, other):
         assert isinstance(other, FrequencyFilter), "Other object must be a FrequencyFilter object"
@@ -204,10 +209,10 @@ def are_compatible_filters(frequency_filters):
     if isinstance(frequency_filters, FrequencyFilter):
         return True
     if not isinstance(frequency_filters, Iterable):
-        raise TypeError('frequency filters must be a single or list of FrequencyFilter objects')
+        raise TypeError("frequency filters must be a single or list of FrequencyFilter objects")
     tests = [isinstance(obj, FrequencyFilter) for obj in frequency_filters]
     if not np.all(np.array(tests)):
-        raise TypeError('frequency filters must be a list of FrequencyFilter objects')
+        raise TypeError("frequency filters must be a list of FrequencyFilter objects")
     ref_filter = frequency_filters[0]
     for ind in range(1, len(frequency_filters)):
         if not ref_filter.is_compatible(frequency_filters[ind]):
@@ -217,7 +222,7 @@ def are_compatible_filters(frequency_filters):
 
 def build_composite_freq_filter(frequency_filters):
     if not are_compatible_filters(frequency_filters):
-        raise ValueError('frequency filters must be a single or list of FrequencyFilter objects')
+        raise ValueError("frequency filters must be a single or list of FrequencyFilter objects")
 
     if not isinstance(frequency_filters, Iterable):
         frequency_filters = [frequency_filters]
@@ -268,9 +273,12 @@ class NoiseBandFilter(FrequencyFilter):
         freq_widths = np.array(freq_widths)
         if freqs.ndim != freq_widths.ndim:
             raise ValueError(
-                'Error in noiseBandFilter: dimensionality of frequencies and frequency widths do not match!')
+                "Error in noiseBandFilter: dimensionality of frequencies and frequency widths do not match!"
+            )
         if freqs.shape != freq_widths.shape:
-            raise ValueError('Error in noiseBandFilter: shape of frequencies and frequency widths do not match!')
+            raise ValueError(
+                "Error in noiseBandFilter: shape of frequencies and frequency widths do not match!"
+            )
 
         self.freqs = freqs
         self.freq_widths = freq_widths
@@ -283,32 +291,32 @@ class NoiseBandFilter(FrequencyFilter):
             w_vec = np.arange(-0.5 * samp_rate, 0.5 * samp_rate, samp_rate / signal_length)
             fig, ax = plt.subplots(2, 1)
             ax[0].plot(w_vec, noise_filter)
-            ax[0].set_yscale('log')
-            ax[0].axis('tight')
-            ax[0].set_xlabel('Freq')
-            ax[0].set_title('Before clean up')
+            ax[0].set_yscale("log")
+            ax[0].axis("tight")
+            ax[0].set_xlabel("Freq")
+            ax[0].set_title("Before clean up")
 
         # Setting noise freq bands to 0
         for cur_freq, d_freq in zip(freqs, freq_widths):
             ind = int(round(signal_length * (cur_freq / samp_rate)))
             sz = int(round(cent * d_freq / samp_rate))
-            noise_filter[cent - ind - sz:cent - ind + sz + 1] = 0
-            noise_filter[cent + ind - sz:cent + ind + sz + 1] = 0
+            noise_filter[cent - ind - sz : cent - ind + sz + 1] = 0
+            noise_filter[cent + ind - sz : cent + ind + sz + 1] = 0
 
         if show_plots:
             ax[1].plot(w_vec, noise_filter)
-            ax[1].set_yscale('log')
-            ax[1].axis('tight')
-            ax[1].set_xlabel('Freq')
-            ax[1].set_title('After clean up')
+            ax[1].set_yscale("log")
+            ax[1].axis("tight")
+            ax[1].set_xlabel("Freq")
+            ax[1].set_title("After clean up")
             plt.show()
 
         self.value = noise_filter
 
     def get_parms(self):
         basic_parms = super(NoiseBandFilter, self).get_parms()
-        prefix = 'noise_band_'
-        this_parms = {prefix + 'freqs': self.freqs, prefix + 'widths': self.freq_widths}
+        prefix = "noise_band_"
+        this_parms = {prefix + "freqs": self.freqs, prefix + "widths": self.freq_widths}
         this_parms.update(basic_parms)
         return this_parms
 
@@ -337,7 +345,7 @@ class LowPassFilter(FrequencyFilter):
         """
 
         if f_cutoff >= 0.5 * samp_rate:
-            raise ValueError('Error in LPFClip --> LPF too high! Skipping')
+            raise ValueError("Error in LPFClip --> LPF too high! Skipping")
 
         self.f_cutoff = f_cutoff
         self.roll_off = roll_off
@@ -358,16 +366,16 @@ class LowPassFilter(FrequencyFilter):
         t2 = np.linspace(-extent / 2, extent / 2, num=sz)
         smoothing = 0.5 * (1 + erf(t2))
 
-        lpf[cent - ind:cent - ind + sz] = smoothing
-        lpf[cent - ind + sz:cent + ind - sz + 1] = 1
-        lpf[cent + ind - sz + 1:cent + ind + 1] = 1 - smoothing
+        lpf[cent - ind : cent - ind + sz] = smoothing
+        lpf[cent - ind + sz : cent + ind - sz + 1] = 1
+        lpf[cent + ind - sz + 1 : cent + ind + 1] = 1 - smoothing
 
         self.value = lpf
 
     def get_parms(self):
         basic_parms = super(LowPassFilter, self).get_parms()
-        prefix = 'low_pass_'
-        this_parms = {prefix + 'cut_off': self.f_cutoff, prefix + 'widths': self.roll_off}
+        prefix = "low_pass_"
+        this_parms = {prefix + "cut_off": self.f_cutoff, prefix + "widths": self.roll_off}
         this_parms.update(basic_parms)
         return this_parms
 
@@ -417,12 +425,13 @@ class HarmonicPassFilter(FrequencyFilter):
 
         if do_plots:
             print(
-                'OnlyKeepHarmonics: samp_rate = %2.1e Hz, first harmonic = %3.2f Hz, %d harmonics w/- %3.2f Hz bands\n' % (
-                    samp_rate, first_freq, num_harm, band_width))
+                "OnlyKeepHarmonics: samp_rate = %2.1e Hz, first harmonic = %3.2f Hz, %d harmonics w/- %3.2f Hz bands\n"
+                % (samp_rate, first_freq, num_harm, band_width)
+            )
             w_vec = np.arange(-samp_rate / 2.0, samp_rate / 2.0, samp_rate / signal_length)
             fig, ax = plt.subplots(figsize=(5, 5))
             ax.plot(w_vec, harm_filter)
-            ax.set_title('Raw')
+            ax.set_title("Raw")
 
         sz = int(round(cent * band_width / samp_rate))
 
@@ -430,43 +439,46 @@ class HarmonicPassFilter(FrequencyFilter):
         ind = int(round(signal_length * (first_freq / samp_rate)))
         if ind >= signal_length:
             warn()
-            raise ValueError('Invalid harmonic frequency')
+            raise ValueError("Invalid harmonic frequency")
 
-        harm_filter[max(cent - ind + sz + 1, 0):min(signal_length, cent + ind - sz)] = 0
+        harm_filter[max(cent - ind + sz + 1, 0) : min(signal_length, cent + ind - sz)] = 0
 
         if do_plots:
             fig2, ax2 = plt.subplots(figsize=(5, 5))
             ax2.plot(w_vec, harm_filter)
-            ax2.set_title('Step 1')
+            ax2.set_title("Step 1")
 
         # Last harmonic
         ind = int(round(signal_length * (num_harm * first_freq / samp_rate)))
-        harm_filter[:cent - ind - sz] = 0
-        harm_filter[cent + ind + sz + 1:] = 0
+        harm_filter[: cent - ind - sz] = 0
+        harm_filter[cent + ind + sz + 1 :] = 0
 
         if do_plots:
             fig3, ax3 = plt.subplots(figsize=(5, 5))
             ax3.plot(w_vec, harm_filter)
-            ax3.set_title('Step 2')
+            ax3.set_title("Step 2")
 
         if num_harm > 1:
             for harm_ind in range(1, num_harm):
                 ind = int(round(signal_length * (harm_ind * first_freq / samp_rate)))
                 ind2 = int(round(signal_length * ((harm_ind + 1) * first_freq / samp_rate)))
-                harm_filter[cent - ind2 + sz + 1:cent - ind - sz] = 0
-                harm_filter[cent + ind + sz + 1:cent + ind2 - sz] = 0
+                harm_filter[cent - ind2 + sz + 1 : cent - ind - sz] = 0
+                harm_filter[cent + ind + sz + 1 : cent + ind2 - sz] = 0
                 if do_plots:
                     fig4, ax4 = plt.subplots(figsize=(5, 5))
                     ax4.plot(w_vec, harm_filter)
-                    ax4.set_title('Step %d' % (harm_ind + 2))
+                    ax4.set_title("Step %d" % (harm_ind + 2))
 
         self.value = harm_filter
 
     def get_parms(self):
         basic_parms = super(HarmonicPassFilter, self).get_parms()
-        prefix = 'harmonic_pass_'
-        this_parms = {prefix + 'start_freq': self.first_freq, prefix + 'band_width': self.band_width,
-                      prefix + 'bands': self.num_harm}
+        prefix = "harmonic_pass_"
+        this_parms = {
+            prefix + "start_freq": self.first_freq,
+            prefix + "band_width": self.band_width,
+            prefix + "bands": self.num_harm,
+        }
         this_parms.update(basic_parms)
         return this_parms
 
@@ -499,8 +511,7 @@ class HarmonicPassFilter(FrequencyFilter):
 
 
 class BandPassFilter(FrequencyFilter):
-    def __init__(self, signal_length, samp_rate, f_center, f_width,
-                 fir=False, fir_taps=1999):
+    def __init__(self, signal_length, samp_rate, f_center, f_width, fir=False, fir_taps=1999):
         """
         Builds a bandpass filter
 
@@ -526,7 +537,7 @@ class BandPassFilter(FrequencyFilter):
         """
 
         if f_center >= 0.5 * samp_rate:
-            raise ValueError('Filter cutoff exceeds Nyquist rate')
+            raise ValueError("Filter cutoff exceeds Nyquist rate")
 
         self.f_center = f_center
         self.f_width = f_width
@@ -541,16 +552,14 @@ class BandPassFilter(FrequencyFilter):
 
         # Finite Impulse Response or Boxcar
         if not fir:
-
-            bpf[cent - ind - sz:cent - ind + sz + 1] = 1
-            bpf[cent + ind - sz:cent + ind + sz + 1] = 1
+            bpf[cent - ind - sz : cent - ind + sz + 1] = 1
+            bpf[cent + ind - sz : cent + ind + sz + 1] = 1
 
         else:
-
             freq_low = (f_center - f_width) / (0.5 * samp_rate)
             freq_high = (f_center + f_width) / (0.5 * samp_rate)
             band = [freq_low, freq_high]
-            taps = sps.firwin(int(fir_taps), band, pass_zero=False, window='blackman')
+            taps = sps.firwin(int(fir_taps), band, pass_zero=False, window="blackman")
 
             bpf = np.abs(np.fft.fftshift(np.fft.fft(taps, n=signal_length)))
 
@@ -558,7 +567,7 @@ class BandPassFilter(FrequencyFilter):
 
     def get_parms(self):
         basic_parms = super(BandPassFilter, self).get_parms()
-        prefix = 'band_pass_'
-        this_parms = {prefix + 'start_freq': self.f_center, prefix + 'band_width': self.f_width}
+        prefix = "band_pass_"
+        this_parms = {prefix + "start_freq": self.f_center, prefix + "band_width": self.f_width}
         this_parms.update(basic_parms)
         return this_parms

@@ -21,6 +21,7 @@ class ForcIVTranslator(Translator):
     """
     Translates FORC IV datasets from .mat files to .h5
     """
+
     def __init__(self, *args, **kwargs):
         super(ForcIVTranslator, self).__init__(*args, **kwargs)
         self.h5_read = None
@@ -48,23 +49,22 @@ class ForcIVTranslator(Translator):
         raw_data_path = path.abspath(raw_data_path)
         folder_path, file_name = path.split(raw_data_path)
 
-        h5_path = path.join(folder_path, file_name[:-4] + '.h5')
+        h5_path = path.join(folder_path, file_name[:-4] + ".h5")
         if path.exists(h5_path):
             remove(h5_path)
-        h5_f = h5py.File(h5_path, 'w')
+        h5_f = h5py.File(h5_path, "w")
 
         self.h5_read = True
         try:
-            h5_raw = h5py.File(raw_data_path, 'r')
+            h5_raw = h5py.File(raw_data_path, "r")
         except OSError:
             self.h5_read = False
             h5_raw = loadmat(raw_data_path)
 
-
         try:
-            excite_cell = h5_raw['dc_amp_cell3']
+            excite_cell = h5_raw["dc_amp_cell3"]
         except KeyError:
-            excite_cell = [h5_raw['VS_amp_vec']]
+            excite_cell = [h5_raw["VS_amp_vec"]]
         test = excite_cell[0][0]
         if self.h5_read:
             excitation_vec = h5_raw[test]
@@ -72,18 +72,19 @@ class ForcIVTranslator(Translator):
             excitation_vec = float(np.squeeze(test))
 
         try:
-            current_cell = h5_raw['current_cell3']
+            current_cell = h5_raw["current_cell3"]
         except KeyError:
-            current_cell = h5_raw['IV_dat']
-
+            current_cell = h5_raw["IV_dat"]
 
         num_rows = current_cell.shape[0]
         num_cols = current_cell.shape[1]
         num_iv_pts = excitation_vec.size
         num_cycles = 0
-        if len(current_cell.shape)==4:
+        if len(current_cell.shape) == 4:
             num_cycles = current_cell.shape[-1]
-            current_data = np.zeros(shape=(num_rows * num_cols, num_iv_pts*num_cycles), dtype=float)
+            current_data = np.zeros(
+                shape=(num_rows * num_cols, num_iv_pts * num_cycles), dtype=float
+            )
         else:
             current_data = np.zeros(shape=(num_rows * num_cols, num_iv_pts), dtype=float)
 
@@ -94,28 +95,33 @@ class ForcIVTranslator(Translator):
                     curr_val = np.squeeze(h5_raw[current_cell[row_ind][col_ind]].value)
                 else:
                     curr_val = np.array(np.squeeze(current_cell[row_ind][col_ind])).astype(float)
-                curr_val = curr_val.reshape(current_data[0,:].shape)
-                current_data[pix_ind, :] = 1E+9 * curr_val
+                curr_val = curr_val.reshape(current_data[0, :].shape)
+                current_data[pix_ind, :] = 1e9 * curr_val
 
         parm_dict = self._read_parms(h5_raw)
-        parm_dict.update({'translator': 'FORC_IV'})
+        parm_dict.update({"translator": "FORC_IV"})
 
-        pos_desc = [Dimension('Y', 'm', np.arange(num_rows)), Dimension('X', 'm', np.arange(num_cols))]
-        
-        if num_cycles>0:
-            spec_desc = [Dimension('DC Bias', 'V', excitation_vec),
-                        Dimension('Cycles', 'number', np.arange(num_cycles))]
+        pos_desc = [
+            Dimension("Y", "m", np.arange(num_rows)),
+            Dimension("X", "m", np.arange(num_cols)),
+        ]
+
+        if num_cycles > 0:
+            spec_desc = [
+                Dimension("DC Bias", "V", excitation_vec),
+                Dimension("Cycles", "number", np.arange(num_cycles)),
+            ]
         else:
-            spec_desc = [Dimension('DC Bias', 'V', excitation_vec)]
+            spec_desc = [Dimension("DC Bias", "V", excitation_vec)]
 
-        meas_grp = create_indexed_group(h5_f, 'Measurement')
-        chan_grp = create_indexed_group(meas_grp, 'Channel')
+        meas_grp = create_indexed_group(h5_f, "Measurement")
+        chan_grp = create_indexed_group(meas_grp, "Channel")
 
         write_simple_attrs(chan_grp, parm_dict)
 
-        h5_main = write_main_dataset(chan_grp, current_data, 'Raw_Data',
-                                     'Current', '1E-9 A',
-                                     pos_desc, spec_desc)
+        h5_main = write_main_dataset(
+            chan_grp, current_data, "Raw_Data", "Current", "1E-9 A", pos_desc, spec_desc
+        )
 
         return h5_main
 
@@ -134,8 +140,15 @@ class ForcIVTranslator(Translator):
             Dictionary containing all relevant parameters
         """
         parm_dict = dict()
-        exceptions = ['Z_cell3', 'current_cell3', 'dc_amp_cell3', 'loop_area_rel', '__version__', '__header__',
-                      '__globals__']
+        exceptions = [
+            "Z_cell3",
+            "current_cell3",
+            "dc_amp_cell3",
+            "loop_area_rel",
+            "__version__",
+            "__header__",
+            "__globals__",
+        ]
         for att_name in raw_data_file_handle:
             if att_name not in exceptions:
                 if not self.h5_read:

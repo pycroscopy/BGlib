@@ -21,27 +21,29 @@ import sys
 
 def install(package):
     subprocess.call([sys.executable, "-m", "pip", "install", package])
+
+
 # Package for downloading online files:
 try:
     # This package is not part of anaconda and may need to be installed.
-    importlib.import_module('wget')
+    importlib.import_module("wget")
 except ImportError:
-    warn('wget not found.  Will install with pip.')
-    install('wget')
-    importlib.import_module('wget')
+    warn("wget not found.  Will install with pip.")
+    install("wget")
+    importlib.import_module("wget")
 
 # The mathematical computation package:
 
 # import sidpy - supporting package for pyUSID:
 try:
-    importlib.import_module('sidpy')
+    importlib.import_module("sidpy")
 except ImportError:
-    warn('sidpy not found.  Will install with pip.')
-    install('sidpy')
-    importlib.import_module('sidpy')
+    warn("sidpy not found.  Will install with pip.")
+    install("sidpy")
+    importlib.import_module("sidpy")
 
 ###############################################################################
 # Better documentation to follow
 # ==============================
 # Here we will download a compressed data file from Github and unpack it:
-print('Hello World')
+print("Hello World")

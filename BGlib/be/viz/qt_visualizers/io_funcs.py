@@ -16,17 +16,19 @@ def loadDataFunc(filePath, **kwargs):
             array indices are (Step, #rows, #cols, cycle#)
     """
     data = loadmat(filePath)
-    data_mat = data['loop_mat']
+    data_mat = data["loop_mat"]
     data_mat = data_mat[:, :, :, :]
-    data_mat[np.where(data_mat > 1E-1)] = 0  # Presumably, this will not be requried.
-    data_mat[np.where(data_mat < -1E-1)] = 0  # Otherwise we will have to write smoothing/cleaning functions
+    data_mat[np.where(data_mat > 1e-1)] = 0  # Presumably, this will not be requried.
+    data_mat[np.where(data_mat < -1e-1)] = (
+        0  # Otherwise we will have to write smoothing/cleaning functions
+    )
     data_mat = np.transpose(data_mat, (3, 0, 1, 2))
-    xvec = data['VV'].ravel()
+    xvec = data["VV"].ravel()
 
     return data_mat, xvec
 
 
-def readData(h5_path, dset_name='SHO_Fit_Guess'):
+def readData(h5_path, dset_name="SHO_Fit_Guess"):
     """
     Reads the hdf5 data file and calls appropriate reader based on data type
     Input:
@@ -40,14 +42,14 @@ def readData(h5_path, dset_name='SHO_Fit_Guess'):
 
     """
 
-    h5_file = h5py.File(h5_path, 'r')
+    h5_file = h5py.File(h5_path, "r")
 
-    h5_group = h5_file['Measurement_000']
+    h5_group = h5_file["Measurement_000"]
 
-    data_type = h5_group.attrs['VS_mode']
-    if data_type == 'DC modulation mode':
+    data_type = h5_group.attrs["VS_mode"]
+    if data_type == "DC modulation mode":
         return readDCData(h5_group)
-    elif data_type == 'AC modulation mode with time reversal':
+    elif data_type == "AC modulation mode with time reversal":
         return readACData(h5_group)
 
 
@@ -67,34 +69,34 @@ def readDCData(h5_group):
         xvec -- numpy array containing the possible plot data of the slice viewer
         xvec_labs -- numpy array of labels and units for the xvec array
     """
-    h5_chan = h5_group['Channel_000']
-    h5_main = h5_chan['Raw_Data']
+    h5_chan = h5_group["Channel_000"]
+    h5_main = h5_chan["Raw_Data"]
     h5_file = h5_main.file
-    h5_specv = h5_file[h5_main.attrs['Spectroscopic_Values']]
-    h5_bins = h5_file[h5_main.attrs['Bin_Frequencies']]
+    h5_specv = h5_file[h5_main.attrs["Spectroscopic_Values"]]
+    h5_bins = h5_file[h5_main.attrs["Bin_Frequencies"]]
 
-    h5_shogroup = h5_chan['Raw_Data-SHO_Fit_000']
-    h5_guess = h5_shogroup['Guess']
+    h5_shogroup = h5_chan["Raw_Data-SHO_Fit_000"]
+    h5_guess = h5_shogroup["Guess"]
 
-    h5_data_labels = h5_specv.attrs['labels']
-    h5_sho_specv = h5_file[h5_guess.attrs['Spectroscopic_Values']]
-    h5_indices = h5_file[h5_guess.attrs['Spectroscopic_Indices']]
-    h5_pos = h5_file[h5_main.attrs['Position_Indices']]
+    h5_data_labels = h5_specv.attrs["labels"]
+    h5_sho_specv = h5_file[h5_guess.attrs["Spectroscopic_Values"]]
+    h5_indices = h5_file[h5_guess.attrs["Spectroscopic_Indices"]]
+    h5_pos = h5_file[h5_main.attrs["Position_Indices"]]
 
     num_rows, num_cols = __getPos(h5_pos)
     num_pos = num_rows * num_cols
 
     ndims = len(np.where(np.array(h5_pos.shape) > 1)[0])
 
-    num_cycles = h5_group.attrs['VS_number_of_cycles']
+    num_cycles = h5_group.attrs["VS_number_of_cycles"]
     num_bins = len(np.unique(h5_bins))
 
-    data_xvec = h5_sho_specv[h5_sho_specv.attrs['DC_Offset']].flatten()
-    field_type = h5_group.attrs['VS_measure_in_field_loops']
+    data_xvec = h5_sho_specv[h5_sho_specv.attrs["DC_Offset"]].flatten()
+    field_type = h5_group.attrs["VS_measure_in_field_loops"]
 
-    '''
+    """
     Separate data into cycles
-    '''
+    """
     data_guess = np.reshape(h5_guess, [num_pos, num_cycles, -1])
     data_guess = np.transpose(data_guess, [1, 2, 0])
     data_xvec = np.reshape(data_xvec, [num_cycles, -1])
@@ -103,74 +105,78 @@ def readDCData(h5_group):
 
     pt_xvec = np.tile(np.arange(data_xvec.shape[1]), [num_cycles, 1])
 
-    if field_type == 'in and out-of-field':
-        '''
+    if field_type == "in and out-of-field":
+        """
     Seperate out in-field and out-of-field values
-        '''
-        data_guess = np.array([data_guess[:, slice(0, None, 2), :], data_guess[:, slice(1, None, 2), :]])
+        """
+        data_guess = np.array(
+            [data_guess[:, slice(0, None, 2), :], data_guess[:, slice(1, None, 2), :]]
+        )
         data_guess = np.reshape(data_guess, (2, num_cycles, -1, num_rows, num_cols))
         data_xvec = np.array([data_xvec[:, slice(0, None, 2)], data_xvec[:, slice(1, None, 2)]])
         pt_xvec = np.array([pt_xvec[:, slice(0, None, 2)], pt_xvec[:, slice(1, None, 2)]])
 
         data_main = np.reshape(data_main, (num_cycles, -1, num_bins, num_rows, num_cols))
-        data_main = np.array([data_main[:, slice(0, None, 2), :, :, :], data_main[:, slice(1, None, 2), :, :, :]])
+        data_main = np.array(
+            [data_main[:, slice(0, None, 2), :, :, :], data_main[:, slice(1, None, 2), :, :, :]]
+        )
 
-        data_parts = ['In-field', 'Out-of-field']
-    elif field_type == 'in-field':
+        data_parts = ["In-field", "Out-of-field"]
+    elif field_type == "in-field":
         data_guess = np.reshape(data_guess, (1, num_cycles, -1, num_rows, num_cols))
         data_xvec = data_xvec.reshape(1, num_cycles, -1)
         pt_xvec = pt_xvec.reshape(1, num_cycles, -1)
 
         data_main = np.reshape(data_main, (1, num_cycles, -1, num_bins, num_rows, num_cols))
 
-        data_parts = ['In-field']
+        data_parts = ["In-field"]
 
-    elif field_type == 'out-of-field':
+    elif field_type == "out-of-field":
         data_guess = np.reshape(data_guess, (1, num_cycles, -1, num_rows, num_cols))
         data_xvec = data_xvec.reshape(1, num_cycles, -1)
         pt_xvec = pt_xvec.reshape(1, num_cycles, -1)
 
         data_main = np.reshape(data_main, (1, num_cycles, -1, num_bins, num_rows, num_cols))
 
-        data_parts = ['Out-of-field']
+        data_parts = ["Out-of-field"]
     else:
-        raise ValueError('Unknown field type in data.  Cannot parse')
+        raise ValueError("Unknown field type in data.  Cannot parse")
 
-    '''
+    """
     Repeat steps for reading guess on the results if present
-    '''
+    """
 
     try:
-        h5_results = h5_shogroup['Fit']
+        h5_results = h5_shogroup["Fit"]
         data_results = np.reshape(h5_results, [num_pos, num_cycles, -1])
         data_results = np.transpose(data_results, [1, 2, 0])
 
-        if field_type == 'in and out-of-field':
-            data_results = np.array([data_results[:, slice(0, None, 2), :],
-                                     data_results[:, slice(1, None, 2), :]])
+        if field_type == "in and out-of-field":
+            data_results = np.array(
+                [data_results[:, slice(0, None, 2), :], data_results[:, slice(1, None, 2), :]]
+            )
             data_results = np.reshape(data_results, (2, num_cycles, -1, num_rows, num_cols))
-        elif field_type == 'in-field':
+        elif field_type == "in-field":
             data_results = np.reshape(data_results, (1, num_cycles, -1, num_rows, num_cols))
-        elif field_type == 'out-of-field':
+        elif field_type == "out-of-field":
             data_results = np.reshape(data_results, (1, num_cycles, -1, num_rows, num_cols))
 
     except KeyError:
         data_results = None
 
     xvec = np.array([data_xvec, pt_xvec])
-    xvec_labs = np.array([['Voltage', 'V'], ['UDVS Step', '']])
+    xvec_labs = np.array([["Voltage", "V"], ["UDVS Step", ""]])
     data_labs = h5_data_labels
     data_units = list()
     for label in data_labs:
-        if label == 'Amplitude':
-            data_units.append('V')
-        elif label == 'Frequency':
-            data_units.append('Hz')
-        elif label == 'Quality Factor':
-            data_units.append('')
-        elif label == 'Phase':
-            data_units.append('rad')
-
+        if label == "Amplitude":
+            data_units.append("V")
+        elif label == "Frequency":
+            data_units.append("Hz")
+        elif label == "Quality Factor":
+            data_units.append("")
+        elif label == "Phase":
+            data_units.append("rad")
 
             #     xaxis = {'XData':data_xvec,
             #              'XData Name':'Voltage',
@@ -198,7 +204,16 @@ def readDCData(h5_group):
             #                  'Dims':ndims,
             #                  'Bins':h5_bins.value}
 
-    return data_guess, data_results, xvec, xvec_labs, data_parts, ndims, data_main, np.unique(h5_bins.value)
+    return (
+        data_guess,
+        data_results,
+        xvec,
+        xvec_labs,
+        data_parts,
+        ndims,
+        data_main,
+        np.unique(h5_bins.value),
+    )
 
 
 def readACData(h5_group):
@@ -214,34 +229,34 @@ def readACData(h5_group):
         xvec -- numpy array containing the possible plot data of the slice viewer
         xvec_labs -- numpy array of labels and units for the xvec array
     """
-    h5_chan = h5_group['Channel_000']
-    h5_main = h5_chan['Raw_Data']
-    h5_specv = h5_chan['Spectroscopic_Values']
-    h5_bins = h5_chan['Bin_Frequencies']
+    h5_chan = h5_group["Channel_000"]
+    h5_main = h5_chan["Raw_Data"]
+    h5_specv = h5_chan["Spectroscopic_Values"]
+    h5_bins = h5_chan["Bin_Frequencies"]
 
-    h5_shogroup = h5_chan['Raw_Data-SHO_Fit_000']
-    h5_guess = h5_shogroup['Guess']
+    h5_shogroup = h5_chan["Raw_Data-SHO_Fit_000"]
+    h5_guess = h5_shogroup["Guess"]
 
-    h5_data_labels = h5_specv.attrs['labels']
-    h5_sho_specv = h5_shogroup['Spectroscopic_Values']
-    h5_indices = h5_shogroup['Spectroscopic_Indices']
-    h5_pos = h5_chan['Position_Indices']
+    h5_data_labels = h5_specv.attrs["labels"]
+    h5_sho_specv = h5_shogroup["Spectroscopic_Values"]
+    h5_indices = h5_shogroup["Spectroscopic_Indices"]
+    h5_pos = h5_chan["Position_Indices"]
 
     num_rows, num_cols = __getPos(h5_pos)
     num_pos = num_rows * num_cols
 
     ndims = len(np.where(np.array(h5_pos.shape) > 1)[0])
 
-    num_cycles = h5_group.attrs['VS_number_of_cycles']
+    num_cycles = h5_group.attrs["VS_number_of_cycles"]
     num_bins = len(np.unique(h5_bins))
 
-    data_xvec = h5_sho_specv[h5_sho_specv.attrs['AC_Amplitude']].flatten()
-    direction = h5_specv[h5_specv.attrs['Direction']].flatten()
-    direction = h5_sho_specv[h5_sho_specv.attrs['Direction']].flatten()
+    data_xvec = h5_sho_specv[h5_sho_specv.attrs["AC_Amplitude"]].flatten()
+    direction = h5_specv[h5_specv.attrs["Direction"]].flatten()
+    direction = h5_sho_specv[h5_sho_specv.attrs["Direction"]].flatten()
 
-    '''
+    """
     Separate data into cycles
-    '''
+    """
     data_guess = np.reshape(h5_guess, [num_pos, num_cycles, -1])
     data_guess = np.transpose(data_guess, [1, 2, 0])
     data_xvec = np.reshape(data_xvec, [num_cycles, -1])
@@ -250,9 +265,9 @@ def readACData(h5_group):
 
     pt_xvec = np.tile(np.arange(data_xvec.shape[1]), [num_cycles, 1])
 
-    '''
+    """
     Seperate out forward and reverse values
-    '''
+    """
     for_dir = np.where(direction == 1.0)[0]
     rev_dir = np.where(direction == -1.0)[0]
 
@@ -264,7 +279,7 @@ def readACData(h5_group):
 
     data_xvec = np.array([data_xvec[:, for_dir], data_xvec[:, rev_dir]])
     pt_xvec = np.array([pt_xvec[:, for_dir], pt_xvec[:, rev_dir]])
-    data_parts = ['Forward', 'Reverse']
+    data_parts = ["Forward", "Reverse"]
 
     #     '''
     #     Get the mean and standard deviation of each variable
@@ -278,14 +293,14 @@ def readACData(h5_group):
     #             np.clip(data_guess[var,cycle,:,:],min_data,max_data,data_guess[var,cycle,:,:])
 
     xvec = np.array([data_xvec, pt_xvec])
-    xvec_labs = np.array([['AC Current', 'A'], ['UDVS Step', '']])
+    xvec_labs = np.array([["AC Current", "A"], ["UDVS Step", ""]])
 
-    '''
+    """
     Repeat steps for reading guess on the results if present
-    '''
+    """
 
     try:
-        h5_results = h5_shogroup['Fit']
+        h5_results = h5_shogroup["Fit"]
         data_results = np.reshape(h5_results, [num_pos, num_cycles, -1])
         data_results = np.transpose(data_results, [1, 2, 0])
 
@@ -300,15 +315,14 @@ def readACData(h5_group):
     data_labs = h5_data_labels
     data_units = list()
     for label in data_labs:
-        if label == 'Amplitude':
-            data_units.append('V')
-        elif label == 'Frequency':
-            data_units.append('Hz')
-        elif label == 'Quality Factor':
-            data_units.append('')
-        elif label == 'Phase':
-            data_units.append('rad')
-
+        if label == "Amplitude":
+            data_units.append("V")
+        elif label == "Frequency":
+            data_units.append("Hz")
+        elif label == "Quality Factor":
+            data_units.append("")
+        elif label == "Phase":
+            data_units.append("rad")
 
             #     xaxis = {'XData':data_xvec,
             #              'XData Name':'Voltage',
@@ -336,20 +350,29 @@ def readACData(h5_group):
             #                  'Dims':ndims,
             #                  'Bins':h5_bins.value}
 
-    return data_guess, data_results, xvec, xvec_labs, data_parts, ndims, data_main, np.unique(h5_bins.value)
+    return (
+        data_guess,
+        data_results,
+        xvec,
+        xvec_labs,
+        data_parts,
+        ndims,
+        data_main,
+        np.unique(h5_bins.value),
+    )
 
 
 def getSpectralData(point, data_mat):
     """
     This function accepts a tuple (x,y) and extracts the spectra
     from matrix (data) at that point, and returns an Nx2 vector
-    
+
     Inputs:
         point -- (x,y) position to be retrieved from data_mat
         data_mat -- matrix to retrieve data from
-        
+
     Outputs:
-        
+
     """
     spec_ydata = data_mat[:, int(np.round(point[0])), int(np.round(point[1]))]
     return spec_ydata.ravel()
@@ -372,11 +395,11 @@ def __findDataset(h5_file, ds_name):
     """
     Uses visit() to find all datasets with the desired name
     """
-    print('Finding all instances of', ds_name)
+    print("Finding all instances of", ds_name)
     ds = []
 
     def __findName(name, obj):
-        if name.split('/')[-1] == ds_name and isinstance(obj, h5py.Dataset):
+        if name.split("/")[-1] == ds_name and isinstance(obj, h5py.Dataset):
             ds.append([name, obj])
         return
 

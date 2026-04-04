@@ -3,6 +3,7 @@ Created on Apr 21, 2016
 
 @author: Chris Smith -- csmith55@utk.edu
 """
+
 import numpy as np
 from .io_funcs import readData
 import pyqtgraph as pg
@@ -19,44 +20,56 @@ class BEPSwindow(QtGui.QMainWindow):
         Create the initial window
         """
         super(BEPSwindow, self).__init__()
-        winTitle = kwargs.get('winTitle', 'BEPS Visualization')
+        winTitle = kwargs.get("winTitle", "BEPS Visualization")
         self.setWindowTitle(winTitle)
-        pg.setConfigOption('background', 'w')
-        pg.setConfigOption('foreground', 'k')
-        pg.setConfigOption('antialias', True)
+        pg.setConfigOption("background", "w")
+        pg.setConfigOption("foreground", "k")
+        pg.setConfigOption("antialias", True)
 
-        '''
+        """
         Define some custom colormaps from VisIt
-        '''
-        self.hot_desaturated = {'ticks': [(1, (255, 76, 76, 255)),
-                                          (0.857, (107, 0, 0, 255)),
-                                          (0.714, (255, 96, 0, 255)),
-                                          (0.571, (255, 255, 0, 255)),
-                                          (0.429, (0, 127, 0, 255)),
-                                          (0.285, (0, 255, 255, 255)),
-                                          (0.143, (0, 0, 91, 255)),
-                                          (0, (71, 71, 219, 255))],
-                                'mode': 'rgb'}
-        self.hot_cold = {'ticks': [(1, (255, 255, 0, 255)),
-                                   (0.55, (255, 0, 0, 255)),
-                                   (0.5, (0, 0, 127, 255)),
-                                   (0.45, (0, 0, 255, 255)),
-                                   (0, (0, 255, 255, 255))],
-                         'mode': 'rgb'}
-        self.difference = {'ticks': [(1, (255, 0, 0, 255)),
-                                     (0.5, (255, 255, 255, 255)),
-                                     (0, (0, 0, 255, 255))],
-                           'mode': 'rgb'}
-        '''
+        """
+        self.hot_desaturated = {
+            "ticks": [
+                (1, (255, 76, 76, 255)),
+                (0.857, (107, 0, 0, 255)),
+                (0.714, (255, 96, 0, 255)),
+                (0.571, (255, 255, 0, 255)),
+                (0.429, (0, 127, 0, 255)),
+                (0.285, (0, 255, 255, 255)),
+                (0.143, (0, 0, 91, 255)),
+                (0, (71, 71, 219, 255)),
+            ],
+            "mode": "rgb",
+        }
+        self.hot_cold = {
+            "ticks": [
+                (1, (255, 255, 0, 255)),
+                (0.55, (255, 0, 0, 255)),
+                (0.5, (0, 0, 127, 255)),
+                (0.45, (0, 0, 255, 255)),
+                (0, (0, 255, 255, 255)),
+            ],
+            "mode": "rgb",
+        }
+        self.difference = {
+            "ticks": [(1, (255, 0, 0, 255)), (0.5, (255, 255, 255, 255)), (0, (0, 0, 255, 255))],
+            "mode": "rgb",
+        }
+        """
         Colormaps from Matlab
-        '''
-        self.jet = {'ticks': [(1, (128, 0, 0, 255)),
-                              (0.875, (255, 0, 0, 255)),
-                              (0.625, (255, 255, 0, 255)),
-                              (0.375, (0, 255, 255, 255)),
-                              (0.125, (0, 0, 255, 255)),
-                              (0, (0, 0, 143, 255))],
-                    'mode': 'rgb'}
+        """
+        self.jet = {
+            "ticks": [
+                (1, (128, 0, 0, 255)),
+                (0.875, (255, 0, 0, 255)),
+                (0.625, (255, 255, 0, 255)),
+                (0.375, (0, 255, 255, 255)),
+                (0.125, (0, 0, 255, 255)),
+                (0, (0, 0, 143, 255)),
+            ],
+            "mode": "rgb",
+        }
 
     #     def sliceViewFunc(self,**kwargs):
     #         '''
@@ -103,126 +116,133 @@ class BEPSwindow(QtGui.QMainWindow):
         arrays for later uses and get the proper parameters
         """
         if not h5_path:
-            h5_path = pg.FileDialog.getOpenFileName(caption='Select H5 file',
-                                                    filter="H5 file (*.h5)")
+            h5_path = pg.FileDialog.getOpenFileName(
+                caption="Select H5 file", filter="H5 file (*.h5)"
+            )
             h5_path = str(h5_path)
-        data_guess, data_results, xvec, xvec_labs, data_parts, ndims, data_main, freq_vec = readData(h5_path)
+        data_guess, data_results, xvec, xvec_labs, data_parts, ndims, data_main, freq_vec = (
+            readData(h5_path)
+        )
 
         num_cycles = data_guess.shape[1]
 
-        y_labs = np.array([['Amplitude', 'V'], ['Frequency', 'Hz'], ['Q Factor', ''], ['Phase', 'rad']])
+        y_labs = np.array(
+            [["Amplitude", "V"], ["Frequency", "Hz"], ["Q Factor", ""], ["Phase", "rad"]]
+        )
 
         # The following should ALL be derived from the file in question via PySPM!!
-        plot_elements = [['Amplitude [V]', np.abs], ['Phase [rad]', np.angle]]
+        plot_elements = [["Amplitude [V]", np.abs], ["Phase [rad]", np.angle]]
 
-        initialPars = {'Number of Cycles': num_cycles,
-                       'Type of Measurement:': 'IV',
-                       'xlabel': xvec_labs,
-                       'ylabel': y_labs,
-                       'Plot Elements': plot_elements,
-                       'Pieces': data_parts,
-                       'NDims': ndims}
-        '''
+        initialPars = {
+            "Number of Cycles": num_cycles,
+            "Type of Measurement:": "IV",
+            "xlabel": xvec_labs,
+            "ylabel": y_labs,
+            "Plot Elements": plot_elements,
+            "Pieces": data_parts,
+            "NDims": ndims,
+        }
+        """
         Set up the plots using the read data
-        '''
+        """
         self.__setupPlots(initialPars)
-        '''
+        """
         Set the initial data
-        '''
+        """
         self.__setInitialData(data_guess, data_results, xvec, data_main, freq_vec)
 
     def __setupPlots(self, initialPars, **kwargs):
         """
         This function sets up the GUI layout, adding PyQT widgets
         Fills the layout with objects, sets an roi to crosshair.
-        
-        Input: 
-            initialParameters -- Dictionary,  
-                                 Dictionary containing parameters of 
+
+        Input:
+            initialParameters -- Dictionary,
+                                 Dictionary containing parameters of
                                  data file, needed for GUI setup.
-            winTitle -- string, Optional 
+            winTitle -- string, Optional
                         Title of QWindow, default = 'Window'.None
-            
-        Output:  
+
+        Output:
             None
-            
+
         Shared Objects:
             imv1 -- QtGui.ImageView
-                    Item which is used to plot the map of the SHO values at 
+                    Item which is used to plot the map of the SHO values at
                     a given step
             imv2 -- QtGui.PlotWidget
-                    Item which is used to plot the current loop selected by 
+                    Item which is used to plot the current loop selected by
                     the CrossHairsRoi from imv1
             imv3 -- QtGui.PlotWidget
-                    Item which is used to plot the DC offset or AC Amplitude 
+                    Item which is used to plot the DC offset or AC Amplitude
                     vs. step number
             roiPt -- pg.CrossHairROI
-                    ROI object within imv1 which determines the position used 
+                    ROI object within imv1 which determines the position used
                     to generate the loop in imv2
             roi1 -- pg.ROI
                     Standard ROI object within imv1
             posLine -- pt.InfiniteLine
-                    Object in imv3 which is used to denote the current UDVS 
-                    step.  It's position is sinced with the frame number in 
+                    Object in imv3 which is used to denote the current UDVS
+                    step.  It's position is sinced with the frame number in
                     imv1
             cycle_list -- QtGui.ComboBox
-                    Object which allows the user to select which cycle to 
+                    Object which allows the user to select which cycle to
                     display
             plot_list -- QtGui.ComboBox
-                    Object which allows the used to select which of the SHO 
+                    Object which allows the used to select which of the SHO
                     parameters to plot
             roi_list -- QtGui.ComboBox
-                    Object which allows the user to change the x-variable in 
+                    Object which allows the user to change the x-variable in
                     imv2 from Voltage/Current to UDVS step
             part_list -- QtGuiComboBox
-                    Object which allows the user to select between in or 
+                    Object which allows the user to select between in or
                     out-of-field for DC and forward or reverse for AC
             xlabel -- Numpy Array
-                    Array holding (Name,Unit) pairs of options for the x-axis 
+                    Array holding (Name,Unit) pairs of options for the x-axis
                     of imv2
             ylabel -- Numpy Array
-                    Array holding (Name,Unit) pairs of options for the y-axis 
+                    Array holding (Name,Unit) pairs of options for the y-axis
                     of imv2
             ndims -- Int
                     Number of spacial dimensions in data
         """
         #         Get the relevant parameters to enable plotting, labels etc.
-        num_of_cycles = initialPars['Number of Cycles']
-        ylabel = initialPars['ylabel']  # This has to change!
-        xlabel = initialPars['xlabel']
-        plot_elements_list = initialPars['Plot Elements']
-        data_part_list = initialPars['Pieces']
-        Ndims = initialPars['NDims']
+        num_of_cycles = initialPars["Number of Cycles"]
+        ylabel = initialPars["ylabel"]  # This has to change!
+        xlabel = initialPars["xlabel"]
+        plot_elements_list = initialPars["Plot Elements"]
+        data_part_list = initialPars["Pieces"]
+        Ndims = initialPars["NDims"]
 
         roi_elements_list = xlabel[:, 0]
-        '''
+        """
         Setup the layout for the window
-        '''
+        """
         cw = QtGui.QWidget()  # Add the plotting widget
         self.setCentralWidget(cw)  # What does this do?
         layout = QtGui.QGridLayout()  # Use a layout
         cw.setLayout(layout)
 
-        '''
+        """
         Create the Image and plot widgets
-        '''
+        """
         if Ndims == 1:
             imv1, imv2, imv3 = self.__setupOneD(xlabel, ylabel)
         else:
             imv1, imv2, imv3 = self.__setupTwoD(xlabel, ylabel)
 
-        '''
+        """
         Create combo boxes
-        '''
+        """
         cycle_list = QtGui.QComboBox()  # Make a combo box for selecting cycle number
         plot_list = QtGui.QComboBox()  # Make a combo box for selecting what variable to plot
         roi_list = QtGui.QComboBox()  # Choose between plotting versus voltage or step number
         part_list = QtGui.QComboBox()  # Choose the field or direction
 
         func_list = []
-        '''
+        """
         Now populate them
-        '''
+        """
         for i in range(num_of_cycles):
             cycle_list.addItem("Cycle " + str(i))
 
@@ -236,23 +256,23 @@ class BEPSwindow(QtGui.QMainWindow):
         for part in data_part_list:
             part_list.addItem(part)
 
-        glab = QtGui.QLabel('SHO Guess Parameters')
-        g0lab = QtGui.QLabel('Amp: {}'.format('-'))
-        g1lab = QtGui.QLabel('w0: {}'.format('-'))
-        g2lab = QtGui.QLabel('Q: {}'.format('-'))
-        g3lab = QtGui.QLabel('Phase: {}'.format('-'))
+        glab = QtGui.QLabel("SHO Guess Parameters")
+        g0lab = QtGui.QLabel("Amp: {}".format("-"))
+        g1lab = QtGui.QLabel("w0: {}".format("-"))
+        g2lab = QtGui.QLabel("Q: {}".format("-"))
+        g3lab = QtGui.QLabel("Phase: {}".format("-"))
 
-        rlab = QtGui.QLabel('SHO Result Parameters')
-        r0lab = QtGui.QLabel('Amp: {}'.format('-'))
-        r1lab = QtGui.QLabel('w0: {}'.format('-'))
-        r2lab = QtGui.QLabel('Q: {}'.format('-'))
-        r3lab = QtGui.QLabel('Phase: {}'.format('-'))
+        rlab = QtGui.QLabel("SHO Result Parameters")
+        r0lab = QtGui.QLabel("Amp: {}".format("-"))
+        r1lab = QtGui.QLabel("w0: {}".format("-"))
+        r2lab = QtGui.QLabel("Q: {}".format("-"))
+        r3lab = QtGui.QLabel("Phase: {}".format("-"))
 
-        '''
+        """
         Add the widgets to the layout
         
         addWidget(WidgetName, Row,Col, RowSpan,ColSpan) 
-        '''
+        """
         layout.addWidget(imv1, 0, 0, 13, 5)  # Add them at these positions
         layout.addWidget(imv2, 0, 5, 13, 5)
         layout.addWidget(imv3, 14, 0, 2, 10)
@@ -271,21 +291,21 @@ class BEPSwindow(QtGui.QMainWindow):
         layout.addWidget(r2lab, 12, 10)
         layout.addWidget(r3lab, 13, 10)
 
-        '''
+        """
         Customize the Voltage/Current vs time plot
-        '''
+        """
         imv3.setMaximumHeight(150)  # Don't want this to be too big
-        imv3.getPlotItem().setLabel('left', text=ylabel[0, 0], units=ylabel[0, 1])
-        imv3.getPlotItem().setLabel('bottom', text=xlabel[1, 0], units=xlabel[1, 1])
+        imv3.getPlotItem().setLabel("left", text=ylabel[0, 0], units=ylabel[0, 1])
+        imv3.getPlotItem().setLabel("bottom", text=xlabel[1, 0], units=xlabel[1, 1])
         imv3.getViewBox().setMouseEnabled(x=False, y=False)
-        posLine = pg.InfiniteLine(angle=90, movable=True, pen='g')
+        posLine = pg.InfiniteLine(angle=90, movable=True, pen="g")
         imv3.addItem(posLine)
         posLine.setValue(0)
         posLine.setZValue(100)
 
-        '''
+        """
         Share variables we'll need for later
-        '''
+        """
         self.ndims = Ndims
         self.imv1 = imv1
         self.imv2 = imv2
@@ -357,18 +377,18 @@ class BEPSwindow(QtGui.QMainWindow):
         imv2 = pg.PlotWidget()
         imv3 = pg.PlotWidget()
 
-        '''
+        """
         Setup all the labeling
-        '''
-        imv1.setTitle('Plot of {} vs Frequency Bin'.format(ylabel[0, 0]))
-        imv1.setLabel('left', text=ylabel[0, 0], units=ylabel[0, 1])
-        imv1.setLabel('bottom', text='Frequency Bin')
+        """
+        imv1.setTitle("Plot of {} vs Frequency Bin".format(ylabel[0, 0]))
+        imv1.setLabel("left", text=ylabel[0, 0], units=ylabel[0, 1])
+        imv1.setLabel("bottom", text="Frequency Bin")
 
-        '''
+        """
         Customize Spectra graph labels and plotting    
-        '''
-        imv2.setLabel('left', text=ylabel[0, 0], units=ylabel[0, 1])
-        imv2.setLabel('bottom', text=xlabel[0, 0], units=xlabel[0, 1])
+        """
+        imv2.setLabel("left", text=ylabel[0, 0], units=ylabel[0, 1])
+        imv2.setLabel("bottom", text=xlabel[0, 0], units=xlabel[0, 1])
 
         return imv1, imv2, imv3
 
@@ -398,12 +418,12 @@ class BEPSwindow(QtGui.QMainWindow):
         imv2 = pg.PlotWidget()
         imv3 = pg.PlotWidget()
 
-        '''
+        """
         Prevent map from being to small and add the crosshair ROI
-        '''
+        """
         imv1.setMinimumSize(500, 500)
-        plt1.setTitle('Map of {} vs Position'.format(ylabel[0, 0]))
-        roiPt = pg.CrosshairROI([0, 0], size=2, pen='b')  # Add a cross-hair ROI item
+        plt1.setTitle("Map of {} vs Position".format(ylabel[0, 0]))
+        roiPt = pg.CrosshairROI([0, 0], size=2, pen="b")  # Add a cross-hair ROI item
         imv1.addItem(roiPt)
         grad1 = imv1.ui.histogram.gradient
         #         grad1.loadPreset('thermal') #choose the default colormap from presets
@@ -411,23 +431,23 @@ class BEPSwindow(QtGui.QMainWindow):
         imv1.getView().setMouseEnabled(x=False, y=False)
         imv1.ui.menuBtn.hide()
 
-        '''
+        """
         Customize Spectra graph labels and plotting    
-        '''
-        imv2.setTitle('Loop for Position {}'.format(roiPt.pos()))
-        imv2.setLabel('left', text=ylabel[0, 0], units=ylabel[0, 1])
-        imv2.setLabel('bottom', text=xlabel[0, 0], units=xlabel[0, 1])
+        """
+        imv2.setTitle("Loop for Position {}".format(roiPt.pos()))
+        imv2.setLabel("left", text=ylabel[0, 0], units=ylabel[0, 1])
+        imv2.setLabel("bottom", text=xlabel[0, 0], units=xlabel[0, 1])
 
-        '''
+        """
         Customize ROI plot window
-        '''
+        """
         roiplt1 = imv1.getRoiPlot().getPlotItem()
-        roiplt1.setLabel('left', text=ylabel[0, 0], units=ylabel[0, 1])
-        roiplt1.setLabel('bottom', text=xlabel[0, 0], units=xlabel[0, 1])
+        roiplt1.setLabel("left", text=ylabel[0, 0], units=ylabel[0, 1])
+        roiplt1.setLabel("bottom", text=xlabel[0, 0], units=xlabel[0, 1])
 
-        '''
+        """
         Share variables unique to 2D mode
-        '''
+        """
         self.plt1 = plt1
         self.roi1 = roiplt1
         self.roiPt = roiPt
@@ -446,9 +466,9 @@ class BEPSwindow(QtGui.QMainWindow):
         else:
             self.__setDataTwoD(data_guess, data_results, xvec, data_main, freq_vec, points)
 
-        '''
+        """
         Initialize all shared selectors
-        '''
+        """
         self.data_guess = data_guess
         self.data_results = data_results
         self.data_main = data_main
@@ -503,15 +523,13 @@ class BEPSwindow(QtGui.QMainWindow):
                       added at the end to allow for plotting in step mode
         """
 
-        '''
+        """
         Plot Initial data
-        '''
+        """
         positions = np.arange(data_guess.shape[3])
-        self.plot1 = self.imv1.plot(x=positions,
-                                    y=data_guess[0, 0, 0, :, 0],
-                                    pen='k')
+        self.plot1 = self.imv1.plot(x=positions, y=data_guess[0, 0, 0, :, 0], pen="k")
         self.imv1.currentIndex = 0
-        roiPt = pg.InfiniteLine(angle=90, movable=True, pen='r')
+        roiPt = pg.InfiniteLine(angle=90, movable=True, pen="r")
         self.imv1.addItem(roiPt)
         self.roiPt = roiPt
         self.roiPt.setPos(0)
@@ -521,32 +539,30 @@ class BEPSwindow(QtGui.QMainWindow):
         self.row = int(self.point_roi[0])
         self.col = int(self.point_roi[1])
 
-        self.main_plot = pg.PlotDataItem(x=np.arange(self.num_bins),
-                                         y=self.func(data_main[0, 0, :, 0, 0]),
-                                         pen='g')
+        self.main_plot = pg.PlotDataItem(
+            x=np.arange(self.num_bins), y=self.func(data_main[0, 0, :, 0, 0]), pen="g"
+        )
         self.guess = self.__calc_sho(data_guess[0, 0, 0, 0, 0], freq_vec)
-        self.guess_plot = pg.PlotDataItem(x=np.arange(self.num_bins),
-                                          y=self.func(self.guess),
-                                          pen='k')
+        self.guess_plot = pg.PlotDataItem(
+            x=np.arange(self.num_bins), y=self.func(self.guess), pen="k"
+        )
 
         self.imv2.addItem(self.main_plot)
         self.imv2.addItem(self.guess_plot)
 
         if data_results is not None:
             self.results = self.__calc_sho(data_results[0, 0, 0, 0, 0], freq_vec)
-            self.results_plot = pg.PlotDataItem(x=np.arange(self.num_bins),
-                                                y=self.func(self.results),
-                                                pen='r')
+            self.results_plot = pg.PlotDataItem(
+                x=np.arange(self.num_bins), y=self.func(self.results), pen="r"
+            )
             self.imv2.addItem(self.results_plot)
         else:
             self.results = None
             self.results_plot = None
 
-        self.imv2.setTitle('Loop for Position {}'.format(self.point_roi))
+        self.imv2.setTitle("Loop for Position {}".format(self.point_roi))
 
-        self.imv3.plot(points, xvec[0, 0, 0, :],
-                       stepMode=True,
-                       pen='k')
+        self.imv3.plot(points, xvec[0, 0, 0, :], stepMode=True, pen="k")
         self.posLine.setBounds([points[0], points[-2]])
 
     def __setDataTwoD(self, data_mat, data_results, xvec, data_main, freq_vec, points):
@@ -589,15 +605,14 @@ class BEPSwindow(QtGui.QMainWindow):
                       added at the end to allow for plotting in step mode
         """
 
-        '''
+        """
         Plot Initial data
-        '''
-        self.imv1.setImage(data_mat['Amplitude [V]'][0, 0, :, :, :],
-                           xvals=xvec[0, 0, 0, :])
+        """
+        self.imv1.setImage(data_mat["Amplitude [V]"][0, 0, :, :, :], xvals=xvec[0, 0, 0, :])
         self.plt1.getViewBox().autoRange(padding=0.1)
-        '''
+        """
         Prevent the selection of a point from outside the domain
-        '''
+        """
         self.roiPt.maxBounds = self.imv1.getImageItem().boundingRect()
         roisize = self.roiPt.size()
         self.roiPt.maxBounds.adjust(0, 0, roisize[0] / 2, roisize[1] / 2)
@@ -607,32 +622,29 @@ class BEPSwindow(QtGui.QMainWindow):
         self.row = int(self.point_roi[0])
         self.col = int(self.point_roi[1])
 
-        self.main_plot = pg.PlotDataItem(x=np.arange(self.num_bins),
-                                         y=self.func(data_main[0, 0, 0, :, 0, 0]),
-                                         pen='g')
+        self.main_plot = pg.PlotDataItem(
+            x=np.arange(self.num_bins), y=self.func(data_main[0, 0, 0, :, 0, 0]), pen="g"
+        )
         self.guess = self.__calc_sho(data_mat[0, 0, 0, 0, 0], freq_vec)
-        self.guess_plot = pg.PlotDataItem(x=np.arange(self.num_bins),
-                                          y=self.func(self.guess),
-                                          pen='k')
+        self.guess_plot = pg.PlotDataItem(
+            x=np.arange(self.num_bins), y=self.func(self.guess), pen="k"
+        )
 
         self.imv2.addItem(self.main_plot)
         self.imv2.addItem(self.guess_plot)
 
         if data_results is not None:
             self.results = self.__calc_sho(data_results[0, 0, 0, 0, 0], freq_vec)
-            self.results_plot = pg.PlotDataItem(x=np.arange(self.num_bins),
-                                                y=self.func(self.results),
-                                                pen='r')
+            self.results_plot = pg.PlotDataItem(
+                x=np.arange(self.num_bins), y=self.func(self.results), pen="r"
+            )
             self.imv2.addItem(self.results_plot)
         else:
             self.results = None
             self.results_plot = None
 
-        self.imv3.plot(points, xvec[0, 0, 0, :],
-                       stepMode=True,
-                       pen='k')
-        self.posLine.setBounds([points[0],
-                                points[-2]])
+        self.imv3.plot(points, xvec[0, 0, 0, :], stepMode=True, pen="k")
+        self.posLine.setBounds([points[0], points[-2]])
 
         self.point_roi = self.__getROIpos()
 
@@ -652,14 +664,24 @@ class BEPSwindow(QtGui.QMainWindow):
         update functions
         """
         if self.ndims > 1:
-            self.roiPt.sigRegionChanged.connect(self.updateROICross)  # Link roi changes to update function
+            self.roiPt.sigRegionChanged.connect(
+                self.updateROICross
+            )  # Link roi changes to update function
             self.imv1.timeLine.sigPositionChanged.connect(self.updateTimeMap)
         else:
-            self.roiPt.sigPositionChanged.connect(self.updateROICross)  # Link roi changes to update function
+            self.roiPt.sigPositionChanged.connect(
+                self.updateROICross
+            )  # Link roi changes to update function
         self.posLine.sigPositionChanged.connect(self.updateTimeLine)
-        self.cycle_list.activated[str].connect(self.updateCycleList)  # Link cycle changes to update function
-        self.plot_list.activated[str].connect(self.updatePlotList)  # Link plot variable changes to update function
-        self.roi_list.activated[str].connect(self.updateROIList)  # Link ROI variable changes to update function
+        self.cycle_list.activated[str].connect(
+            self.updateCycleList
+        )  # Link cycle changes to update function
+        self.plot_list.activated[str].connect(
+            self.updatePlotList
+        )  # Link plot variable changes to update function
+        self.roi_list.activated[str].connect(
+            self.updateROIList
+        )  # Link ROI variable changes to update function
         self.part_list.activated[str].connect(self.updatePartList)
         self.guess_plot.sigPlotChanged.connect(self.updateParms)
 
@@ -670,51 +692,51 @@ class BEPSwindow(QtGui.QMainWindow):
         """
         current_frame = self.sel_frame
 
-        '''
+        """
         Get the new cycle
-        '''
+        """
         self.sel_cycle = self.cycle_list.currentIndex()
 
-        '''
+        """
         Replot everything
-        '''
+        """
         if self.ndims > 1:
-            self.imv1.setImage(self.data_guess[self.plot_name][self.sel_part, self.sel_cycle, :, :, :],
-                               xvals=self.xvec[self.sel_roi,
-                                     self.sel_part,
-                                     self.sel_cycle, :],
-                               autoHistogramRange=True)
+            self.imv1.setImage(
+                self.data_guess[self.plot_name][self.sel_part, self.sel_cycle, :, :, :],
+                xvals=self.xvec[self.sel_roi, self.sel_part, self.sel_cycle, :],
+                autoHistogramRange=True,
+            )
 
         else:
-            self.plot1.setData(y=self.data_guess[self.plot_name][self.sel_part,
-                                 self.sel_cycle,
-                                 self.sel_frame, :, 0])
+            self.plot1.setData(
+                y=self.data_guess[self.plot_name][
+                    self.sel_part, self.sel_cycle, self.sel_frame, :, 0
+                ]
+            )
 
-        self.main_plot.setData(y=self.func(self.data_main[self.sel_part,
-                                           self.sel_cycle,
-                                           self.sel_frame, :,
-                                           self.row,
-                                           self.col]))
-        self.guess = self.__calc_sho(self.data_guess[self.sel_part,
-                                                     self.sel_cycle,
-                                                     self.sel_frame,
-                                                     self.row,
-                                                     self.col],
-                                     self.freq_vec)
+        self.main_plot.setData(
+            y=self.func(
+                self.data_main[self.sel_part, self.sel_cycle, self.sel_frame, :, self.row, self.col]
+            )
+        )
+        self.guess = self.__calc_sho(
+            self.data_guess[self.sel_part, self.sel_cycle, self.sel_frame, self.row, self.col],
+            self.freq_vec,
+        )
         self.guess_plot.setData(y=self.func(self.guess))
 
         if self.results is not None:
-            self.results = self.__calc_sho(self.data_results[self.sel_part,
-                                                             self.sel_cycle,
-                                                             self.sel_frame,
-                                                             self.row,
-                                                             self.col],
-                                           self.freq_vec)
+            self.results = self.__calc_sho(
+                self.data_results[
+                    self.sel_part, self.sel_cycle, self.sel_frame, self.row, self.col
+                ],
+                self.freq_vec,
+            )
             self.results_plot.setData(y=self.func(self.results))
 
-        '''
+        """
         Set the selected frame to the current frame
-        '''
+        """
         self.sel_frame = current_frame
         if self.ndims > 1:
             self.imv1.setCurrentIndex(self.sel_frame)
@@ -726,60 +748,62 @@ class BEPSwindow(QtGui.QMainWindow):
         """
         current_frame = self.sel_frame
 
-        '''
+        """
         Get the new plot selection and update Map
-        '''
+        """
         self.sel_plot = self.plot_list.currentIndex()
         self.plot_name = str(self.plot_list.currentText())
         self.func = self.func_list[self.sel_plot]
 
         if self.ndims > 1:
-            self.imv1.setImage(self.data_guess[self.plot_name][self.sel_part,
-                               self.sel_cycle, :, :, :],
-                               xvals=self.xvec[self.sel_roi,
-                                     self.sel_part,
-                                     self.sel_cycle, :],
-                               autoHistogramRange=True)
-            self.plt1.setTitle('Map of {} vs Position'.format(self.ylabel[self.sel_plot, 0]))
+            self.imv1.setImage(
+                self.data_guess[self.plot_name][self.sel_part, self.sel_cycle, :, :, :],
+                xvals=self.xvec[self.sel_roi, self.sel_part, self.sel_cycle, :],
+                autoHistogramRange=True,
+            )
+            self.plt1.setTitle("Map of {} vs Position".format(self.ylabel[self.sel_plot, 0]))
 
-            self.roi1.setLabel('left',
-                               text=self.ylabel[self.sel_plot, 0],
-                               units=self.ylabel[self.sel_plot, 1])
+            self.roi1.setLabel(
+                "left", text=self.ylabel[self.sel_plot, 0], units=self.ylabel[self.sel_plot, 1]
+            )
         else:
-            self.plot1.setData(y=self.data_guess[self.plot_name][self.sel_part,
-                                 self.sel_cycle,
-                                 self.sel_frame, :, 0])
-            self.imv1.setTitle('Plot of {} vs {}'.format(self.ylabel[self.sel_plot, 0],
-                                                         self.xlabel[self.sel_roi, 0]))
+            self.plot1.setData(
+                y=self.data_guess[self.plot_name][
+                    self.sel_part, self.sel_cycle, self.sel_frame, :, 0
+                ]
+            )
+            self.imv1.setTitle(
+                "Plot of {} vs {}".format(
+                    self.ylabel[self.sel_plot, 0], self.xlabel[self.sel_roi, 0]
+                )
+            )
 
-        self.main_plot.setData(y=self.func(self.data_main[self.sel_part,
-                                           self.sel_cycle,
-                                           self.sel_frame, :,
-                                           self.row,
-                                           self.col]))
-        self.guess = self.__calc_sho(self.data_guess[self.sel_part,
-                                                     self.sel_cycle,
-                                                     self.sel_frame,
-                                                     self.row,
-                                                     self.col],
-                                     self.freq_vec)
+        self.main_plot.setData(
+            y=self.func(
+                self.data_main[self.sel_part, self.sel_cycle, self.sel_frame, :, self.row, self.col]
+            )
+        )
+        self.guess = self.__calc_sho(
+            self.data_guess[self.sel_part, self.sel_cycle, self.sel_frame, self.row, self.col],
+            self.freq_vec,
+        )
         self.guess_plot.setData(y=self.func(self.guess))
-        self.imv2.setLabel('left',
-                           text=self.ylabel[self.sel_plot, 0],
-                           units=self.ylabel[self.sel_plot, 1])
+        self.imv2.setLabel(
+            "left", text=self.ylabel[self.sel_plot, 0], units=self.ylabel[self.sel_plot, 1]
+        )
 
         if self.results is not None:
-            self.results = self.__calc_sho(self.data_results[self.sel_part,
-                                                             self.sel_cycle,
-                                                             self.sel_frame,
-                                                             self.row,
-                                                             self.col],
-                                           self.freq_vec)
+            self.results = self.__calc_sho(
+                self.data_results[
+                    self.sel_part, self.sel_cycle, self.sel_frame, self.row, self.col
+                ],
+                self.freq_vec,
+            )
             self.results_plot.setData(y=self.func(self.results))
 
-        '''
+        """
         Set the selected frame to the current frame
-        '''
+        """
         self.sel_frame = current_frame
         if self.ndims > 1:
             self.imv1.setCurrentIndex(self.sel_frame)
@@ -791,52 +815,49 @@ class BEPSwindow(QtGui.QMainWindow):
         """
         current_frame = self.sel_frame
 
-        '''
+        """
         Get the new choice of ROI variable from the list and update plots
-        '''
+        """
         self.sel_roi = self.roi_list.currentIndex()
 
         if self.ndims > 1:
-            self.imv1.setImage(self.data_guess[self.plot_name][self.sel_part,
-                               self.sel_cycle, :, :, :],
-                               xvals=self.xvec[self.sel_roi,
-                                     self.sel_part,
-                                     self.sel_cycle, :],
-                               autoHistogramRange=True)
+            self.imv1.setImage(
+                self.data_guess[self.plot_name][self.sel_part, self.sel_cycle, :, :, :],
+                xvals=self.xvec[self.sel_roi, self.sel_part, self.sel_cycle, :],
+                autoHistogramRange=True,
+            )
 
-            self.roi1.setLabel('bottom',
-                               text=self.xlabel[self.sel_roi, 0],
-                               units=self.xlabel[self.sel_roi, 1])
+            self.roi1.setLabel(
+                "bottom", text=self.xlabel[self.sel_roi, 0], units=self.xlabel[self.sel_roi, 1]
+            )
 
-        self.main_plot.setData(y=self.func(self.data_main[self.sel_part,
-                                           self.sel_cycle,
-                                           self.sel_frame, :,
-                                           self.row,
-                                           self.col]))
-        self.guess = self.__calc_sho(self.data_guess[self.sel_part,
-                                                     self.sel_cycle,
-                                                     self.sel_frame,
-                                                     self.row,
-                                                     self.col],
-                                     self.freq_vec)
+        self.main_plot.setData(
+            y=self.func(
+                self.data_main[self.sel_part, self.sel_cycle, self.sel_frame, :, self.row, self.col]
+            )
+        )
+        self.guess = self.__calc_sho(
+            self.data_guess[self.sel_part, self.sel_cycle, self.sel_frame, self.row, self.col],
+            self.freq_vec,
+        )
         self.guess_plot.setData(y=self.func(self.guess))
 
         if self.results is not None:
-            self.results = self.__calc_sho(self.data_results[self.sel_part,
-                                                             self.sel_cycle,
-                                                             self.sel_frame,
-                                                             self.row,
-                                                             self.col],
-                                           self.freq_vec)
+            self.results = self.__calc_sho(
+                self.data_results[
+                    self.sel_part, self.sel_cycle, self.sel_frame, self.row, self.col
+                ],
+                self.freq_vec,
+            )
             self.results_plot.setData(y=self.func(self.results))
 
-        self.imv2.setLabel('bottom',
-                           text=self.xlabel[self.sel_roi, 0],
-                           units=self.xlabel[self.sel_roi, 1])
+        self.imv2.setLabel(
+            "bottom", text=self.xlabel[self.sel_roi, 0], units=self.xlabel[self.sel_roi, 1]
+        )
 
-        '''
+        """
         Set the selected frame to the current frame
-        '''
+        """
         self.sel_frame = current_frame
         if self.ndims > 1:
             self.imv1.setCurrentIndex(self.sel_frame)
@@ -848,50 +869,49 @@ class BEPSwindow(QtGui.QMainWindow):
         """
         current_frame = self.sel_frame
 
-        '''
+        """
         Get the new part variable and update plots
         
         The part variable is the Field for DC and the direction for AC
-        '''
+        """
         self.sel_part = self.part_list.currentIndex()
 
         if self.ndims > 1:
-            self.imv1.setImage(self.data_guess[self.plot_name][self.sel_part,
-                               self.sel_cycle, :, :, :],
-                               xvals=self.xvec[self.sel_roi,
-                                     self.sel_part,
-                                     self.sel_cycle, :],
-                               autoHistogramRange=True)
+            self.imv1.setImage(
+                self.data_guess[self.plot_name][self.sel_part, self.sel_cycle, :, :, :],
+                xvals=self.xvec[self.sel_roi, self.sel_part, self.sel_cycle, :],
+                autoHistogramRange=True,
+            )
         else:
-            self.plot1.setData(y=self.data_guess[self.plot_name][self.sel_part,
-                                 self.sel_cycle,
-                                 self.sel_frame, :, 0])
+            self.plot1.setData(
+                y=self.data_guess[self.plot_name][
+                    self.sel_part, self.sel_cycle, self.sel_frame, :, 0
+                ]
+            )
 
-        self.main_plot.setData(y=self.func(self.data_main[self.sel_part,
-                                           self.sel_cycle,
-                                           self.sel_frame, :,
-                                           self.row,
-                                           self.col]))
-        self.guess = self.__calc_sho(self.data_guess[self.sel_part,
-                                                     self.sel_cycle,
-                                                     self.sel_frame,
-                                                     self.row,
-                                                     self.col],
-                                     self.freq_vec)
+        self.main_plot.setData(
+            y=self.func(
+                self.data_main[self.sel_part, self.sel_cycle, self.sel_frame, :, self.row, self.col]
+            )
+        )
+        self.guess = self.__calc_sho(
+            self.data_guess[self.sel_part, self.sel_cycle, self.sel_frame, self.row, self.col],
+            self.freq_vec,
+        )
         self.guess_plot.setData(y=self.func(self.guess))
 
         if self.results is not None:
-            self.results = self.__calc_sho(self.data_results[self.sel_part,
-                                                             self.sel_cycle,
-                                                             self.sel_frame,
-                                                             self.row,
-                                                             self.col],
-                                           self.freq_vec)
+            self.results = self.__calc_sho(
+                self.data_results[
+                    self.sel_part, self.sel_cycle, self.sel_frame, self.row, self.col
+                ],
+                self.freq_vec,
+            )
             self.results_plot.setData(y=self.func(self.results))
 
-        '''
+        """
         Set the selected frame to the current frame
-        '''
+        """
         if self.ndims > 1:
             self.sel_frame = current_frame
             self.imv1.setCurrentIndex(self.sel_frame)
@@ -906,30 +926,28 @@ class BEPSwindow(QtGui.QMainWindow):
         self.row = int(self.point_roi[0])
         self.col = int(self.point_roi[1])
 
-        self.main_plot.setData(x=np.arange(self.num_bins),
-                               y=self.func(self.data_main[self.sel_part,
-                                           self.sel_cycle,
-                                           self.sel_frame, :,
-                                           self.row,
-                                           self.col]))
-        self.guess = self.__calc_sho(self.data_guess[self.sel_part,
-                                                     self.sel_cycle,
-                                                     self.sel_frame,
-                                                     self.row,
-                                                     self.col],
-                                     self.freq_vec)
+        self.main_plot.setData(
+            x=np.arange(self.num_bins),
+            y=self.func(
+                self.data_main[self.sel_part, self.sel_cycle, self.sel_frame, :, self.row, self.col]
+            ),
+        )
+        self.guess = self.__calc_sho(
+            self.data_guess[self.sel_part, self.sel_cycle, self.sel_frame, self.row, self.col],
+            self.freq_vec,
+        )
         self.guess_plot.setData(y=self.func(self.guess))
 
         if self.results is not None:
-            self.results = self.__calc_sho(self.data_results[self.sel_part,
-                                                             self.sel_cycle,
-                                                             self.sel_frame,
-                                                             self.row,
-                                                             self.col],
-                                           self.freq_vec)
+            self.results = self.__calc_sho(
+                self.data_results[
+                    self.sel_part, self.sel_cycle, self.sel_frame, self.row, self.col
+                ],
+                self.freq_vec,
+            )
             self.results_plot.setData(y=self.func(self.results))
 
-        self.imv2.setTitle('SHO for Position {}'.format(self.point_roi))
+        self.imv2.setTitle("SHO for Position {}".format(self.point_roi))
 
     def updateTimeMap(self):
         """
@@ -950,53 +968,45 @@ class BEPSwindow(QtGui.QMainWindow):
         else:
             self.imv1.setCurrentIndex(self.sel_frame)
 
-        self.main_plot.setData(x=np.arange(self.num_bins),
-                               y=self.func(self.data_main[self.sel_part,
-                                           self.sel_cycle,
-                                           self.sel_frame, :,
-                                           self.row,
-                                           self.col]))
-        self.guess = self.__calc_sho(self.data_guess[self.sel_part,
-                                                     self.sel_cycle,
-                                                     self.sel_frame,
-                                                     self.row,
-                                                     self.col],
-                                     self.freq_vec)
+        self.main_plot.setData(
+            x=np.arange(self.num_bins),
+            y=self.func(
+                self.data_main[self.sel_part, self.sel_cycle, self.sel_frame, :, self.row, self.col]
+            ),
+        )
+        self.guess = self.__calc_sho(
+            self.data_guess[self.sel_part, self.sel_cycle, self.sel_frame, self.row, self.col],
+            self.freq_vec,
+        )
         self.guess_plot.setData(y=self.func(self.guess))
 
         if self.results is not None:
-            self.results = self.__calc_sho(self.data_results[self.sel_part,
-                                                             self.sel_cycle,
-                                                             self.sel_frame,
-                                                             self.row,
-                                                             self.col],
-                                           self.freq_vec)
+            self.results = self.__calc_sho(
+                self.data_results[
+                    self.sel_part, self.sel_cycle, self.sel_frame, self.row, self.col
+                ],
+                self.freq_vec,
+            )
             self.results_plot.setData(y=self.func(self.results))
 
     def updateParms(self):
         """
         update the values of the parameters printed to the sidebar
         """
-        gparms = self.data_guess[self.sel_part,
-                                 self.sel_cycle,
-                                 self.sel_frame,
-                                 self.row,
-                                 self.col]
-        self.glabs[0].setText('Amp: {}'.format(gparms['Amplitude [V]']))
-        self.glabs[1].setText('w0: {}'.format(gparms['Frequency [Hz]']))
-        self.glabs[2].setText('Q: {}'.format(gparms['Quality Factor']))
-        self.glabs[3].setText('Phase: {}'.format(gparms['Phase [rad]']))
+        gparms = self.data_guess[self.sel_part, self.sel_cycle, self.sel_frame, self.row, self.col]
+        self.glabs[0].setText("Amp: {}".format(gparms["Amplitude [V]"]))
+        self.glabs[1].setText("w0: {}".format(gparms["Frequency [Hz]"]))
+        self.glabs[2].setText("Q: {}".format(gparms["Quality Factor"]))
+        self.glabs[3].setText("Phase: {}".format(gparms["Phase [rad]"]))
 
         if self.data_results is not None:
-            rparms = self.data_results[self.sel_part,
-                                       self.sel_cycle,
-                                       self.sel_frame,
-                                       self.row,
-                                       self.col]
-            self.rlabs[0].setText('Amp: {}'.format(rparms['Amplitude [V]']))
-            self.rlabs[1].setText('w0: {}'.format(rparms['Frequency [Hz]']))
-            self.rlabs[2].setText('Q: {}'.format(rparms['Quality Factor']))
-            self.rlabs[3].setText('Phase: {}'.format(rparms['Phase [rad]']))
+            rparms = self.data_results[
+                self.sel_part, self.sel_cycle, self.sel_frame, self.row, self.col
+            ]
+            self.rlabs[0].setText("Amp: {}".format(rparms["Amplitude [V]"]))
+            self.rlabs[1].setText("w0: {}".format(rparms["Frequency [Hz]"]))
+            self.rlabs[2].setText("Q: {}".format(rparms["Quality Factor"]))
+            self.rlabs[3].setText("Phase: {}".format(rparms["Phase [rad]"]))
 
     @staticmethod
     def __calc_sho(p, xvec):
