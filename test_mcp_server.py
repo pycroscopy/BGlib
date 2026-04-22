@@ -10,18 +10,15 @@ import sys
 from typing import Dict, Any
 
 
-def send_request(process: subprocess.Popen, method: str, params: Dict[str, Any] = None) -> Dict[str, Any]:
+def send_request(
+    process: subprocess.Popen, method: str, params: Dict[str, Any] = None
+) -> Dict[str, Any]:
     """Send an MCP request to the server process."""
     request_id = 1
-    request = {
-        "jsonrpc": "2.0",
-        "id": request_id,
-        "method": method,
-        "params": params or {}
-    }
+    request = {"jsonrpc": "2.0", "id": request_id, "method": method, "params": params or {}}
 
     # Send request
-    process.stdin.write(json.dumps(request).encode() + b'\n')
+    process.stdin.write(json.dumps(request).encode() + b"\n")
     process.stdin.flush()
 
     # Read response
@@ -44,15 +41,18 @@ def test_server():
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=False,  # We'll handle bytes
-            cwd="/Users/rvv/Github/BGlib"
+            cwd="/Users/rvv/Github/BGlib",
         )
     except FileNotFoundError:
-        print("Error: Could not find bglib_mcp_server module. Make sure BGlib is installed with MCP support.")
+        print(
+            "Error: Could not find bglib_mcp_server module. Make sure BGlib is installed with MCP support."
+        )
         return False
 
     try:
         # Wait a bit for server to start
         import time
+
         time.sleep(1)
 
         # Test 1: List available tools
@@ -68,10 +68,9 @@ def test_server():
 
         # Test 2: Call a simple tool (get_rotation_matrix)
         print("\n2. Testing tool call (get_rotation_matrix)...")
-        response = send_request(process, "tools/call", {
-            "name": "get_rotation_matrix",
-            "arguments": {"theta": 0.0}
-        })
+        response = send_request(
+            process, "tools/call", {"name": "get_rotation_matrix", "arguments": {"theta": 0.0}}
+        )
         if "result" in response:
             print("✓ get_rotation_matrix call successful")
             print(f"Result: {response['result']}")
