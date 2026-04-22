@@ -5,7 +5,6 @@ Covers be_sho.py, be_loop.py, and be_relax_fit.py pure-function utilities.
 """
 
 import importlib.util
-import sys
 from pathlib import Path
 
 import numpy as np
