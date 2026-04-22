@@ -1,0 +1,26 @@
+BGlib.gmode.translators.gmode\_tune.GTuneTranslator
+===================================================
+
+.. currentmodule:: BGlib.gmode.translators.gmode_tune
+
+.. autoclass:: GTuneTranslator
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~GTuneTranslator.is_valid_file
+      ~GTuneTranslator.translate
+   
+   
+
+   
+   
+   

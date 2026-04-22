@@ -1,0 +1,38 @@
+BGlib.be.analysis.be\_loop\_fitter.BELoopFitter
+===============================================
+
+.. currentmodule:: BGlib.be.analysis.be_loop_fitter
+
+.. autoclass:: BELoopFitter
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~BELoopFitter.compute
+      ~BELoopFitter.do_fit
+      ~BELoopFitter.do_guess
+      ~BELoopFitter.extract_loop_parameters
+      ~BELoopFitter.set_up_fit
+      ~BELoopFitter.set_up_guess
+      ~BELoopFitter.test
+      ~BELoopFitter.use_partial_computation
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BELoopFitter.parms_dict
+   
+   

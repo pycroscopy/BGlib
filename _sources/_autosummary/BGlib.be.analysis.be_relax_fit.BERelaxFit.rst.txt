@@ -1,0 +1,33 @@
+BGlib.be.analysis.be\_relax\_fit.BERelaxFit
+===========================================
+
+.. currentmodule:: BGlib.be.analysis.be_relax_fit
+
+.. autoclass:: BERelaxFit
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~BERelaxFit.compute
+      ~BERelaxFit.test
+      ~BERelaxFit.use_partial_computation
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BERelaxFit.parms_dict
+   
+   

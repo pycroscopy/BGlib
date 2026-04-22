@@ -1,0 +1,32 @@
+BGlib.misc.translators.tr\_kpfm
+===============================
+
+.. automodule:: BGlib.misc.translators.tr_kpfm
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :nosignatures:
+   
+      TRKPFMTranslator
+   
+   
+
+   
+   
+   
+
+
+

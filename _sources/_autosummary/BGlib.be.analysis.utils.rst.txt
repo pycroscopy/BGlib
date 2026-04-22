@@ -1,0 +1,33 @@
+BGlib.be.analysis.utils
+=======================
+
+.. automodule:: BGlib.be.analysis.utils
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. autosummary::
+   :toctree:
+      :template: custom-module-template.rst
+   :recursive:
+
+   be_loop
+   be_sho
+   sidpy_sho_fitter
+   tree
+

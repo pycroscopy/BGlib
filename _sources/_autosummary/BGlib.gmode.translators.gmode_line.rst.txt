@@ -1,0 +1,32 @@
+BGlib.gmode.translators.gmode\_line
+===================================
+
+.. automodule:: BGlib.gmode.translators.gmode_line
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :nosignatures:
+   
+      GLineTranslator
+   
+   
+
+   
+   
+   
+
+
+

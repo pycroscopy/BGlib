@@ -1,0 +1,6 @@
+BGlib.be.analysis.be\_loop\_fitter.logger
+=========================================
+
+.. currentmodule:: BGlib.be.analysis.be_loop_fitter
+
+.. autodata:: logger

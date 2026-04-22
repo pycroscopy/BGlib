@@ -1,0 +1,26 @@
+BGlib.be.translators.be\_odf\_relaxation.BEodfRelaxationTranslator
+==================================================================
+
+.. currentmodule:: BGlib.be.translators.be_odf_relaxation
+
+.. autoclass:: BEodfRelaxationTranslator
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~BEodfRelaxationTranslator.is_valid_file
+      ~BEodfRelaxationTranslator.translate
+   
+   
+
+   
+   
+   

@@ -1,0 +1,33 @@
+BGlib.gmode.analysis.giv\_bayesian.GIVBayesian
+==============================================
+
+.. currentmodule:: BGlib.gmode.analysis.giv_bayesian
+
+.. autoclass:: GIVBayesian
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~GIVBayesian.compute
+      ~GIVBayesian.test
+      ~GIVBayesian.use_partial_computation
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~GIVBayesian.parms_dict
+   
+   

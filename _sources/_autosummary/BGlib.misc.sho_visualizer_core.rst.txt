@@ -1,0 +1,32 @@
+BGlib.misc.sho\_visualizer\_core
+================================
+
+.. automodule:: BGlib.misc.sho_visualizer_core
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :nosignatures:
+   
+      SHOVisualizerCore
+   
+   
+
+   
+   
+   
+
+
+

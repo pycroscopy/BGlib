@@ -1,0 +1,31 @@
+BGlib.be.analysis.BERelaxFit
+============================
+
+.. currentmodule:: BGlib.be.analysis
+
+.. autoclass:: BERelaxFit
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BERelaxFit.__init__
+      ~BERelaxFit.compute
+      ~BERelaxFit.test
+      ~BERelaxFit.use_partial_computation
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BERelaxFit.parms_dict
+   
+   

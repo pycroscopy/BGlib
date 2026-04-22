@@ -1,0 +1,6 @@
+BGlib.be.analysis.utils.be\_loop.loop\_fit\_function
+====================================================
+
+.. currentmodule:: BGlib.be.analysis.utils.be_loop
+
+.. autofunction:: loop_fit_function

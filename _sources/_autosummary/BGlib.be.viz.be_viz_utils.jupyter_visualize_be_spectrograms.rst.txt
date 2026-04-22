@@ -1,0 +1,6 @@
+BGlib.be.viz.be\_viz\_utils.jupyter\_visualize\_be\_spectrograms
+================================================================
+
+.. currentmodule:: BGlib.be.viz.be_viz_utils
+
+.. autofunction:: jupyter_visualize_be_spectrograms

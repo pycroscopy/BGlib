@@ -1,0 +1,6 @@
+BGlib.be.analysis.utils.sidpy\_sho\_fitter.SHOestimateGuess
+===========================================================
+
+.. currentmodule:: BGlib.be.analysis.utils.sidpy_sho_fitter
+
+.. autofunction:: SHOestimateGuess

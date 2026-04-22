@@ -1,0 +1,34 @@
+BGlib.misc
+==========
+
+.. automodule:: BGlib.misc
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. autosummary::
+   :toctree:
+      :template: custom-module-template.rst
+   :recursive:
+
+   bg_gui 2
+   bg_gui
+   sho_visualizer_core
+   sho_visualizer_widget
+   translators
+

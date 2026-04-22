@@ -1,0 +1,6 @@
+BGlib.be.analysis.utils.be\_sho.SHOupperBound
+=============================================
+
+.. currentmodule:: BGlib.be.analysis.utils.be_sho
+
+.. autofunction:: SHOupperBound

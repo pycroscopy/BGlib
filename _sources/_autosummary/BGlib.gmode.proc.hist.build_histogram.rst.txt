@@ -1,0 +1,6 @@
+BGlib.gmode.proc.hist.build\_histogram
+======================================
+
+.. currentmodule:: BGlib.gmode.proc.hist
+
+.. autofunction:: build_histogram

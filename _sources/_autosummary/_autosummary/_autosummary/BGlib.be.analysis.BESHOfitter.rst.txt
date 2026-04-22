@@ -1,0 +1,35 @@
+BGlib.be.analysis.BESHOfitter
+=============================
+
+.. currentmodule:: BGlib.be.analysis
+
+.. autoclass:: BESHOfitter
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BESHOfitter.__init__
+      ~BESHOfitter.compute
+      ~BESHOfitter.do_fit
+      ~BESHOfitter.do_guess
+      ~BESHOfitter.set_up_fit
+      ~BESHOfitter.set_up_guess
+      ~BESHOfitter.test
+      ~BESHOfitter.use_partial_computation
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BESHOfitter.parms_dict
+   
+   

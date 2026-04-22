@@ -1,0 +1,61 @@
+BGlib.be.translators.df\_utils.be\_utils
+========================================
+
+.. automodule:: BGlib.be.translators.df_utils.be_utils
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      createSpecVals
+      flat_parm_dict_to_nested
+      generatePlotGroups
+      generateTestSpectroscopicData
+      generate_bipolar_triangular_waveform
+      getActiveUDVSsteps
+      getDataIndicesForUDVSstep
+      getForExcitWfm
+      getIndicesforPlotGroup
+      getSliceForExcWfm
+      getSpecSliceForUDVSstep
+      getSpectroscopicParmLabel
+      infer_bipolar_triangular_fraction_phase
+      isSimpleDataset
+      maxReadPixels
+      normalizeBEresponse
+      parmsToDict
+      remove_non_exist_spec_dim_labs
+      requires_conjugate
+      reshape_mean_data
+      trimUDVS
+      visualize_plot_groups
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :nosignatures:
+   
+      BEHistogram
+   
+   
+
+   
+   
+   
+
+
+

@@ -1,0 +1,31 @@
+BGlib.misc.sho\_visualizer\_core.SHOVisualizerCore
+==================================================
+
+.. currentmodule:: BGlib.misc.sho_visualizer_core
+
+.. autoclass:: SHOVisualizerCore
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~SHOVisualizerCore.get_map_slice
+      ~SHOVisualizerCore.get_spectrum_at_point
+      ~SHOVisualizerCore.set_cycle
+      ~SHOVisualizerCore.set_dc_index
+      ~SHOVisualizerCore.set_field
+      ~SHOVisualizerCore.set_fit_param
+      ~SHOVisualizerCore.set_point
+   
+   
+
+   
+   
+   

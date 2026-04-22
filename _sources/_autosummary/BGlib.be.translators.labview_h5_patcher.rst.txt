@@ -1,0 +1,40 @@
+BGlib.be.translators.labview\_h5\_patcher
+=========================================
+
+.. automodule:: BGlib.be.translators.labview_h5_patcher
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      fix_BE_problem
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :nosignatures:
+   
+      LabViewH5Patcher
+   
+   
+
+   
+   
+   
+
+
+

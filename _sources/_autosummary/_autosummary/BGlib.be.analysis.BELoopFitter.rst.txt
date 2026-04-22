@@ -1,0 +1,36 @@
+BGlib.be.analysis.BELoopFitter
+==============================
+
+.. currentmodule:: BGlib.be.analysis
+
+.. autoclass:: BELoopFitter
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BELoopFitter.__init__
+      ~BELoopFitter.compute
+      ~BELoopFitter.do_fit
+      ~BELoopFitter.do_guess
+      ~BELoopFitter.extract_loop_parameters
+      ~BELoopFitter.set_up_fit
+      ~BELoopFitter.set_up_guess
+      ~BELoopFitter.test
+      ~BELoopFitter.use_partial_computation
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BELoopFitter.parms_dict
+   
+   

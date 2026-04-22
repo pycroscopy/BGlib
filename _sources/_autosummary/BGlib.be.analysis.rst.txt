@@ -1,0 +1,34 @@
+BGlib.be.analysis
+=================
+
+.. automodule:: BGlib.be.analysis
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. autosummary::
+   :toctree:
+      :template: custom-module-template.rst
+   :recursive:
+
+   be_loop_fitter
+   be_relax_fit
+   be_sho_fitter
+   fitter
+   utils
+

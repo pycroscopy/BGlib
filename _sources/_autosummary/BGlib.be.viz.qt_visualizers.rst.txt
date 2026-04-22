@@ -1,0 +1,32 @@
+BGlib.be.viz.qt\_visualizers
+============================
+
+.. automodule:: BGlib.be.viz.qt_visualizers
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. autosummary::
+   :toctree:
+      :template: custom-module-template.rst
+   :recursive:
+
+   io_funcs
+   plot_functions
+   sho_master
+

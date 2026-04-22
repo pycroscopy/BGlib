@@ -1,0 +1,37 @@
+BGlib.be.analysis.be\_sho\_fitter.BESHOfitter
+=============================================
+
+.. currentmodule:: BGlib.be.analysis.be_sho_fitter
+
+.. autoclass:: BESHOfitter
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~BESHOfitter.compute
+      ~BESHOfitter.do_fit
+      ~BESHOfitter.do_guess
+      ~BESHOfitter.set_up_fit
+      ~BESHOfitter.set_up_guess
+      ~BESHOfitter.test
+      ~BESHOfitter.use_partial_computation
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BESHOfitter.parms_dict
+   
+   

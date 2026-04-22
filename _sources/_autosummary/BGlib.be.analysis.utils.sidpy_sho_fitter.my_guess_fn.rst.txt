@@ -1,0 +1,6 @@
+BGlib.be.analysis.utils.sidpy\_sho\_fitter.my\_guess\_fn
+========================================================
+
+.. currentmodule:: BGlib.be.analysis.utils.sidpy_sho_fitter
+
+.. autofunction:: my_guess_fn

@@ -1,0 +1,6 @@
+BGlib.be.analysis.utils.be\_loop.calc\_switching\_coef\_vec
+===========================================================
+
+.. currentmodule:: BGlib.be.analysis.utils.be_loop
+
+.. autofunction:: calc_switching_coef_vec

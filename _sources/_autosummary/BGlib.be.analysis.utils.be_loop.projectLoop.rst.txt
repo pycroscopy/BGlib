@@ -1,0 +1,6 @@
+BGlib.be.analysis.utils.be\_loop.projectLoop
+============================================
+
+.. currentmodule:: BGlib.be.analysis.utils.be_loop
+
+.. autofunction:: projectLoop

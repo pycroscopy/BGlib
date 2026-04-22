@@ -1,0 +1,6 @@
+BGlib.be.analysis.utils.be\_loop.get\_rotation\_matrix
+======================================================
+
+.. currentmodule:: BGlib.be.analysis.utils.be_loop
+
+.. autofunction:: get_rotation_matrix

@@ -1,0 +1,851 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>&lt;no title&gt; &mdash; BGlib 0.0.6 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
+
+  
+      <script src="../../_static/documentation_options.js?v=1fd71caa"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            BGlib
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">BGlib</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">BGlib</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_autosummary/BGlib.html">BGlib</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Band Excitation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gmode/index.html">General Mode</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BGlib</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">&lt;no title&gt;</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/notebooks/be/BE_Processing_sidpy.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">matplotlib</span> widget
+<br/></pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;/Users/rvv/Github/BGlib/&#39;</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;/Users/rvv/Github/sidpy/&#39;</span><span class="p">)</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">BGlib.be</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">belib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">h5py</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sidpy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">SciFiReaders</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">BGlib.be.analysis.utils.sidpy_sho_fitter</span><span class="w"> </span><span class="kn">import</span> <span class="n">SHOestimateGuess</span><span class="p">,</span> <span class="n">SHOestimateGuess</span><span class="p">,</span> <span class="n">SHO_fit_flattened</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">load_data</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Given the path to a .h5 dataset, reads, patches and returns the BEPS dataset,</span>
+<span class="sd">    the frequency vector, and the index of the independent dimensions</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">patcher</span> <span class="o">=</span> <span class="n">belib</span><span class="o">.</span><span class="n">translators</span><span class="o">.</span><span class="n">LabViewH5Patcher</span><span class="p">()</span>
+    <span class="n">patcher</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+    <span class="n">reader</span> <span class="o">=</span> <span class="n">sr</span><span class="o">.</span><span class="n">Usid_reader</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+    <span class="n">beps_raw</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="n">freq_axis</span> <span class="o">=</span> <span class="n">beps_raw</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;Frequency (Hz)&#39;</span><span class="p">)</span>
+    <span class="n">freq_vec</span> <span class="o">=</span> <span class="n">beps_raw</span><span class="o">.</span><span class="n">_axes</span><span class="p">[</span><span class="n">freq_axis</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">all_dims</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+    <span class="n">ind_dims</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">all_dims</span><span class="p">,</span> <span class="n">freq_axis</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">beps_raw</span><span class="p">,</span> <span class="n">freq_vec</span><span class="p">,</span> <span class="n">ind_dims</span>
+<br/></pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">folder_path</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;/Users/rvv/Dropbox (ORNL)/PTO LSMO JCY/031822&#39;</span>
+<span class="n">file_name</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;60x60_0deg_0004.h5&#39;</span>
+<span class="n">path_to_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder_path</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#path_gwy = r&#39;/Users/rvv/Dropbox (ORNL)/AE Related Stuff/RL for Walls/Paper/Resubmission/12202023/PTO_110_Virgin0001.gwy&#39;</span>
+<span class="c1">#gwy_reader = sr.GwyddionReader(path_gwy)</span>
+<span class="c1">#data = gwy_reader.read()</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#fig = data[0].plot()</span>
+
+<span class="c1">#threadpoolctl version. We need to insist on version 3.2.0</span>
+<br/></pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">patcher</span> <span class="o">=</span> <span class="n">belib</span><span class="o">.</span><span class="n">translators</span><span class="o">.</span><span class="n">LabViewH5Patcher</span><span class="p">()</span>
+<span class="n">patcher</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">path_to_file</span><span class="p">)</span>
+
+<span class="n">reader</span> <span class="o">=</span> <span class="n">sr</span><span class="o">.</span><span class="n">Usid_reader</span><span class="p">(</span><span class="n">path_to_file</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/Users/rvv/Github/sidpy/sidpy/sid/translator.py:42: FutureWarning: Consider using sidpy.Reader instead of sidpy.Translator if possible and contribute your reader to ScopeReaders
+  warn(&#39;Consider using sidpy.Reader instead of sidpy.Translator if &#39;
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+File is already Pycroscopy ready.
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">data</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<table>
+    <tr>
+        <td>
+            <table style="border-collapse: collapse;">
+                <thead>
+                    <tr>
+                        <td> </td>
+                        <th> Array </th>
+                        <th> Chunk </th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    <tr>
+                        <th> Bytes </th>
+                        <td> 864.84 MiB </td>
+                        <td> 125.14 MiB </td>
+                    </tr>
+
+                    <tr>
+                        <th> Shape </th>
+                        <td> (60, 60, 123, 64, 2, 2) </td>
+                        <td> (45, 45, 45, 45, 2, 2) </td>
+                    </tr>
+                    <tr>
+                        <th> Dask graph </th>
+                        <td colspan="2"> 24 chunks in 1 graph layer </td>
+                    </tr>
+                    <tr>
+                        <th> Data type </th>
+                        <td colspan="2"> complex64 numpy.ndarray </td>
+                    </tr>
+                </tbody>
+            </table>
+        </td>
+        <td>
+        <svg width="582" height="142" style="stroke:rgb(0,0,0);stroke-width:1" >
+
+  <!-- Horizontal lines -->
+  <line x1="10" y1="0" x2="44" y2="34" style="stroke-width:2" />
+  <line x1="10" y1="43" x2="44" y2="78" />
+  <line x1="10" y1="58" x2="44" y2="92" style="stroke-width:2" />
+
+  <!-- Vertical lines -->
+  <line x1="10" y1="0" x2="10" y2="58" style="stroke-width:2" />
+  <line x1="35" y1="25" x2="35" y2="84" />
+  <line x1="44" y1="34" x2="44" y2="92" style="stroke-width:2" />
+
+  <!-- Colored Rectangle -->
+  <polygon points="10.0,0.0 44.433285509325685,34.433285509325685 44.433285509325685,92.96987087517934 10.0,58.53658536585366" style="fill:#ECB172A0;stroke-width:0"/>
+
+  <!-- Horizontal lines -->
+  <line x1="10" y1="0" x2="130" y2="0" style="stroke-width:2" />
+  <line x1="35" y1="25" x2="155" y2="25" />
+  <line x1="44" y1="34" x2="164" y2="34" style="stroke-width:2" />
+
+  <!-- Vertical lines -->
+  <line x1="10" y1="0" x2="44" y2="34" style="stroke-width:2" />
+  <line x1="53" y1="0" x2="88" y2="34" />
+  <line x1="97" y1="0" x2="132" y2="34" />
+  <line x1="130" y1="0" x2="164" y2="34" style="stroke-width:2" />
+
+  <!-- Colored Rectangle -->
+  <polygon points="10.0,0.0 130.0,0.0 164.43328550932569,34.433285509325685 44.433285509325685,34.433285509325685" style="fill:#ECB172A0;stroke-width:0"/>
+
+  <!-- Horizontal lines -->
+  <line x1="44" y1="34" x2="164" y2="34" style="stroke-width:2" />
+  <line x1="44" y1="78" x2="164" y2="78" />
+  <line x1="44" y1="92" x2="164" y2="92" style="stroke-width:2" />
+
+  <!-- Vertical lines -->
+  <line x1="44" y1="34" x2="44" y2="92" style="stroke-width:2" />
+  <line x1="88" y1="34" x2="88" y2="92" />
+  <line x1="132" y1="34" x2="132" y2="92" />
+  <line x1="164" y1="34" x2="164" y2="92" style="stroke-width:2" />
+
+  <!-- Colored Rectangle -->
+  <polygon points="44.433285509325685,34.433285509325685 164.43328550932569,34.433285509325685 164.43328550932569,92.96987087517934 44.433285509325685,92.96987087517934" style="fill:#ECB172A0;stroke-width:0"/>
+
+  <!-- Text -->
+  <text x="104.433286" y="112.969871" font-size="1.0rem" font-weight="100" text-anchor="middle" >123</text>
+  <text x="184.433286" y="63.701578" font-size="1.0rem" font-weight="100" text-anchor="middle" transform="rotate(0,184.433286,63.701578)">60</text>
+  <text x="17.216643" y="95.753228" font-size="1.0rem" font-weight="100" text-anchor="middle" transform="rotate(45,17.216643,95.753228)">60</text>
+
+
+  <!-- Horizontal lines -->
+  <line x1="234" y1="0" x2="270" y2="36" style="stroke-width:2" />
+  <line x1="234" y1="27" x2="270" y2="64" style="stroke-width:2" />
+
+  <!-- Vertical lines -->
+  <line x1="234" y1="0" x2="234" y2="27" style="stroke-width:2" />
+  <line x1="259" y1="25" x2="259" y2="53" />
+  <line x1="270" y1="36" x2="270" y2="64" style="stroke-width:2" />
+
+  <!-- Colored Rectangle -->
+  <polygon points="234.0,0.0 270.7288378766141,36.72883787661406 270.7288378766141,64.6182194826501 234.0,27.88938160603605" style="fill:#ECB172A0;stroke-width:0"/>
+
+  <!-- Horizontal lines -->
+  <line x1="234" y1="0" x2="261" y2="0" style="stroke-width:2" />
+  <line x1="259" y1="25" x2="287" y2="25" />
+  <line x1="270" y1="36" x2="298" y2="36" style="stroke-width:2" />
+
+  <!-- Vertical lines -->
+  <line x1="234" y1="0" x2="270" y2="36" style="stroke-width:2" />
+  <line x1="261" y1="0" x2="298" y2="36" style="stroke-width:2" />
+
+  <!-- Colored Rectangle -->
+  <polygon points="234.0,0.0 261.88938160603607,0.0 298.61821948265015,36.72883787661406 270.7288378766141,36.72883787661406" style="fill:#ECB172A0;stroke-width:0"/>
+
+  <!-- Horizontal lines -->
+  <line x1="270" y1="36" x2="298" y2="36" style="stroke-width:2" />
+  <line x1="270" y1="64" x2="298" y2="64" style="stroke-width:2" />
+
+  <!-- Vertical lines -->
+  <line x1="270" y1="36" x2="270" y2="64" style="stroke-width:2" />
+  <line x1="298" y1="36" x2="298" y2="64" style="stroke-width:2" />
+
+  <!-- Colored Rectangle -->
+  <polygon points="270.7288378766141,36.72883787661406 298.61821948265015,36.72883787661406 298.61821948265015,64.6182194826501 270.7288378766141,64.6182194826501" style="fill:#ECB172A0;stroke-width:0"/>
+
+  <!-- Text -->
+  <text x="284.673529" y="84.618219" font-size="1.0rem" font-weight="100" text-anchor="middle" >2</text>
+  <text x="318.618219" y="50.673529" font-size="1.0rem" font-weight="100" text-anchor="middle" transform="rotate(0,318.618219,50.673529)">2</text>
+  <text x="242.364419" y="66.253801" font-size="1.0rem" font-weight="100" text-anchor="middle" transform="rotate(45,242.364419,66.253801)">64</text>
+</svg>
+        </td>
+    </tr>
+</table></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">beps_raw</span> <span class="o">=</span> <span class="n">data</span>
+
+<span class="n">freq_axis</span> <span class="o">=</span> <span class="n">beps_raw</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;Frequency (Hz)&#39;</span><span class="p">)</span>
+<span class="n">freq_vec</span> <span class="o">=</span> <span class="n">beps_raw</span><span class="o">.</span><span class="n">_axes</span><span class="p">[</span><span class="n">freq_axis</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+<span class="n">all_dims</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+<span class="n">ind_dims</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">all_dims</span><span class="p">,</span> <span class="n">freq_axis</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">ind_dims</span><span class="p">,</span> <span class="n">freq_vec</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<br/></pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[0 1 3 4 5] (123,)
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">lb</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1E-6</span><span class="p">,</span> <span class="n">freq_vec</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="mi">50</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">]</span>
+<span class="n">ub</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1E-3</span><span class="p">,</span> <span class="n">freq_vec</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">]</span>
+<span class="n">beps_small</span> <span class="o">=</span> <span class="n">beps_raw</span><span class="p">[:</span><span class="mi">5</span><span class="p">,</span> <span class="p">:</span><span class="mi">5</span><span class="p">,</span> <span class="p">:]</span>
+
+<span class="n">fitter</span> <span class="o">=</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">proc</span><span class="o">.</span><span class="n">fitter</span><span class="o">.</span><span class="n">SidFitter</span><span class="p">(</span><span class="n">beps_small</span><span class="p">,</span> <span class="n">SHO_fit_flattened</span><span class="p">,</span><span class="n">num_workers</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+                                     <span class="n">guess_fn</span> <span class="o">=</span> <span class="n">SHOestimateGuess</span><span class="p">,</span><span class="n">ind_dims</span><span class="o">=</span><span class="n">ind_dims</span><span class="p">,</span>
+                           <span class="n">threads</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">return_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">return_fit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">return_std</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                           <span class="n">km_guess</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">num_fit_parms</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="n">n_clus</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span>
+<br/></pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Setting Ind_dims from given values from user
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fitter</span><span class="o">.</span><span class="n">do_guess</span><span class="p">()</span>
+<span class="c1">#fit_dset = fitter.do_fit(bounds = (lb,ub))</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">output</span> <span class="o">=</span> <span class="n">fitter</span><span class="o">.</span><span class="n">do_fit</span><span class="p">(</span><span class="n">bounds</span> <span class="o">=</span> <span class="p">(</span><span class="n">lb</span><span class="p">,</span><span class="n">ub</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Warning: complex dataset detected. For Kmeans priors, we will treat real part only
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/Users/rvv/pycroscopy_env/lib/python3.12/site-packages/distributed/client.py:3371: UserWarning: Sending large graph of size 864.85 MiB.
+This may cause some slowdown.
+Consider loading the data with Dask directly
+ or using futures or delayed objects to embed the data into the graph without repetition.
+See also https://docs.dask.org/en/stable/best-practices.html#load-data-with-dask for more information.
+  warnings.warn(
+/Users/rvv/pycroscopy_env/lib/python3.12/site-packages/distributed/client.py:3371: UserWarning: Sending large graph of size 864.85 MiB.
+This may cause some slowdown.
+Consider loading the data with Dask directly
+ or using futures or delayed objects to embed the data into the graph without repetition.
+See also https://docs.dask.org/en/stable/best-practices.html#load-data-with-dask for more information.
+  warnings.warn(
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+---Finished KMeans, onto fiting each KM Center---
+Fitting center 0
+Fitting center 1
+Fitting center 2
+Fitting center 3
+Fitting center 4
+Shapes of output of fitting function is 246 and original data is 123                   Reshaping output dataset. You are responsible for reshaping
+using generic parameters for dimension  0
+using generic parameters for dimension  1
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/Users/rvv/Github/sidpy/sidpy/base/num_utils.py:54: RuntimeWarning: invalid value encountered in divide
+  if var / step_avg &lt; tol:
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#Let&#39;s check the fitted dataset.</span>
+<span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data_type</span> <span class="o">=</span> <span class="s1">&#39;spectral_image&#39;</span>
+
+<span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_axes</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{0: X:  X (nm) of size (5,),
+ 1: Y:  Y (nm) of size (5,),
+ 2: DC_Offset:  DC_Offset (V) of size (64,),
+ 3: Field:  Field (generic) of size (2,),
+ 4: Cycle:  Cycle (generic) of size (2,),
+ 5: fit_parms:  fit_parameters (a.u.) of size (4,)}
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">address</span> <span class="o">=</span> <span class="n">fitter</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">dashboard_link</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">address</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+http://127.0.0.1:8787/status
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">interact</span><span class="p">,</span> <span class="n">Dropdown</span><span class="p">,</span> <span class="n">FloatSlider</span><span class="p">,</span> <span class="n">VBox</span><span class="p">,</span> <span class="n">HBox</span><span class="p">,</span> <span class="n">Output</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.colors</span><span class="w"> </span><span class="kn">import</span> <span class="n">Normalize</span>
+
+<span class="c1"># ==============================================</span>
+<span class="c1"># Example synthetic dataset</span>
+<span class="c1"># ==============================================</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="c1"># Axes</span>
+<span class="n">X_vals</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+<span class="n">Y_vals</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+<span class="n">DC_vals</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_axes</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+<span class="n">field_vals</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_axes</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+<span class="n">cycle_vals</span>  <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_axes</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+<span class="n">fit_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Amplitude&#39;</span><span class="p">,</span> <span class="s1">&#39;Resonant Frequency&#39;</span><span class="p">,</span> <span class="s1">&#39;Quality Factor&#39;</span><span class="p">,</span> <span class="s1">&#39;Phase&#39;</span><span class="p">]</span> <span class="c1">#need to add into the fit labels</span>
+
+<span class="c1"># ==============================================</span>
+<span class="c1"># Plotting functions</span>
+<span class="c1"># ==============================================</span>
+<span class="c1"># Shared state</span>
+<span class="n">selected_point</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>  <span class="c1"># clicked (X,Y) index</span>
+
+<span class="c1"># Output areas for dynamic updates</span>
+<span class="n">out_left</span> <span class="o">=</span> <span class="n">Output</span><span class="p">()</span>
+<span class="n">out_right</span> <span class="o">=</span> <span class="n">Output</span><span class="p">()</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_visualizer</span><span class="p">(</span><span class="n">dc_index</span><span class="p">,</span> <span class="n">field_index</span><span class="p">,</span> <span class="n">cycle_index</span><span class="p">,</span> <span class="n">fit_index</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Main function to update the plots.&quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">out_left</span><span class="p">:</span>
+        <span class="n">out_left</span><span class="o">.</span><span class="n">clear_output</span><span class="p">(</span><span class="n">wait</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Extract 2D slice for current DC_Offset</span>
+        <span class="n">slice_2d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">dc_index</span><span class="p">,</span> <span class="n">field_index</span><span class="p">,</span> <span class="n">cycle_index</span><span class="p">,</span> <span class="n">fit_index</span><span class="p">])</span>
+
+        <span class="c1"># Create figure</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mf">4.5</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span>
+                               <span class="n">gridspec_kw</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;height_ratios&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">]})</span>
+
+        <span class="c1"># --- Top: Heatmap ---</span>
+        <span class="n">im</span> <span class="o">=</span> <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">slice_2d</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s1">&#39;lower&#39;</span><span class="p">,</span>
+                          <span class="n">extent</span><span class="o">=</span><span class="p">[</span><span class="n">X_vals</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">X_vals</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="n">Y_vals</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">Y_vals</span><span class="o">.</span><span class="n">max</span><span class="p">()],</span>
+                          <span class="n">aspect</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;viridis&#39;</span><span class="p">,</span>
+                          <span class="n">norm</span><span class="o">=</span><span class="n">Normalize</span><span class="p">(</span><span class="n">vmin</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">slice_2d</span><span class="p">),</span> <span class="n">vmax</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">slice_2d</span><span class="p">)))</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">fit_labels</span><span class="p">[</span><span class="n">fit_index</span><span class="p">]</span><span class="si">}</span><span class="s2"> at DC = </span><span class="si">{</span><span class="n">DC_vals</span><span class="p">[</span><span class="n">dc_index</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> V&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;X (nm)&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Y (nm)&quot;</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="n">fit_labels</span><span class="p">[</span><span class="n">fit_index</span><span class="p">])</span>
+
+        <span class="c1"># Add a marker for the selected point</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">X_vals</span><span class="p">[</span><span class="n">selected_point</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]],</span> <span class="n">Y_vals</span><span class="p">[</span><span class="n">selected_point</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]],</span>
+                      <span class="n">color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
+
+        <span class="c1"># --- Bottom: DC waveform ---</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">DC_vals</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;DC Waveform&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">dc_index</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Index&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Voltage (V)&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;DC Offset Waveform&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+
+        <span class="c1"># Capture clicks on the heatmap</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">onclick</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">inaxes</span> <span class="o">==</span> <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="c1"># Find nearest (X,Y) index</span>
+                <span class="n">x_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">X_vals</span> <span class="o">-</span> <span class="n">event</span><span class="o">.</span><span class="n">xdata</span><span class="p">)</span><span class="o">.</span><span class="n">argmin</span><span class="p">()</span>
+                <span class="n">y_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">Y_vals</span> <span class="o">-</span> <span class="n">event</span><span class="o">.</span><span class="n">ydata</span><span class="p">)</span><span class="o">.</span><span class="n">argmin</span><span class="p">()</span>
+                <span class="n">selected_point</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">x_idx</span>
+                <span class="n">selected_point</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">y_idx</span>
+                <span class="c1"># Update right-hand plot</span>
+                <span class="n">update_right_plot</span><span class="p">(</span><span class="n">field_index</span><span class="p">,</span> <span class="n">cycle_index</span><span class="p">,</span> <span class="n">fit_index</span><span class="p">)</span>
+                <span class="n">plot_visualizer</span><span class="p">(</span><span class="n">dc_index</span><span class="p">,</span> <span class="n">field_index</span><span class="p">,</span> <span class="n">cycle_index</span><span class="p">,</span> <span class="n">fit_index</span><span class="p">)</span>
+
+        <span class="n">cid</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">mpl_connect</span><span class="p">(</span><span class="s1">&#39;button_press_event&#39;</span><span class="p">,</span> <span class="n">onclick</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="c1"># Update the right plot initially</span>
+    <span class="n">update_right_plot</span><span class="p">(</span><span class="n">field_index</span><span class="p">,</span> <span class="n">cycle_index</span><span class="p">,</span> <span class="n">fit_index</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">update_right_plot</span><span class="p">(</span><span class="n">field_index</span><span class="p">,</span> <span class="n">cycle_index</span><span class="p">,</span> <span class="n">fit_index</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Plot response vs DC_Offset for selected (X,Y) point.&quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">out_right</span><span class="p">:</span>
+        <span class="n">out_right</span><span class="o">.</span><span class="n">clear_output</span><span class="p">(</span><span class="n">wait</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">x_idx</span><span class="p">,</span> <span class="n">y_idx</span> <span class="o">=</span> <span class="n">selected_point</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">],</span> <span class="n">selected_point</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">x_idx</span><span class="p">,</span> <span class="n">y_idx</span><span class="p">,</span> <span class="p">:,</span> <span class="n">field_index</span><span class="p">,</span> <span class="n">cycle_index</span><span class="p">,</span> <span class="n">fit_index</span><span class="p">]</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">DC_vals</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Response vs DC Offset at (X=</span><span class="si">{</span><span class="n">X_vals</span><span class="p">[</span><span class="n">x_idx</span><span class="p">]</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">, Y=</span><span class="si">{</span><span class="n">Y_vals</span><span class="p">[</span><span class="n">y_idx</span><span class="p">]</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;DC Offset (V)&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="n">fit_labels</span><span class="p">[</span><span class="n">fit_index</span><span class="p">])</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="c1"># ==============================================</span>
+<span class="c1"># Widgets</span>
+<span class="c1"># ==============================================</span>
+<span class="n">field_dropdown</span> <span class="o">=</span> <span class="n">Dropdown</span><span class="p">(</span><span class="n">options</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;On-Field&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),(</span><span class="s1">&#39;Off-Field&#39;</span><span class="p">,</span><span class="mi">1</span><span class="p">)],</span> <span class="n">value</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s1">&#39;Field:&#39;</span><span class="p">)</span>
+<span class="n">cycle_dropdown</span> <span class="o">=</span> <span class="n">Dropdown</span><span class="p">(</span><span class="n">options</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;First Cycle&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),(</span><span class="s1">&#39;Second Cycle&#39;</span><span class="p">,</span><span class="mi">1</span><span class="p">)],</span> <span class="n">value</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s1">&#39;Cycle:&#39;</span><span class="p">)</span>
+<span class="n">fit_dropdown</span> <span class="o">=</span> <span class="n">Dropdown</span><span class="p">(</span><span class="n">options</span><span class="o">=</span><span class="p">[(</span><span class="n">name</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">fit_labels</span><span class="p">)],</span> <span class="n">value</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s1">&#39;Fit:&#39;</span><span class="p">)</span>
+
+<span class="n">dc_slider</span> <span class="o">=</span> <span class="n">FloatSlider</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">DC_vals</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+                        <span class="n">step</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">description</span><span class="o">=</span><span class="s1">&#39;DC Step&#39;</span><span class="p">,</span> <span class="n">continuous_update</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="c1"># Wrapper to convert voltage to index</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="n">dc_value</span><span class="p">,</span> <span class="n">field_value</span><span class="p">,</span> <span class="n">cycle_value</span><span class="p">,</span> <span class="n">fit_value</span><span class="p">):</span>
+    <span class="n">dc_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">dc_value</span><span class="p">)</span>
+    <span class="n">cycle_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">cycle_value</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
+    <span class="n">plot_visualizer</span><span class="p">(</span><span class="n">dc_index</span><span class="p">,</span> <span class="n">field_value</span><span class="p">,</span> <span class="n">cycle_index</span><span class="p">,</span> <span class="n">fit_value</span><span class="p">)</span>
+
+<span class="c1"># ==============================================</span>
+<span class="c1"># Layout</span>
+<span class="c1"># ==============================================</span>
+<span class="n">controls</span> <span class="o">=</span> <span class="n">VBox</span><span class="p">([</span><span class="n">dc_slider</span><span class="p">,</span> <span class="n">field_dropdown</span><span class="p">,</span> <span class="n">cycle_dropdown</span><span class="p">,</span> <span class="n">fit_dropdown</span><span class="p">])</span>
+
+<span class="c1"># Left side narrower, right side wider</span>
+<span class="n">layout</span> <span class="o">=</span> <span class="n">HBox</span><span class="p">([</span>
+    <span class="n">VBox</span><span class="p">([</span> <span class="n">out_left</span><span class="p">],</span> <span class="n">layout</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;width&#39;</span><span class="p">:</span> <span class="s1">&#39;45%&#39;</span><span class="p">}),</span>
+    <span class="n">VBox</span><span class="p">([</span><span class="n">out_right</span><span class="p">,</span> <span class="n">controls</span><span class="p">],</span> <span class="n">layout</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;width&#39;</span><span class="p">:</span> <span class="s1">&#39;55%&#39;</span><span class="p">})</span>
+<span class="p">])</span>
+
+<span class="c1"># Initialize visualization</span>
+<span class="n">update</span><span class="p">(</span><span class="n">dc_slider</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">field_dropdown</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">cycle_dropdown</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">fit_dropdown</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+<span class="c1"># Display</span>
+<span class="n">display</span><span class="p">(</span><span class="n">layout</span><span class="p">)</span>
+
+<span class="c1"># Link updates</span>
+<span class="n">dc_slider</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="k">lambda</span> <span class="n">change</span><span class="p">:</span> <span class="n">update</span><span class="p">(</span><span class="n">dc_slider</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">field_dropdown</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">cycle_dropdown</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">fit_dropdown</span><span class="o">.</span><span class="n">value</span><span class="p">),</span> <span class="n">names</span><span class="o">=</span><span class="s1">&#39;value&#39;</span><span class="p">)</span>
+<span class="n">field_dropdown</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="k">lambda</span> <span class="n">change</span><span class="p">:</span> <span class="n">update</span><span class="p">(</span><span class="n">dc_slider</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">field_dropdown</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">cycle_dropdown</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">fit_dropdown</span><span class="o">.</span><span class="n">value</span><span class="p">),</span> <span class="n">names</span><span class="o">=</span><span class="s1">&#39;value&#39;</span><span class="p">)</span>
+<span class="n">cycle_dropdown</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="k">lambda</span> <span class="n">change</span><span class="p">:</span> <span class="n">update</span><span class="p">(</span><span class="n">dc_slider</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">field_dropdown</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">cycle_dropdown</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">fit_dropdown</span><span class="o">.</span><span class="n">value</span><span class="p">),</span> <span class="n">names</span><span class="o">=</span><span class="s1">&#39;value&#39;</span><span class="p">)</span>
+<span class="n">fit_dropdown</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="k">lambda</span> <span class="n">change</span><span class="p">:</span> <span class="n">update</span><span class="p">(</span><span class="n">dc_slider</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">field_dropdown</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">cycle_dropdown</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">fit_dropdown</span><span class="o">.</span><span class="n">value</span><span class="p">),</span> <span class="n">names</span><span class="o">=</span><span class="s1">&#39;value&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "2d2efed20806492db2bb444defb0b723", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(5, 5, 64, 2, 2, 4)
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_axes</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[&lt;matplotlib.lines.Line2D at 0x13bb800e0&gt;]
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "803243fd92da42b7bc59ad46653be3a4", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[60]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="p">[(</span><span class="n">name</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">fit_labels</span><span class="p">)]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[60]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[(&#39;Amplitude&#39;, 0),
+ (&#39;Resonant Frequency&#39;, 1),
+ (&#39;Quality Factor&#39;, 2),
+ (&#39;Phase&#39;, 3)]
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">THis visualizer  works for BELIne data. Just input a BEline sidpy dataset and an SHO fit dataset from sidpy fitter</span>
+<span class="sd">Some things need work</span>
+<span class="sd">Get X,Y units from sidpy dataset</span>
+<span class="sd">Plot a scale bar and add a checkbox for whether you want it</span>
+<span class="sd">Add export plot button</span>
+<span class="sd">Make a simple viz for the plot parameters only, and enable figures to be output.</span>
+<span class="sd">Get the frequency vector from the sidpy dataset</span>
+<span class="sd">Then, start work on a BEPS visualizer.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="o">%</span><span class="k">matplotlib</span> notebook
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mpl_toolkits.mplot3d</span><span class="w"> </span><span class="kn">import</span> <span class="n">Axes3D</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">interact</span><span class="p">,</span> <span class="n">widgets</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">InteractiveVisualizer</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">raw_data</span><span class="p">,</span> <span class="n">fit_data</span><span class="p">,</span> <span class="n">freq_vec</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">raw_data</span> <span class="o">=</span> <span class="n">raw_data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_data</span> <span class="o">=</span> <span class="n">fit_data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">freq_vec</span> <span class="o">=</span> <span class="n">freq_vec</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ax1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ax2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ax3</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">freq_slice</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># Connect the button press event handler to the 2D image plot</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">mpl_connect</span><span class="p">(</span><span class="s1">&#39;button_press_event&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_click</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">freq_slice_slider</span> <span class="o">=</span> <span class="n">widgets</span><span class="o">.</span><span class="n">IntSlider</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">freq_vec</span><span class="p">),</span> <span class="n">value</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s1">&#39;Freq Slice:&#39;</span><span class="p">)</span>
+        <span class="n">interact</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">update_plots</span><span class="p">,</span> <span class="n">freq_slice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">freq_slice_slider</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">widgets</span><span class="o">.</span><span class="n">fixed</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">y</span><span class="o">=</span><span class="n">widgets</span><span class="o">.</span><span class="n">fixed</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_plots</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">freq_slice</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">on_click</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">inaxes</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">ax1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">xdata</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">ydata</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_plots</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">freq_slice</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_plots</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">freq_slice</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">freq_slice</span> <span class="o">=</span> <span class="n">freq_slice</span>
+        <span class="c1"># Plot the slice of the raw data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax1</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax1</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">raw_data</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">freq_slice</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax1</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Raw Data&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax1</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;X&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax1</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Y&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax1</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">Rectangle</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="o">-</span><span class="mf">0.5</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">))</span>
+
+
+        <span class="n">amp_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">raw_data</span><span class="p">[</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,:])</span>
+        <span class="n">phase_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">raw_data</span><span class="p">[</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,:])</span>
+
+        <span class="n">fit_parms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_data</span><span class="p">[</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,:]</span>
+
+        <span class="n">sho_fit</span> <span class="o">=</span> <span class="n">SHO_fit_flattened</span><span class="p">(</span><span class="n">freq_vec</span><span class="p">,</span> <span class="o">*</span><span class="n">fit_parms</span><span class="p">)</span>
+
+        <span class="n">sho_fit_complex</span> <span class="o">=</span> <span class="n">sho_fit</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">sho_fit</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">sho_fit</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">sho_fit</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span> <span class="p">:]</span>
+        <span class="n">amp_fit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">sho_fit_complex</span><span class="p">)</span>
+        <span class="n">phase_fit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">sho_fit_complex</span><span class="p">)</span>
+
+        <span class="c1"># Plot the spectrum at the selected X, Y position from raw data and fit data</span>
+        <span class="c1">#Plot amplitude</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax2</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">freq_vec</span><span class="p">,</span> <span class="n">amp_data</span><span class="p">,</span><span class="s1">&#39;ro&#39;</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;Raw Data&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">freq_vec</span><span class="p">,</span> <span class="n">amp_fit</span><span class="p">,</span><span class="s1">&#39;r-&#39;</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;Fit&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax2</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Amplitude&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax2</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Frequency&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax2</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Amplitude (a.u.)&#39;</span><span class="p">)</span>
+
+        <span class="c1">#Plot phase</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax3</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax3</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">freq_vec</span><span class="p">,</span> <span class="n">phase_data</span><span class="p">,</span><span class="s1">&#39;ro&#39;</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;Raw Data&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax3</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">freq_vec</span><span class="p">,</span> <span class="n">phase_fit</span><span class="p">,</span><span class="s1">&#39;r-&#39;</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;Fit&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax3</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Phase&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax3</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Frequency&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax3</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Amplitude (a.u.)&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Update the figure</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="c1"># Example usage</span>
+<span class="c1"># Assume raw_data and fit_data are your input matrices</span>
+<span class="n">raw_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">beline_sidpy</span><span class="p">)</span>  <span class="c1"># Replace this with your actual raw data</span>
+<span class="n">fit_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">fit_results</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>  <span class="c1"># Replace this with your actual fit data</span>
+
+<span class="c1"># Instantiate the visualizer</span>
+<span class="n">visualizer</span> <span class="o">=</span> <span class="n">InteractiveVisualizer</span><span class="p">(</span><span class="n">raw_data</span><span class="p">,</span> <span class="n">fit_data</span><span class="p">,</span> <span class="n">freq_vec</span><span class="p">)</span>
+<br/><br/></pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[14]</span><span class="ansi-green-fg">, line 88</span>
+<span class="ansi-green-fg">     85</span>         <span style="color: rgb(0,135,0)">self</span>.fig.tight_layout()
+<span class="ansi-green-fg">     86</span> <span style="color: rgb(95,135,135)"># Example usage</span>
+<span class="ansi-green-fg">     87</span> <span style="color: rgb(95,135,135)"># Assume raw_data and fit_data are your input matrices</span>
+<span class="ansi-green-fg">---&gt; </span><span class="ansi-green-fg">88</span> raw_data = np.array(<span class="ansi-yellow-bg">beline_sidpy</span>)  <span style="color: rgb(95,135,135)"># Replace this with your actual raw data</span>
+<span class="ansi-green-fg">     89</span> fit_data = np.array(fit_results[<span class="ansi-green-fg">0</span>])  <span style="color: rgb(95,135,135)"># Replace this with your actual fit data</span>
+<span class="ansi-green-fg">     91</span> <span style="color: rgb(95,135,135)"># Instantiate the visualizer</span>
+
+<span class="ansi-red-fg">NameError</span>: name &#39;beline_sidpy&#39; is not defined
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Pycroscopy contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

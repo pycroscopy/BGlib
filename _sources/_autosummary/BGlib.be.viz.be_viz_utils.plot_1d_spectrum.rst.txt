@@ -1,0 +1,6 @@
+BGlib.be.viz.be\_viz\_utils.plot\_1d\_spectrum
+==============================================
+
+.. currentmodule:: BGlib.be.viz.be_viz_utils
+
+.. autofunction:: plot_1d_spectrum

@@ -1,0 +1,6 @@
+BGlib.be.analysis.utils.sidpy\_sho\_fitter.SHO\_fit\_abs
+========================================================
+
+.. currentmodule:: BGlib.be.analysis.utils.sidpy_sho_fitter
+
+.. autofunction:: SHO_fit_abs

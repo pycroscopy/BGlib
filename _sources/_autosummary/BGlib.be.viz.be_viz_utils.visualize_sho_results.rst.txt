@@ -1,0 +1,6 @@
+BGlib.be.viz.be\_viz\_utils.visualize\_sho\_results
+===================================================
+
+.. currentmodule:: BGlib.be.viz.be_viz_utils
+
+.. autofunction:: visualize_sho_results
