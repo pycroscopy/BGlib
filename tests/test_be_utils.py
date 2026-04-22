@@ -14,11 +14,13 @@ from numpy.testing import assert_allclose
 # Import utility modules directly to avoid translator chain that requires xlrd.
 _root = Path(__file__).parent.parent
 
+
 def _load(rel_path):
     spec = importlib.util.spec_from_file_location(rel_path, _root / rel_path)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
+
 
 _be_sho = _load("BGlib/be/analysis/utils/be_sho.py")
 _be_loop = _load("BGlib/be/analysis/utils/be_loop.py")
@@ -48,6 +50,7 @@ fit_exp_curve = _be_relax.fit_exp_curve
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_sho_response(A=100.0, w0=100_000.0, Q=100.0, phi=0.0, n_pts=64):
     """Return (w_vec, resp_vec) for a synthetic SHO."""
     w_vec = np.linspace(0.8 * w0, 1.2 * w0, n_pts)
@@ -66,6 +69,7 @@ def _make_synthetic_loop(n_pts=100):
 # ===========================================================================
 # SHOfunc
 # ===========================================================================
+
 
 class TestSHOfunc:
     def test_returns_complex_array(self):
@@ -110,6 +114,7 @@ class TestSHOfunc:
 # SHOfastGuess
 # ===========================================================================
 
+
 class TestSHOfastGuess:
     def test_returns_four_element_array(self):
         w_vec, resp = _make_sho_response()
@@ -133,6 +138,7 @@ class TestSHOfastGuess:
 # ===========================================================================
 # SHOestimateGuess
 # ===========================================================================
+
 
 class TestSHOestimateGuess:
     def test_returns_four_element_array(self):
@@ -175,6 +181,7 @@ class TestSHOestimateGuess:
 # SHOlowerBound / SHOupperBound
 # ===========================================================================
 
+
 class TestSHOBounds:
     def test_lower_bound_shape(self):
         w_vec = np.linspace(1e5, 2e5, 50)
@@ -209,6 +216,7 @@ class TestSHOBounds:
 # get_rotation_matrix
 # ===========================================================================
 
+
 class TestGetRotationMatrix:
     def test_identity_at_zero(self):
         R = get_rotation_matrix(0.0)
@@ -242,6 +250,7 @@ class TestGetRotationMatrix:
 # ===========================================================================
 # calculate_loop_centroid
 # ===========================================================================
+
 
 class TestCalculateLoopCentroid:
     def _unit_square(self):
@@ -289,6 +298,7 @@ class TestCalculateLoopCentroid:
 # loop_fit_function
 # ===========================================================================
 
+
 class TestLoopFitFunction:
     def test_output_length_matches_input(self):
         vdc, pr_vec, coef_vec = _make_synthetic_loop(100)
@@ -330,21 +340,28 @@ class TestLoopFitFunction:
 # calc_switching_coef_vec
 # ===========================================================================
 
+
 class TestCalcSwitchingCoefVec:
     def _make_coef_array(self, n=5):
         rng = np.random.default_rng(42)
         coef = rng.uniform(0.5, 3.0, size=(n, 9))
-        coef[:, 2] = -2.0   # a2: negative switching voltage
-        coef[:, 3] = 2.0    # a3: positive switching voltage
+        coef[:, 2] = -2.0  # a2: negative switching voltage
+        coef[:, 3] = 2.0  # a3: positive switching voltage
         return coef
 
     def test_output_structured_array_fields(self):
         coef = self._make_coef_array()
         result = calc_switching_coef_vec(coef, 0.97)
         expected_fields = {
-            "V+", "V-", "Imprint", "R+", "R-",
-            "Switchable Polarization", "Work of Switching",
-            "Nucleation Bias 1", "Nucleation Bias 2",
+            "V+",
+            "V-",
+            "Imprint",
+            "R+",
+            "R-",
+            "Switchable Polarization",
+            "Work of Switching",
+            "Nucleation Bias 1",
+            "Nucleation Bias 2",
         }
         assert set(result.dtype.names) == expected_fields
 
@@ -382,6 +399,7 @@ class TestCalcSwitchingCoefVec:
 # generate_guess
 # ===========================================================================
 
+
 class TestGenerateGuess:
     def test_returns_nine_parameters(self):
         vdc, pr_vec, _ = _make_synthetic_loop(100)
@@ -416,6 +434,7 @@ class TestGenerateGuess:
 # ===========================================================================
 # fit_loop
 # ===========================================================================
+
 
 class TestFitLoop:
     def test_returns_three_outputs(self):
@@ -460,6 +479,7 @@ class TestFitLoop:
 # ===========================================================================
 # be_relax_fit pure functions
 # ===========================================================================
+
 
 class TestExpFunction:
     def test_at_zero(self):
