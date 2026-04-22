@@ -100,8 +100,7 @@ class HDFwriter(object):
         Repack the opened hdf5 file into a temporary file
         """
         try:
-            repack_line = " ".join(["h5repack", '"' + self.path + '"', '"' + tmpfile + '"'])
-            subprocess.check_output(repack_line, stderr=subprocess.STDOUT, shell=True)
+            subprocess.check_output(["h5repack", self.path, tmpfile], stderr=subprocess.STDOUT)
             # Check that the file is done being modified
             sleep(0.5)
             while time() - os.stat(tmpfile).st_mtime <= 1:
