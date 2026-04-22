@@ -23,7 +23,7 @@ requirements = [
     "joblib>=0.11.0",
     "ipywidgets>=5.2.2",
     "ipython>=6.0",
-    "numpy_groupies==0.9.7",  # New build of 0.9.8.4 appears to cause build problems
+    "numpy_groupies>=0.9.22",  # New build of 0.9.8.4 appears to cause build problems
     "sidpy>=0.12.1",
     "pyUSID>=0.0.11",
     "xlrd>=1.0.0",
